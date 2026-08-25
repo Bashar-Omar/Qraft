@@ -1,0 +1,32 @@
+# Qraft dependency policy — pnpm 11
+#
+# pnpm 11 blocks dependency lifecycle/build scripts by default and exits
+# non-zero for unreviewed scripts. Qraft explicitly approves only the
+# dependency currently required by the Next/ESLint toolchain.
+#
+# Keep this file reviewed and committed. Do not enable
+# dangerouslyAllowAllBuilds.
+
+strictDepBuilds: true
+verifyDepsBeforeRun: error
+
+allowBuilds:
+  unrs-resolver: true
+
+# pnpm 11 has a built-in 24-hour minimum release age. Next.js 16.3.3 and
+# its platform packages were intentionally selected on the same day as the
+# security release, so pnpm added these exact exceptions during resolution.
+# Keep them exact; do not widen them to package-name-only exceptions.
+minimumReleaseAgeExclude:
+  - "@next/env@16.3.3"
+  - "@next/eslint-plugin-next@16.3.3"
+  - "@next/swc-darwin-arm64@16.3.3"
+  - "@next/swc-darwin-x64@16.3.3"
+  - "@next/swc-linux-arm64-gnu@16.3.3"
+  - "@next/swc-linux-arm64-musl@16.3.3"
+  - "@next/swc-linux-x64-gnu@16.3.3"
+  - "@next/swc-linux-x64-musl@16.3.3"
+  - "@next/swc-win32-arm64-msvc@16.3.3"
+  - "@next/swc-win32-x64-msvc@16.3.3"
+  - "eslint-config-next@16.3.3"
+  - "next@16.3.3"
