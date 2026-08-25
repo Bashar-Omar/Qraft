@@ -148,3 +148,22 @@ Before a standards-specific advanced feature:
 4. use accurate terminology.
 
 This blueprint is not a replacement for ISO/GS1 specifications.
+
+## Phase 1 standard QR engine
+
+### `qr` / paulmillr-qr
+
+- `https://www.npmjs.com/package/qr`
+- `https://github.com/paulmillr/qr`
+- `https://github.com/paulmillr/qr/releases/tag/0.6.0`
+- `https://jsr.io/@paulmillr/qr`
+
+Phase 1A selection notes:
+
+- current reviewed version: `0.6.0`,
+- zero runtime dependencies,
+- built-in TypeScript declarations,
+- raw matrix generation,
+- L/M/Q/H error correction,
+- decoding support used only as an initial software regression gate,
+- designer QR styling remains a separate adapter decision.

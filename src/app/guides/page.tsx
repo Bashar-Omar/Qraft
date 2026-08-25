@@ -20,8 +20,9 @@ export default function GuidesPage() {
         <span className="mono-label accent-marker">GUIDES / SYSTEM</span>
         <h1>Technical depth without technical clutter.</h1>
         <p>
-          The full planning documents are already versioned under <code>/docs</code>. Public web
-          guides will be added after the core generator proves its contracts.
+          The implementation decisions and quality gates are versioned under <code>/docs</code>.
+          Phase 1A now proves the standard QR contract; public-facing guides expand after the
+          curated payload set is complete.
         </p>
       </div>
 
