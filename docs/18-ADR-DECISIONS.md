@@ -36,15 +36,16 @@ Future option:
 
 ---
 
-## ADR-003 — Dual rendering engine
+## ADR-003 — Specialized rendering engines
 
-**Status:** Accepted
+**Status:** Accepted / refined in ADR-013
 
+- standards-first QR adapter for the safe baseline,
 - styled QR adapter for creative normal QR,
-- bwip adapter for standards/barcodes.
+- bwip adapter for industrial/barcode breadth.
 
 Reason:
-styling breadth and barcode breadth are different optimization problems.
+standard QR correctness, creative styling breadth and barcode breadth are different optimization problems. Each engine remains replaceable behind Qraft-owned ports.
 
 ---
 
@@ -146,3 +147,32 @@ avoid generic AI/shadcn clone appearance.
 Quality Assistant exposes transparent checks + local self-decode.
 
 No certification language without an actual certification process.
+
+---
+
+## ADR-013 — Prove a standard QR baseline before designer styling
+
+**Status:** Accepted
+
+Phase 1 uses `qr@0.6.0` behind `StandardQrRenderer` for the first production QR path.
+
+Reasons:
+
+- zero runtime dependencies,
+- built-in TypeScript declarations,
+- browser and Node support,
+- raw matrix output that Qraft can own and export itself,
+- QR versions 1–40 and all four standard error-correction levels,
+- decoding support suitable for software regression vectors,
+- recent 0.6.0 security/spec self-audit and TypeScript 5.9+ compatibility work.
+
+Boundary:
+
+- `qr` imports are allowed only inside `src/engines/` and engine-focused tests,
+- UI/application/domain code consumes Qraft-owned types,
+- Qraft generates its own SVG/PNG artifacts from the normalized matrix,
+- designer QR styling is a separate future adapter and does not redefine the safe standard baseline.
+
+Testing caveat:
+
+A render→decode round trip using the same library is a useful regression gate, not independent scanner certification. Later hardening must add independent decoder/device fixtures.

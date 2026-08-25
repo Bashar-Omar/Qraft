@@ -42,8 +42,11 @@ src/
       export-code.ts
     batch/
       run-batch.ts
+  composition/
+    core-qr.ts
   engines/
     render/
+      standard-qr/
       styled-qr/
       bwip/
     decode/
@@ -78,6 +81,12 @@ src/
     vectors/
     factories/
 ```
+
+## Composition root
+
+Concrete adapters are wired in `src/composition/`, not inside application use cases.
+
+The application layer accepts Qraft-owned ports/dependencies; the composition root selects the current renderer/exporters. This keeps engine replacement out of domain/application code and prevents React features from importing vendor adapters directly.
 
 ## Core contracts
 

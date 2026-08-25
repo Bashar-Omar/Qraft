@@ -4,7 +4,7 @@ import { PhaseCard } from "@/components/foundation/phase-card";
 import { QrMotif } from "@/components/foundation/qr-motif";
 
 const systemNotes = [
-  ["PHASE", "00 / FOUNDATION"],
+  ["PHASE", "01A / CORE QR"],
   ["RUNTIME", "BROWSER-FIRST"],
   ["PERSISTENCE", "NO ACCOUNT"],
   ["DEPLOYMENT", "STATIC-EXPORT READY"],
@@ -15,7 +15,7 @@ export default function HomePage() {
     <>
       <section className="hero shell">
         <div className="hero__copy">
-          <span className="mono-label accent-marker">QRAFT / SYSTEM / 00</span>
+          <span className="mono-label accent-marker">QRAFT / SYSTEM / 01A</span>
           <h1>Craft codes that work.</h1>
           <p className="hero__lede">
             A privacy-first QR and barcode studio designed as a serious creative tool — precise,
@@ -23,22 +23,22 @@ export default function HomePage() {
           </p>
           <div className="hero__actions">
             <Link className="button button--primary" href="/generate">
-              Open studio shell
+              Open QR studio
             </Link>
             <Link className="button button--secondary" href="/guides">
               Architecture notes
             </Link>
           </div>
           <p className="hero__honesty">
-            Phase 0 establishes the production foundation. QR generation is intentionally wired in
-            the next phase, after architecture and CI are proven.
+            Phase 1A is live: URL and Text payloads generate locally through Qraft-owned contracts,
+            with standard QR output plus real SVG and PNG export.
           </p>
         </div>
 
-        <div className="hero-visual" aria-label="Qraft foundation preview">
+        <div className="hero-visual" aria-label="Qraft Core QR preview">
           <div className="hero-visual__toolbar">
             <span className="mono-label">QRAFT / LOCAL ENGINE</span>
-            <span className="status-dot">FOUNDATION</span>
+            <span className="status-dot">CORE QR / LIVE</span>
           </div>
           <div className="hero-visual__canvas">
             <div className="hero-visual__code">
@@ -46,7 +46,7 @@ export default function HomePage() {
             </div>
             <div className="hero-visual__annotation">
               <span>CLIENT FIRST</span>
-              <strong>00</strong>
+              <strong>01A</strong>
               <span>NO CLOUD DATA</span>
             </div>
           </div>
@@ -58,7 +58,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="system-strip shell" aria-label="Foundation status">
+      <section className="system-strip shell" aria-label="Core QR status">
         {systemNotes.map(([label, value]) => (
           <div className="system-strip__item" key={label}>
             <span className="mono-label">{label}</span>
@@ -82,7 +82,7 @@ export default function HomePage() {
             description="Intent-first payload editing, styling, live preview, quality and export."
             eyebrow="01 / PRIMARY"
             href="/generate"
-            status="NEXT"
+            status="LIVE"
             title="Generate"
           />
           <PhaseCard
@@ -103,7 +103,7 @@ export default function HomePage() {
             description="Standards-aware explanations, architecture decisions and practical guides."
             eyebrow="DOCS / TRUST"
             href="/guides"
-            status="FOUNDATION"
+            status="ACTIVE"
             title="Guides"
           />
         </div>

@@ -4,8 +4,8 @@
 
 Qraft is a public-source, privacy-first QR and barcode studio being built as a portfolio-grade product: designer-friendly, standards-aware, responsive, testable and local-first.
 
-> **Current status:** Phase 0 — repository foundation.  
-> The application shell, brand system, theme, static-export configuration, tests and CI are implemented. The local Phase 0 quality gate is green; GitHub CI is the remaining external reproduction check. QR generation itself starts in Phase 1; this repository does not fake unfinished functionality.
+> **Current status:** Phase 1A — Core QR vertical slice.
+> Phase 0 is green locally and in GitHub CI. URL and Text payloads now generate real standard QR codes locally, with live preview, selectable error correction, SVG/PNG export and a render→decode regression test. The broader Phase 1 payload set is intentionally still staged.
 
 ## Product principles
 
@@ -17,7 +17,7 @@ Qraft is a public-source, privacy-first QR and barcode studio being built as a p
 - Quality guidance is transparent and never presented as certification.
 - Responsive/mobile behavior is part of “done,” not a later patch.
 
-## Phase 0 stack
+## Current stack
 
 - Next.js `16.3.3`
 - React `19.2.8`
@@ -28,20 +28,23 @@ Qraft is a public-source, privacy-first QR and barcode studio being built as a p
 - Playwright `1.62.1`
 - ESLint 9 + `eslint-config-next`
 - Prettier `3.9.6`
+- `qr` `0.6.0` behind Qraft's standard QR renderer adapter
 
-Node.js `24 LTS` is the project/CI standard. Next.js requires at least Node `20.9`, and pnpm 11 supports Node 24.
+Node.js `24 LTS` is the project/CI standard.
 
-## Why TypeScript 5.9 instead of TypeScript 7?
+## Why the standard QR engine is isolated
 
-TypeScript 7 is the current npm `latest`, but current Next.js 16 tooling still expects the legacy JavaScript compiler API entrypoint that TypeScript 7 no longer ships. Qraft prioritizes a reproducible production build over chasing a major version before the framework integration is ready.
+Phase 1A uses `qr@0.6.0` for the standards-first QR baseline. It is a TypeScript package with zero runtime dependencies and exposes both raw QR matrices and decoding. Qraft consumes it only inside `src/engines/`; the payload domain, application use cases, UI and export schema do not depend on vendor types.
 
-This decision is isolated in `package.json` and documented in `docs/21-PHASE-0-IMPLEMENTATION.md`.
+The designer QR engine remains a later, separate adapter. Standard output is proven before creative styling is introduced. See `docs/18-ADR-DECISIONS.md` and `docs/22-PHASE-1-CORE-QR.md`.
+
+## Why TypeScript 5.9?
+
+Qraft prioritizes a reproducible framework build over automatic major upgrades. The TypeScript pin is isolated in `package.json`; upgrades are reviewed as deliberate maintenance work rather than merged from Dependabot by default.
 
 ## pnpm supply-chain policy
 
-Qraft keeps pnpm 11's strict dependency-build protection enabled. Dependency install scripts
-must be explicitly reviewed in `pnpm-workspace.yaml`; currently only `unrs-resolver` is allowed.
-Verification is configured not to auto-install stale dependencies.
+Qraft keeps pnpm 11's strict dependency-build protection enabled. Dependency install scripts must be explicitly reviewed in `pnpm-workspace.yaml`; currently only `unrs-resolver` is allowed. Verification is configured not to auto-install stale dependencies.
 
 ## Local setup — Windows
 
@@ -80,56 +83,67 @@ pnpm verify
 ## Architecture
 
 ```text
-UI / features
-    ↓
-application use-cases
-    ↓
-ports / Qraft-owned domain types
-    ↓
-adapters / rendering & decoding libraries
+Payload codec / registry
+        ↓
+application use-case
+        ↓
+Qraft rendering port
+        ↓
+standard QR adapter
+        ↓
+Qraft-owned matrix + metadata
+        ↓
+SVG / PNG exporters
 ```
 
-The planned source architecture is documented in `docs/06-ARCHITECTURE-SOLID.md`.
-
-The runtime folders are intentionally small in Phase 0. We do not create empty architecture theater just to make the tree look large; folders appear when a real contract or feature arrives.
+Vendor package types stay inside `engines/`. The architecture contract is documented in `docs/06-ARCHITECTURE-SOLID.md`.
 
 ## Current routes
 
-- `/` — product/foundation landing
-- `/generate` — responsive Generate shell; real pipeline arrives in Phase 1
+- `/` — product landing and current capability status
+- `/generate` — live Core QR studio for URL and Text
 - `/scan` — planned scanner surface
 - `/batch` — planned batch surface
 - `/guides` — guide/documentation surface
 
+## Phase 1A capability
+
+Implemented in this slice:
+
+1. typed payload contracts and registry,
+2. URL codec with local validation and `https://` normalization,
+3. exact plain-text codec,
+4. safe standard QR adapter,
+5. ECC L/M/Q/H with Medium as the default,
+6. fixed four-module quiet-zone baseline,
+7. live local preview,
+8. Qraft-owned SVG export,
+9. crisp browser-canvas PNG export,
+10. unit coverage plus render→decode regression coverage.
+
+The same-engine round-trip is a software regression check, **not scanner certification**. Independent decoder/device checks belong to the later Quality/Hardening gates.
+
 ## Repository quality
 
-CI checks:
+Protected `main` requires pull requests and CI. The CI gate checks formatting, ESLint, TypeScript, Vitest, production static build, and Playwright coverage in desktop and mobile Chromium profiles.
 
-1. formatting,
-2. ESLint,
-3. TypeScript,
-4. Vitest,
-5. production static build,
-6. Playwright Chromium smoke tests.
+See `CONTRIBUTING.md` and `docs/15-GITHUB-CI-CD.md` for workflow policy.
 
-See `CONTRIBUTING.md` and `docs/15-GITHUB-CI-CD.md` for the repository workflow and CI policy.
+## Next Phase 1 work
 
-## Roadmap
+Phase 1B expands the payload layer without changing renderer internals:
 
-The full roadmap is under `docs/13-ROADMAP.md`.
+1. Email, Phone and SMS codecs,
+2. Wi-Fi codec with escaping and security modes,
+3. richer payload-specific editors,
+4. broader golden fixtures and an independent decode path,
+5. mobile/accessibility hardening for the full curated payload set.
 
-Immediate next work after Phase 0 is green:
-
-1. payload registry and codec contracts,
-2. URL/Text payloads,
-3. safe standard QR renderer,
-4. live preview,
-5. SVG/PNG export,
-6. render→decode golden vector.
+Designer QR styling remains Phase 2.
 
 ## Privacy
 
-Normal Qraft generation is designed to happen in the browser. User QR payloads, logos, scans and CSVs must not become analytics properties or production logs.
+Normal Qraft generation is designed to happen in the browser. User QR payloads, logos, scans and CSVs must not become analytics properties or production logs. URL generation validates syntax locally and does not fetch the destination.
 
 ## License
 
