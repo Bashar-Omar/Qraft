@@ -220,3 +220,24 @@ Implementation notes re-checked:
 - backslash, semicolon, comma, double quote and colon are escaped with a backslash.
 
 Wi-Fi QR payload syntax is an ecosystem convention rather than an IETF URI standard, so Qraft documents it as compatibility behavior rather than formal certification.
+
+## Phase 2A designer QR refresh — 2026-08-26
+
+### `qr-code-styling`
+
+- `https://www.npmjs.com/package/qr-code-styling`
+- `https://github.com/kozakdenys/qr-code-styling`
+- `https://github.com/kozakdenys/qr-code-styling/blob/master/src/types/index.ts`
+- `https://github.com/kozakdenys/qr-code-styling/blob/master/src/core/QRCodeStyling.ts`
+- `https://github.com/kozakdenys/qr-code-styling/issues/38`
+
+Re-checked implementation facts:
+
+- current npm release remains `1.9.2`, MIT, with built-in declarations,
+- runtime dependency is `qrcode-generator ^1.4.4`,
+- SVG/PNG/JPEG/WebP raw artifacts are supported,
+- dots/modules and corner square/dot shapes are configurable,
+- gradients accept radians, so Qraft stores degrees and converts only in the adapter,
+- `roundSize: false` avoids extra module rounding margin in SVG,
+- historical Next.js eager-import failures justify a client-only dynamic import boundary,
+- package maintenance cadence is slower than Qraft's core stack, reinforcing ADR-008's replaceable adapter requirement.

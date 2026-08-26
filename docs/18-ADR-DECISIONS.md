@@ -176,3 +176,25 @@ Boundary:
 Testing caveat:
 
 A render→decode round trip using the same library is a useful regression gate, not independent scanner certification. Later hardening must add independent decoder/device fixtures.
+
+---
+
+## ADR-014 — Canonical styled SVG with a separate verification matrix
+
+**Status:** Accepted
+
+Phase 2 uses `qr-code-styling@1.9.2` behind a browser-only adapter for creative QR rendering. The dependency is dynamically imported only inside the adapter because eager imports have historically caused `window`/`self` failures in Next.js server execution.
+
+Qraft continues to run `StandardQrRenderer` as a structural oracle for payload/version/ECC/quiet-zone metadata and software golden vectors. A designer engine can legally choose a different QR mask, so its visible artifact must not be reconstructed from the standard engine's matrix.
+
+Therefore:
+
+- `RenderedCode.svg` is the canonical visible/export artifact,
+- `RenderedCode.verificationMatrix` is the standards-oriented reference,
+- PNG is rasterized from the canonical SVG,
+- the default Pure Mono design remains on the lightweight standard renderer,
+- styled requests are routed to the designer adapter without UI vendor conditionals,
+- designer runtime imports are browser-only and lazy,
+- vendor option types never enter Qraft design state,
+- gradient degrees are converted to vendor radians only in the adapter,
+- logo support waits for Quality Assistant guardrails.

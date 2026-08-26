@@ -374,3 +374,15 @@ The rest of Qraft sees Qraft-owned types.
 - unvalidated JSON import,
 - base64 blobs in global state,
 - capability flags scattered instead of centralized metadata.
+
+## Phase 2A implementation note — canonical styled artifact
+
+Phase 2A keeps the safe standard renderer as a structural oracle and adds a browser-only designer adapter.
+
+`QraftQrDesign` lives in `core/design`; `qr-code-styling` option names remain inside `engines/render/designer-qr`. The designer adapter asks the standard renderer for version/ECC/quiet-zone metadata and a verification matrix, then generates the user-facing SVG through the isolated designer engine.
+
+`RenderedCode.svg` is the canonical preview/export artifact. `RenderedCode.verificationMatrix` is explicitly a standards-oriented reference and is not assumed to share the styled engine's mask pattern. Raster exporters therefore rasterize the canonical SVG instead of repainting the verification matrix.
+
+`QrRenderer` is the engine-selection seam for ordinary QR. The untouched default design stays on `StandardQrRenderer`; only a visual design that differs from the safe baseline reaches `DesignerQrRenderer`. This keeps `qr-code-styling` lazy and prevents a UI conditional from deciding which vendor engine to use.
+
+The package runtime is dynamically imported only after a browser check, preserving the static/client-first boundary and avoiding eager Next.js server evaluation.

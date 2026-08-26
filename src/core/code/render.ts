@@ -1,3 +1,5 @@
+import type { QraftQrDesign } from "@/core/design/qr-design";
+
 export type SymbologyId = "qr";
 
 export type QrErrorCorrectionLevel = "L" | "M" | "Q" | "H";
@@ -15,6 +17,7 @@ export type RenderRequest = Readonly<{
   options?: Readonly<{
     errorCorrectionLevel?: QrErrorCorrectionLevel;
     quietZoneModules?: number;
+    design?: QraftQrDesign;
   }>;
 }>;
 
@@ -30,7 +33,13 @@ export type RenderMetadata = Readonly<{
 }>;
 
 export type RenderedCode = Readonly<{
-  matrix: QrMatrix;
+  /**
+   * Logical matrix used as a standards-oriented verification reference.
+   * Styled renderers may use a different mask while preserving the same
+   * payload/version/ECC. Preview/export must use `svg`, not this matrix.
+   */
+  verificationMatrix: QrMatrix;
+  /** Canonical vector artifact for preview and export. */
   svg: string;
   metadata: RenderMetadata;
 }>;

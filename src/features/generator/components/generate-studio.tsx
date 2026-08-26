@@ -5,8 +5,10 @@ import { useEffect, useMemo, useState } from "react";
 import type { GeneratedCode } from "@/application/generate/generate-code";
 import { exportCode, generateCode } from "@/composition/core-qr";
 import { CodeRenderError, type QrErrorCorrectionLevel } from "@/core/code/render";
+import { DEFAULT_QR_DESIGN, type QraftQrDesign } from "@/core/design/qr-design";
 import { payloadRegistry } from "@/core/payload/payload-registry";
 import { PayloadValidationError, type PayloadId, type PayloadIssue } from "@/core/payload/payload";
+import { QrDesignPanel } from "@/features/generator/components/qr-design-panel";
 import { QrPreview } from "@/features/generator/components/qr-preview";
 import { getPayloadEditorRegistration } from "@/features/generator/components/payload-editor-registry";
 import { downloadArtifact } from "@/features/generator/lib/download";
@@ -64,6 +66,7 @@ export function GenerateStudio() {
     createInitialDrafts(definitions),
   );
   const [errorCorrectionLevel, setErrorCorrectionLevel] = useState<QrErrorCorrectionLevel>("M");
+  const [design, setDesign] = useState<QraftQrDesign>(DEFAULT_QR_DESIGN);
   const [generation, setGeneration] = useState<GenerationState>({ status: "waiting" });
   const [exporting, setExporting] = useState<"svg" | "png" | null>(null);
   const [exportIssue, setExportIssue] = useState<string | null>(null);
@@ -71,8 +74,8 @@ export function GenerateStudio() {
   const editorRegistration = getPayloadEditorRegistration(payloadId);
   const PayloadEditor = editorRegistration.component;
   const requestKey = useMemo(
-    () => JSON.stringify([payloadId, currentDraft, errorCorrectionLevel]),
-    [currentDraft, errorCorrectionLevel, payloadId],
+    () => JSON.stringify([payloadId, currentDraft, errorCorrectionLevel, design]),
+    [currentDraft, design, errorCorrectionLevel, payloadId],
   );
 
   useEffect(() => {
@@ -82,6 +85,7 @@ export function GenerateStudio() {
       payloadId,
       input: currentDraft,
       errorCorrectionLevel,
+      design,
     })
       .then((value) => {
         if (active) {
@@ -98,7 +102,7 @@ export function GenerateStudio() {
     return () => {
       active = false;
     };
-  }, [currentDraft, errorCorrectionLevel, payloadId, requestKey]);
+  }, [currentDraft, design, errorCorrectionLevel, payloadId, requestKey]);
 
   const selectPayload = (nextPayloadId: PayloadId) => {
     setPayloadId(nextPayloadId);
@@ -167,10 +171,13 @@ export function GenerateStudio() {
               <span className="type-row__index">{String(index + 1).padStart(2, "0")}</span>
             </button>
           ))}
-          <div className="type-row type-row--locked" aria-label="Visual Studio arrives in Phase 2">
+          <div
+            className="type-row type-row--locked"
+            aria-label="Logo and Quality Assistant are next"
+          >
             <span>
-              <strong>Designer QR · Quality</strong>
-              <small>Queued for the Visual Studio phase.</small>
+              <strong>Logo · Quality</strong>
+              <small>Next Visual Studio capability slice.</small>
             </span>
             <span className="type-row__index">NEXT</span>
           </div>
@@ -207,6 +214,8 @@ export function GenerateStudio() {
             </div>
           ) : null}
 
+          <QrDesignPanel onChange={setDesign} value={design} />
+
           <fieldset className="ecc-control">
             <legend>Error correction</legend>
             <div className="ecc-grid">
@@ -232,14 +241,14 @@ export function GenerateStudio() {
 
           <div className="studio-safety-card">
             <div>
-              <span className="mono-label">SAFE BASELINE</span>
-              <strong>Standards before styling.</strong>
+              <span className="mono-label">DESIGN GUARDRAIL</span>
+              <strong>Styling without giving up the baseline.</strong>
             </div>
             <ul>
               <li>4-module quiet zone</li>
-              <li>Black on white</li>
+              <li>Qraft-owned design model</li>
               <li>Explicit ECC</li>
-              <li>Local generation only</li>
+              <li>Local designer engine</li>
             </ul>
           </div>
         </div>
@@ -268,7 +277,11 @@ export function GenerateStudio() {
           <>
             <div className="preview-meta">
               <span>FORMAT</span>
-              <strong>QR / STANDARD</strong>
+              <strong>
+                {currentGeneration.value.rendered.metadata.rendererId === "designer-qr"
+                  ? "QR / DESIGNER"
+                  : "QR / STANDARD"}
+              </strong>
               <span>VERSION</span>
               <strong>V{currentGeneration.value.rendered.metadata.version}</strong>
               <span>ECC</span>
@@ -282,9 +295,13 @@ export function GenerateStudio() {
             <div className="preview-quality">
               <div>
                 <span className="quality-dot" />
-                <span>Safe baseline</span>
+                <span>
+                  {currentGeneration.value.rendered.metadata.rendererId === "designer-qr"
+                    ? "Designer renderer active"
+                    : "Safe standard renderer active"}
+                </span>
               </div>
-              <small>Quiet zone and contrast are fixed in this slice.</small>
+              <small>Quality heuristics and local self-test arrive in the next slice.</small>
             </div>
 
             <div className="export-actions">
