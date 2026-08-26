@@ -13,7 +13,7 @@ test("Core QR landing and Generate studio are reachable", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByRole("heading", { name: "Craft codes that work." })).toBeVisible();
-  await expect(page.getByText("02A / VISUAL STUDIO", { exact: true })).toBeVisible();
+  await expect(page.getByText("02B / QUALITY ASSISTANT", { exact: true })).toBeVisible();
 
   await page.getByRole("link", { name: "Open QR studio" }).click();
 
@@ -124,6 +124,30 @@ test("Designer controls update the canonical SVG and PNG artifacts", async ({ pa
   await page.getByRole("button", { name: "Download PNG" }).click();
   const pngDownload = await pngDownloadPromise;
   expect(pngDownload.suggestedFilename()).toBe("qraft-text.png");
+});
+
+test("Quality Assistant self-tests every shipped preset and surfaces design risk", async ({
+  page,
+}) => {
+  await page.goto("/generate");
+
+  const quality = page.locator(".quality-assistant");
+  await expect(quality.getByText("GOOD", { exact: true })).toBeVisible();
+  await expect(quality).toContainText("STRONG · 21.00:1");
+
+  for (const preset of ["Pure Mono", "Qraft Mint", "Soft Mint", "Packaging"]) {
+    await page.getByRole("button", { name: new RegExp(preset) }).click();
+    await quality.getByRole("button", { name: "Run self-test" }).click();
+    await expect(quality.getByText("Passed local self-test", { exact: true })).toBeVisible({
+      timeout: 15_000,
+    });
+  }
+
+  await page.getByRole("button", { name: /Pure Mono/ }).click();
+  await page.getByLabel("Module color").fill("#0fbf8f");
+
+  await expect(quality.getByText("RISK", { exact: true })).toBeVisible();
+  await expect(quality.getByText("Low visual contrast", { exact: true })).toBeVisible();
 });
 
 test("theme selector persists the chosen preference", async ({ page }) => {

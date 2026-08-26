@@ -1,8 +1,10 @@
 import { createExportCode } from "@/application/export/export-code";
 import { createGenerateCode } from "@/application/generate/generate-code";
+import { createSelfTestQr } from "@/application/quality/self-test-qr";
 import { payloadRegistry } from "@/core/payload/payload-registry";
 import { pngExporter } from "@/engines/export/png/png-exporter";
 import { svgExporter } from "@/engines/export/svg/svg-exporter";
+import { zxingQrArtifactDecoder } from "@/engines/decode/zxing/zxing-qr-artifact-decoder";
 import { qrRenderer } from "@/engines/render/qr/qr-renderer";
 
 export const generateCode = createGenerateCode({
@@ -14,3 +16,5 @@ export const exportCode = createExportCode({
   svg: svgExporter,
   png: pngExporter,
 });
+
+export const selfTestQr = createSelfTestQr(zxingQrArtifactDecoder);

@@ -234,7 +234,9 @@ export function QrDesignPanel({ value, onChange }: QrDesignPanelProps) {
         <label className="design-check-row">
           <span>
             <strong>Transparent background</strong>
-            <small>Useful for layout work; Quality Assistant checks arrive next.</small>
+            <small>
+              Useful for layout work; Quality Assistant reports placement-dependent contrast.
+            </small>
           </span>
           <input
             checked={value.background.kind === "transparent"}
@@ -325,8 +327,9 @@ export function QrDesignPanel({ value, onChange }: QrDesignPanelProps) {
       </div>
 
       <p className="design-panel__note">
-        Styling is local and non-destructive. The four-module quiet zone remains locked while the
-        first Quality Assistant rules are being added.
+        Styling is local and non-destructive. The four-module quiet zone stays locked in Safe Mode,
+        while the Quality Assistant reports contrast, polarity and ECC guidance for the current
+        design.
       </p>
     </section>
   );

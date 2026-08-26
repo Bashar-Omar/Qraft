@@ -386,3 +386,32 @@ Phase 2A keeps the safe standard renderer as a structural oracle and adds a brow
 `QrRenderer` is the engine-selection seam for ordinary QR. The untouched default design stays on `StandardQrRenderer`; only a visual design that differs from the safe baseline reaches `DesignerQrRenderer`. This keeps `qr-code-styling` lazy and prevents a UI conditional from deciding which vendor engine to use.
 
 The package runtime is dynamically imported only after a browser check, preserving the static/client-first boundary and avoiding eager Next.js server evaluation.
+
+## Phase 2B implementation note — quality and independent self-test
+
+Phase 2B turns the quality step in the rendering lifecycle into explicit Qraft-owned contracts.
+
+`src/core/quality/` contains pure QR findings, severity, metrics and rule evaluation. The current rules inspect Qraft design values plus Qraft render metadata; they never import the renderer or decoder packages.
+
+The artifact self-test is deliberately separate from deterministic heuristics:
+
+```text
+RenderedCode.svg
+→ application self-test use case
+→ QrArtifactDecoder port
+→ lazy browser decoder adapter
+→ exact raw-payload comparison
+```
+
+The decoder result is a string only at the port boundary. ZXing classes/maps/results stay inside `src/engines/decode/zxing/`, and the application layer reduces the result to `passed`, `decode-failed` or `payload-mismatch` without returning the raw payload.
+
+`@zxing/library` is dynamically imported only when the user explicitly runs the self-test. This keeps the decoder out of initial generation/landing execution and preserves the client-first/static boundary.
+
+Quality findings and self-test have different responsibilities:
+
+- deterministic rules explain visible design risks immediately,
+- self-test checks whether a representative raster of the exact canonical SVG can be independently decoded,
+- a failed self-test is presented as Risk,
+- neither path is certification.
+
+The seam is intentionally ready for Phase 2C logo occlusion and later barcode-specific quality rules without putting vendor logic into `GenerateStudio`.

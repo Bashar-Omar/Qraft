@@ -241,3 +241,50 @@ Re-checked implementation facts:
 - `roundSize: false` avoids extra module rounding margin in SVG,
 - historical Next.js eager-import failures justify a client-only dynamic import boundary,
 - package maintenance cadence is slower than Qraft's core stack, reinforcing ADR-008's replaceable adapter requirement.
+
+## Phase 2B Quality Assistant refresh — 2026-08-26
+
+### Regular QR quiet zone and ECC — DENSO WAVE
+
+- `https://www.qrcode.com/en/howto/code.html/index.html`
+- `https://www.qrcode.com/en/about/error_correction.html`
+
+Re-checked implementation facts:
+
+- regular QR needs a clear four-module margin on all sides,
+- four ECC levels L/M/Q/H are available,
+- increasing ECC improves restoration headroom but also increases symbol size/density pressure,
+- Level M is the common/default baseline described by DENSO.
+
+Qraft treats these as QR-specific facts, not decoration preferences.
+
+### Relative luminance / contrast math — W3C WCAG 2.2 references
+
+- `https://www.w3.org/WAI/WCAG22/Techniques/general/G18`
+- `https://www.w3.org/WAI/WCAG22/Techniques/general/G17`
+
+Qraft reuses the documented sRGB relative-luminance conversion (`0.04045` cutoff) and `(L1 + 0.05) / (L2 + 0.05)` ratio because the math is deterministic and explainable.
+
+Important product boundary:
+
+- WCAG contrast ratios are accessibility criteria for content/text, **not QR scan-compliance thresholds**,
+- Phase 2B's Strong / Moderate / Low cutoffs are explicitly Qraft heuristics,
+- gradient QR foregrounds are sampled at multiple positions rather than judged by a single endpoint.
+
+### `@zxing/library`
+
+- `https://www.npmjs.com/package/@zxing/library`
+- `https://github.com/zxing-js/library`
+
+Implementation snapshot re-checked on 2026-08-26:
+
+- current npm release: `0.23.0`,
+- Apache-2.0,
+- built-in TypeScript declarations,
+- one runtime dependency,
+- QR decode primitives include `RGBLuminanceSource`, `HybridBinarizer`, `BinaryBitmap` and `QRCodeReader`,
+- upstream labels the project maintenance-mode only.
+
+Qraft uses it only behind a lazy browser adapter for explicit self-tests. Vendor types do not cross the engine boundary. The maintenance status is a reason to preserve the replacement seam, not to hide the risk.
+
+`@zxing/browser` remains the later scanner/camera helper candidate; Phase 2B does not need its media/session layer.
