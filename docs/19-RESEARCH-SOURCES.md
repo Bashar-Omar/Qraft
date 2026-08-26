@@ -167,3 +167,56 @@ Phase 1A selection notes:
 - L/M/Q/H error correction,
 - decoding support used only as an initial software regression gate,
 - designer QR styling remains a separate adapter decision.
+
+## Phase 1B payload serialization refresh — 2026-08-26
+
+### Email — RFC 6068
+
+`https://www.rfc-editor.org/rfc/rfc6068.html`
+
+Implementation notes re-checked:
+
+- `mailto:` supports recipient addresses plus header fields,
+- `subject` and `body` are the interoperable general-purpose fields,
+- reserved/query characters need percent encoding,
+- spaces should use `%20`, not `+`,
+- body line breaks are encoded as CRLF (`%0D%0A`).
+
+### Phone — RFC 3966
+
+`https://www.rfc-editor.org/rfc/rfc3966.html`
+
+Implementation notes re-checked:
+
+- `tel:` distinguishes global and local numbers,
+- global numbers start with `+`,
+- visual separators do not change number identity,
+- local numbers require a `phone-context`.
+
+Qraft's curated Phase 1 editor therefore requires global form instead of inventing local context.
+
+### SMS — RFC 5724
+
+`https://www.rfc-editor.org/rfc/rfc5724.html`
+
+Implementation notes re-checked:
+
+- `sms:` reuses RFC 3966 telephone-subscriber syntax,
+- global form is preferred where available,
+- the standardized SMS field defined by the RFC is `body`.
+
+### Wi-Fi QR — ZXing Barcode Contents + parser
+
+- `https://github.com/zxing/zxing/wiki/Barcode-Contents#wi-fi-network-config-android-ios-11`
+- `https://github.com/zxing/zxing/blob/master/core/src/main/java/com/google/zxing/client/result/WifiResultParser.java`
+
+Implementation notes re-checked:
+
+- common payload prefix is `WIFI:`,
+- `S` is the required SSID,
+- `T` commonly uses `WPA`, `WEP` or `nopass`,
+- `P` carries the password for protected networks,
+- `H:true` marks a hidden network,
+- backslash, semicolon, comma, double quote and colon are escaped with a backslash.
+
+Wi-Fi QR payload syntax is an ecosystem convention rather than an IETF URI standard, so Qraft documents it as compatibility behavior rather than formal certification.

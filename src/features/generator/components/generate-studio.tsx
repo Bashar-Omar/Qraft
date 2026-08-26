@@ -6,7 +6,7 @@ import type { GeneratedCode } from "@/application/generate/generate-code";
 import { exportCode, generateCode } from "@/composition/core-qr";
 import { CodeRenderError, type QrErrorCorrectionLevel } from "@/core/code/render";
 import { payloadRegistry } from "@/core/payload/payload-registry";
-import { PayloadValidationError, type PayloadId } from "@/core/payload/payload";
+import { PayloadValidationError, type PayloadId, type PayloadIssue } from "@/core/payload/payload";
 import { QrPreview } from "@/features/generator/components/qr-preview";
 import { getPayloadEditorRegistration } from "@/features/generator/components/payload-editor-registry";
 import { downloadArtifact } from "@/features/generator/lib/download";
@@ -24,25 +24,29 @@ const ECC_OPTIONS: readonly Readonly<{
 
 function createInitialDrafts(
   definitions: ReturnType<typeof payloadRegistry.list>,
-): Record<PayloadId, string> {
+): Record<PayloadId, unknown> {
   return Object.fromEntries(
-    definitions.map((definition) => [
-      definition.id,
-      typeof definition.sampleInput === "string" ? definition.sampleInput : "",
-    ]),
-  ) as Record<PayloadId, string>;
+    definitions.map((definition) => [definition.id, definition.sampleInput]),
+  ) as Record<PayloadId, unknown>;
 }
 
 type GenerationState =
-  | Readonly<{ status: "ready"; value: GeneratedCode }>
-  | Readonly<{ status: "error"; message: string; fieldIssue?: string }>
+  | Readonly<{ status: "ready"; requestKey: string; value: GeneratedCode }>
+  | Readonly<{
+      status: "error";
+      requestKey: string;
+      message: string;
+      issues?: readonly PayloadIssue[];
+    }>
   | Readonly<{ status: "waiting" }>;
 
-function toGenerationError(error: unknown): Readonly<{ message: string; fieldIssue?: string }> {
+function toGenerationError(
+  error: unknown,
+): Readonly<{ message: string; issues?: readonly PayloadIssue[] }> {
   if (error instanceof PayloadValidationError) {
     return {
       message: error.message,
-      fieldIssue: error.issues[0]?.message,
+      issues: error.issues,
     };
   }
 
@@ -56,7 +60,7 @@ function toGenerationError(error: unknown): Readonly<{ message: string; fieldIss
 export function GenerateStudio() {
   const definitions = useMemo(() => payloadRegistry.list(), []);
   const [payloadId, setPayloadId] = useState<PayloadId>("url");
-  const [drafts, setDrafts] = useState<Record<PayloadId, string>>(() =>
+  const [drafts, setDrafts] = useState<Record<PayloadId, unknown>>(() =>
     createInitialDrafts(definitions),
   );
   const [errorCorrectionLevel, setErrorCorrectionLevel] = useState<QrErrorCorrectionLevel>("M");
@@ -66,6 +70,10 @@ export function GenerateStudio() {
   const currentDraft = drafts[payloadId];
   const editorRegistration = getPayloadEditorRegistration(payloadId);
   const PayloadEditor = editorRegistration.component;
+  const requestKey = useMemo(
+    () => JSON.stringify([payloadId, currentDraft, errorCorrectionLevel]),
+    [currentDraft, errorCorrectionLevel, payloadId],
+  );
 
   useEffect(() => {
     let active = true;
@@ -77,34 +85,39 @@ export function GenerateStudio() {
     })
       .then((value) => {
         if (active) {
-          setGeneration({ status: "ready", value });
+          setGeneration({ status: "ready", requestKey, value });
         }
       })
       .catch((error: unknown) => {
         if (active) {
           const details = toGenerationError(error);
-          setGeneration({ status: "error", ...details });
+          setGeneration({ status: "error", requestKey, ...details });
         }
       });
 
     return () => {
       active = false;
     };
-  }, [currentDraft, errorCorrectionLevel, payloadId]);
+  }, [currentDraft, errorCorrectionLevel, payloadId, requestKey]);
 
   const selectPayload = (nextPayloadId: PayloadId) => {
     setPayloadId(nextPayloadId);
   };
 
-  const updateDraft = (value: string) => {
+  const updateDraft = (value: unknown) => {
     setDrafts((current) => ({
       ...current,
       [payloadId]: value,
     }));
   };
 
+  const currentGeneration: GenerationState =
+    generation.status === "waiting" || generation.requestKey === requestKey
+      ? generation
+      : { status: "waiting" };
+
   const download = async (format: "svg" | "png") => {
-    if (generation.status !== "ready") {
+    if (currentGeneration.status !== "ready") {
       return;
     }
 
@@ -113,9 +126,9 @@ export function GenerateStudio() {
 
     try {
       const artifact = await exportCode(
-        generation.value.rendered,
+        currentGeneration.value.rendered,
         format,
-        `qraft-${generation.value.definition.id}`,
+        `qraft-${currentGeneration.value.definition.id}`,
       );
       downloadArtifact(artifact);
     } catch {
@@ -125,10 +138,10 @@ export function GenerateStudio() {
     }
   };
 
-  const fieldIssue = generation.status === "error" ? generation.fieldIssue : undefined;
+  const fieldIssues = currentGeneration.status === "error" ? currentGeneration.issues : undefined;
   const payloadNotice =
-    generation.status === "ready"
-      ? (editorRegistration.getNotice?.(generation.value.parsedData) ?? null)
+    currentGeneration.status === "ready"
+      ? (editorRegistration.getNotice?.(currentGeneration.value.parsedData) ?? null)
       : null;
 
   return (
@@ -154,10 +167,10 @@ export function GenerateStudio() {
               <span className="type-row__index">{String(index + 1).padStart(2, "0")}</span>
             </button>
           ))}
-          <div className="type-row type-row--locked" aria-label="More payloads arrive in Phase 1B">
+          <div className="type-row type-row--locked" aria-label="Visual Studio arrives in Phase 2">
             <span>
-              <strong>Email · Phone · SMS · Wi-Fi</strong>
-              <small>Queued for the next Phase 1 slice.</small>
+              <strong>Designer QR · Quality</strong>
+              <small>Queued for the Visual Studio phase.</small>
             </span>
             <span className="type-row__index">NEXT</span>
           </div>
@@ -185,7 +198,7 @@ export function GenerateStudio() {
         </div>
 
         <div className="studio-editor-stack">
-          <PayloadEditor issue={fieldIssue} onChange={updateDraft} value={currentDraft} />
+          <PayloadEditor issues={fieldIssues} onChange={updateDraft} value={currentDraft} />
 
           {payloadNotice ? (
             <div className="studio-inline-note" role="status">
@@ -238,32 +251,32 @@ export function GenerateStudio() {
           <span className="local-pill">LOCAL</span>
         </div>
 
-        <div className="preview-stage" aria-live="polite">
-          {generation.status === "ready" ? (
-            <QrPreview rendered={generation.value.rendered} />
-          ) : generation.status === "error" ? (
+        <div className="preview-stage" aria-busy={currentGeneration.status === "waiting"}>
+          {currentGeneration.status === "ready" ? (
+            <QrPreview rendered={currentGeneration.value.rendered} />
+          ) : currentGeneration.status === "error" ? (
             <div className="preview-error">
               <span className="mono-label">CHECK CONTENT</span>
-              <strong>{generation.message}</strong>
+              <strong>{currentGeneration.message}</strong>
             </div>
           ) : (
             <div className="preview-pending">Generating…</div>
           )}
         </div>
 
-        {generation.status === "ready" ? (
+        {currentGeneration.status === "ready" ? (
           <>
             <div className="preview-meta">
               <span>FORMAT</span>
               <strong>QR / STANDARD</strong>
               <span>VERSION</span>
-              <strong>V{generation.value.rendered.metadata.version}</strong>
+              <strong>V{currentGeneration.value.rendered.metadata.version}</strong>
               <span>ECC</span>
-              <strong>{generation.value.rendered.metadata.errorCorrectionLevel}</strong>
+              <strong>{currentGeneration.value.rendered.metadata.errorCorrectionLevel}</strong>
               <span>QUIET ZONE</span>
-              <strong>{generation.value.rendered.metadata.quietZoneModules} MODULES</strong>
+              <strong>{currentGeneration.value.rendered.metadata.quietZoneModules} MODULES</strong>
               <span>DATA</span>
-              <strong>{generation.value.rendered.metadata.payloadBytes} BYTES</strong>
+              <strong>{currentGeneration.value.rendered.metadata.payloadBytes} BYTES</strong>
             </div>
 
             <div className="preview-quality">

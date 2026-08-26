@@ -1,8 +1,14 @@
 import type { ChangeEvent } from "react";
 
-import type { PayloadEditorProps } from "@/features/generator/components/payload-editor.types";
+import {
+  getPayloadFieldIssue,
+  type PayloadEditorProps,
+} from "@/features/generator/components/payload-editor.types";
 
-export function UrlEditor({ value, issue, onChange }: PayloadEditorProps) {
+export function UrlEditor({ value, issues, onChange }: PayloadEditorProps) {
+  const draft = typeof value === "string" ? value : "";
+  const issue = getPayloadFieldIssue(issues, "url");
+
   return (
     <div className="studio-field">
       <label htmlFor="payload-url">Destination</label>
@@ -16,7 +22,7 @@ export function UrlEditor({ value, issue, onChange }: PayloadEditorProps) {
         placeholder="example.com"
         spellCheck={false}
         type="text"
-        value={value}
+        value={draft}
       />
       <p className="studio-field__hint" id="payload-url-hint">
         Missing schemes are normalized to https://. Qraft never fetches the destination to generate

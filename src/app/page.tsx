@@ -4,7 +4,7 @@ import { PhaseCard } from "@/components/foundation/phase-card";
 import { QrMotif } from "@/components/foundation/qr-motif";
 
 const systemNotes = [
-  ["PHASE", "01A / CORE QR"],
+  ["PHASE", "01B / CORE QR"],
   ["RUNTIME", "BROWSER-FIRST"],
   ["PERSISTENCE", "NO ACCOUNT"],
   ["DEPLOYMENT", "STATIC-EXPORT READY"],
@@ -15,7 +15,7 @@ export default function HomePage() {
     <>
       <section className="hero shell">
         <div className="hero__copy">
-          <span className="mono-label accent-marker">QRAFT / SYSTEM / 01A</span>
+          <span className="mono-label accent-marker">QRAFT / SYSTEM / 01B</span>
           <h1>Craft codes that work.</h1>
           <p className="hero__lede">
             A privacy-first QR and barcode studio designed as a serious creative tool — precise,
@@ -30,8 +30,8 @@ export default function HomePage() {
             </Link>
           </div>
           <p className="hero__honesty">
-            Phase 1A is live: URL and Text payloads generate locally through Qraft-owned contracts,
-            with standard QR output plus real SVG and PNG export.
+            Phase 1B expands the same local pipeline to URL, Wi-Fi, Email, Phone, SMS and Text, with
+            standard QR output plus real SVG and PNG export.
           </p>
         </div>
 
@@ -46,7 +46,7 @@ export default function HomePage() {
             </div>
             <div className="hero-visual__annotation">
               <span>CLIENT FIRST</span>
-              <strong>01A</strong>
+              <strong>01B</strong>
               <span>NO CLOUD DATA</span>
             </div>
           </div>
