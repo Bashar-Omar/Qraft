@@ -2,6 +2,7 @@ import type { Options, TypeNumber } from "qr-code-styling";
 
 import {
   CodeRenderError,
+  QR_ECC_APPROX_RECOVERY_FRACTION,
   type CodeRenderer,
   type RenderRequest,
   type RenderedCode,
@@ -36,6 +37,21 @@ function paintOptions(paint: QrForegroundPaint): Readonly<{
   };
 }
 
+function toVendorLogoImageSize(design: QraftQrDesign, baseline: RenderedCode): number | undefined {
+  if (!design.logo) {
+    return undefined;
+  }
+
+  const areaSideRatio = design.logo.sizePercent / 100;
+  const coverageFraction = areaSideRatio * areaSideRatio;
+  const recoveryFraction = QR_ECC_APPROX_RECOVERY_FRACTION[baseline.metadata.errorCorrectionLevel];
+
+  // qr-code-styling expresses its image budget as a coefficient of the
+  // selected ECC recovery fraction. Qraft stores a portable visual area
+  // percentage instead and translates only inside this adapter.
+  return Math.min(1, coverageFraction / recoveryFraction);
+}
+
 export function toQrCodeStylingOptions(
   request: RenderRequest,
   baseline: RenderedCode,
@@ -45,6 +61,8 @@ export function toQrCodeStylingOptions(
   const foreground = paintOptions(design.foreground);
   const size = baseline.metadata.totalModules * MODULE_PIXELS;
   const margin = design.quietZoneModules * MODULE_PIXELS;
+  const logoAsset = request.options?.logoAsset;
+  const logoImageSize = toVendorLogoImageSize(design, baseline);
 
   return {
     type: "svg",
@@ -57,6 +75,17 @@ export function toQrCodeStylingOptions(
       mode: "Byte",
       errorCorrectionLevel: baseline.metadata.errorCorrectionLevel,
     },
+    ...(design.logo && logoAsset && logoImageSize !== undefined
+      ? {
+          image: logoAsset.uri,
+          imageOptions: {
+            hideBackgroundDots: true,
+            imageSize: logoImageSize,
+            margin: design.logo.paddingModules * MODULE_PIXELS,
+            saveAsBlob: true,
+          },
+        }
+      : {}),
     dotsOptions: {
       ...foreground,
       type: design.moduleShape,
@@ -76,7 +105,7 @@ export function toQrCodeStylingOptions(
   };
 }
 
-function assertSafeVendorSvg(svg: string): string {
+function assertSafeVendorSvg(svg: string, expectsEmbeddedLogo: boolean): string {
   const trimmed = svg.trim();
   const lower = trimmed.toLowerCase();
 
@@ -86,6 +115,24 @@ function assertSafeVendorSvg(svg: string): string {
 
   if (lower.includes("<script") || lower.includes("javascript:") || /\son[a-z]+\s*=/.test(lower)) {
     throw new CodeRenderError("engine", "The designer QR engine returned unsafe SVG output.");
+  }
+
+  if (expectsEmbeddedLogo) {
+    const imageReferences = Array.from(
+      trimmed.matchAll(/<image\b[^>]*(?:href|xlink:href)\s*=\s*["']([^"']+)["'][^>]*>/gi),
+      (match) => match[1],
+    );
+
+    if (imageReferences.length === 0) {
+      throw new CodeRenderError("engine", "The designer QR engine omitted the selected logo.");
+    }
+
+    if (imageReferences.some((reference) => !/^data:image\/png;base64,/i.test(reference))) {
+      throw new CodeRenderError(
+        "engine",
+        "The designer QR engine did not embed the logo as a self-contained PNG.",
+      );
+    }
   }
 
   return trimmed;
@@ -121,6 +168,21 @@ export class DesignerQrRenderer implements CodeRenderer {
     }
 
     const design = parseQrDesign(request.options?.design ?? DEFAULT_QR_DESIGN);
+    const logoAsset = request.options?.logoAsset;
+
+    if (design.logo && !logoAsset) {
+      throw new CodeRenderError(
+        "invalid-request",
+        "A logo design requires a prepared local logo asset.",
+      );
+    }
+
+    if (logoAsset && (logoAsset.width !== logoAsset.height || logoAsset.width < 1)) {
+      throw new CodeRenderError(
+        "invalid-request",
+        "QR logo assets must be normalized square images.",
+      );
+    }
 
     try {
       const baseline = await this.baselineRenderer.render({
@@ -129,6 +191,7 @@ export class DesignerQrRenderer implements CodeRenderer {
           ...request.options,
           quietZoneModules: design.quietZoneModules,
           design: undefined,
+          logoAsset: undefined,
         },
       });
       const { default: QRCodeStyling } = await import("qr-code-styling");
@@ -142,7 +205,7 @@ export class DesignerQrRenderer implements CodeRenderer {
         );
       }
 
-      const svg = assertSafeVendorSvg(await raw.text());
+      const svg = assertSafeVendorSvg(await raw.text(), Boolean(design.logo));
 
       return {
         verificationMatrix: baseline.verificationMatrix,

@@ -1,5 +1,6 @@
 import type { RenderMetadata } from "@/core/code/render";
 import type { QraftQrDesign } from "@/core/design/qr-design";
+import type { QrLogoGeometryEstimate } from "@/core/design/qr-logo";
 
 export type QualitySeverity = "blocker" | "high-risk" | "medium-risk" | "advisory";
 export type QualitySummaryStatus = "good" | "check" | "risk";
@@ -27,6 +28,7 @@ export type QrQualityMetrics = Readonly<{
   symbolModules: number;
   totalModules: number;
   payloadBytes: number;
+  logo: QrLogoGeometryEstimate | null;
 }>;
 
 export type QrQualityContext = Readonly<{

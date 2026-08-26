@@ -74,4 +74,20 @@ describe("QR design model", () => {
       ),
     ).toBe(false);
   });
+
+  it("parses portable logo geometry without storing runtime image bytes", () => {
+    const design = parseQrDesign({
+      ...DEFAULT_QR_DESIGN,
+      logo: { sizePercent: 20, paddingModules: 0.5 },
+    });
+
+    expect(design.logo).toEqual({ sizePercent: 20, paddingModules: 0.5 });
+    expect(isDefaultQrDesign(design)).toBe(false);
+    expect(() =>
+      parseQrDesign({
+        ...DEFAULT_QR_DESIGN,
+        logo: { sizePercent: 40, paddingModules: 0.5 },
+      }),
+    ).toThrow(/Logo size/i);
+  });
 });

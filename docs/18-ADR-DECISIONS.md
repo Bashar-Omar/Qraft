@@ -226,3 +226,27 @@ Phase 2B needs QR image-decoder primitives, not camera/session helpers. The late
 Risk:
 
 The ZXing JS library is in maintenance mode. The adapter boundary is therefore mandatory and keeps a future replacement local to `engines/decode/`.
+
+---
+
+## ADR-016 — Rasterize local logo input and separate portable geometry from runtime asset
+
+**Status:** Accepted
+
+Phase 2C accepts PNG/JPEG/WebP logos locally, verifies real raster signatures and bounded dimensions, decodes them in the browser and re-encodes them onto an aspect-preserving square PNG canvas before rendering.
+
+Decision:
+
+- raw SVG logo upload is rejected in this slice rather than injected/sanitized incompletely,
+- the portable design model stores only logo size/padding geometry,
+- runtime image bytes are represented only by a short-lived object URL at the render boundary,
+- object URLs are revoked on replacement/removal/unmount,
+- rectangular source art is fitted into a square transparent PNG to avoid renderer aspect-ratio distortion,
+- the designer adapter alone maps Qraft logo geometry to vendor image settings,
+- logo-bearing SVG must embed the normalized PNG and may not leave a blob/external reference,
+- Quality Assistant estimates logo occlusion separately from vendor calculations,
+- independent self-test runs on the exact final logo-bearing canonical SVG.
+
+Why:
+
+This preserves privacy, avoids serializing browser/vendor state, keeps `.qraft.json` design data migration-friendly and makes the renderer replaceable without redefining saved logo controls.

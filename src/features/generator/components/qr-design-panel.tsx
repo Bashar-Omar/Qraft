@@ -36,8 +36,19 @@ function asHexColor(value: string): QrHexColor {
   return value as QrHexColor;
 }
 
+function visualDesign(design: QraftQrDesign): Omit<QraftQrDesign, "logo"> {
+  return {
+    foreground: design.foreground,
+    background: design.background,
+    moduleShape: design.moduleShape,
+    eyeFrame: design.eyeFrame,
+    eyeDot: design.eyeDot,
+    quietZoneModules: design.quietZoneModules,
+  };
+}
+
 function designMatches(left: QraftQrDesign, right: QraftQrDesign): boolean {
-  return JSON.stringify(left) === JSON.stringify(right);
+  return JSON.stringify(visualDesign(left)) === JSON.stringify(visualDesign(right));
 }
 
 type QrDesignPanelProps = Readonly<{
@@ -54,7 +65,7 @@ export function QrDesignPanel({ value, onChange }: QrDesignPanelProps) {
     const preset = QR_DESIGN_PRESETS.find((candidate) => candidate.id === presetId);
 
     if (preset) {
-      onChange(preset.design);
+      onChange({ ...preset.design, ...(value.logo ? { logo: value.logo } : {}) });
     }
   };
 

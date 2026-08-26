@@ -746,6 +746,241 @@ html[data-theme="dark"] .phase-pill {
   line-height: 1.55;
 }
 
+.logo-panel {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--border-soft);
+  border-radius: 18px;
+  background: var(--surface-0);
+}
+
+.logo-panel__heading,
+.logo-safety-actions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.logo-panel__heading h2 {
+  margin: 6px 0 0;
+  font-size: 21px;
+  letter-spacing: -0.035em;
+}
+
+.logo-upload {
+  position: relative;
+  display: flex;
+  min-height: 72px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px;
+  overflow: hidden;
+  border: 1px dashed color-mix(in srgb, var(--text-primary) 24%, transparent);
+  border-radius: 14px;
+  background: var(--surface-1);
+  cursor: pointer;
+}
+
+.logo-upload:hover,
+.logo-upload:focus-within {
+  border-color: rgb(15 191 143 / 60%);
+  box-shadow: inset 0 0 0 1px rgb(15 191 143 / 12%);
+}
+
+.logo-upload.is-busy {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.logo-upload > span:first-child {
+  min-width: 0;
+}
+
+.logo-upload strong,
+.logo-upload small {
+  display: block;
+}
+
+.logo-upload strong {
+  font-size: 11px;
+}
+
+.logo-upload small {
+  margin-top: 4px;
+  color: var(--text-tertiary);
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+.logo-upload input[type="file"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.logo-upload input[type="file"]:disabled {
+  cursor: wait;
+}
+
+.logo-upload .button {
+  width: auto;
+  min-height: 38px;
+  flex: 0 0 auto;
+  padding-inline: 12px;
+  pointer-events: none;
+  font-size: 9px;
+}
+
+.logo-panel__issue {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid rgb(214 69 69 / 30%);
+  border-radius: 11px;
+  color: var(--qraft-signal-red);
+  background: rgb(214 69 69 / 6%);
+  font-size: 10px;
+  line-height: 1.45;
+}
+
+.logo-asset-meta {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid rgb(15 191 143 / 28%);
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--qraft-mint-wash) 45%, var(--surface-1));
+}
+
+[data-theme="dark"] .logo-asset-meta {
+  background: rgb(15 191 143 / 7%);
+}
+
+.logo-asset-meta > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.logo-asset-meta span,
+.logo-asset-meta small {
+  color: var(--text-tertiary);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 8px;
+}
+
+.logo-asset-meta strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.logo-control-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+  gap: 12px;
+}
+
+.logo-range-field,
+.logo-padding-field {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 13px;
+  background: var(--surface-1);
+}
+
+.logo-range-field > span,
+.logo-padding-field > span {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.logo-range-field strong,
+.logo-padding-field strong {
+  font-size: 10px;
+}
+
+.logo-range-field output,
+.logo-padding-field small {
+  color: var(--text-tertiary);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 8px;
+}
+
+.logo-range-field > input[type="range"] {
+  width: 100%;
+  accent-color: var(--qraft-mint);
+}
+
+.logo-range-field > small {
+  color: var(--text-tertiary);
+  font-size: 8px;
+  line-height: 1.4;
+}
+
+.logo-padding-field .design-segmented button {
+  min-height: 36px;
+}
+
+.logo-safety-actions {
+  align-items: center;
+  padding: 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: 13px;
+  background: var(--surface-1);
+}
+
+.logo-safety-actions small {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-tertiary);
+  font-size: 8px;
+}
+
+.logo-safety-actions .button {
+  width: auto;
+  min-height: 38px;
+  flex: 0 0 auto;
+  padding-inline: 12px;
+  font-size: 9px;
+}
+
+.logo-remove {
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  color: var(--qraft-signal-red);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 650;
+}
+
+.logo-panel__note {
+  margin: 0;
+  color: var(--text-tertiary);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.logo-panel__note strong {
+  color: var(--text-secondary);
+}
+
 .placeholder-page {
   padding-block: 140px;
 }
@@ -1895,7 +2130,8 @@ html[data-theme="dark"] .type-row.is-active {
 
   .design-presets,
   .design-gradient-grid,
-  .design-shape-grid {
+  .design-shape-grid,
+  .logo-control-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1981,9 +2217,16 @@ html[data-theme="dark"] .type-row.is-active {
     padding: 16px;
   }
 
-  .quality-self-test {
+  .quality-self-test,
+  .logo-safety-actions,
+  .logo-upload {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .logo-upload .button,
+  .logo-safety-actions .button {
+    width: 100%;
   }
 
   .quality-self-test .button {

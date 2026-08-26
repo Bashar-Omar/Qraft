@@ -288,3 +288,47 @@ Implementation snapshot re-checked on 2026-08-26:
 Qraft uses it only behind a lazy browser adapter for explicit self-tests. Vendor types do not cross the engine boundary. The maintenance status is a reason to preserve the replacement seam, not to hide the risk.
 
 `@zxing/browser` remains the later scanner/camera helper candidate; Phase 2B does not need its media/session layer.
+
+## Phase 2C local logo refresh — 2026-08-26
+
+### Qraft blueprint security boundary
+
+The project blueprint requires allow-listed image types, file-size/dimension limits, local decoding and object-URL cleanup. It also warns that uploaded SVG may contain scripts, event handlers or external resources. Phase 2C therefore ships raster-only input and defers raw SVG support until Qraft has a dedicated safe rasterization/sanitization contract.
+
+### `qr-code-styling` image behavior
+
+- `https://github.com/kozakdenys/qr-code-styling`
+- `https://github.com/kozakdenys/qr-code-styling/blob/master/src/types/index.ts`
+- `https://github.com/kozakdenys/qr-code-styling/issues/144`
+
+Re-checked facts:
+
+- current image options include `hideBackgroundDots`, `imageSize`, `margin` and `saveAsBlob`,
+- upstream documents `imageSize` as a coefficient and recommends not using values above 0.5 casually,
+- current renderer source derives hidden-dot budget from `imageSize × ECC recovery fraction`,
+- `saveAsBlob` exists so SVG output can embed image data instead of leaving a URL reference,
+- the long-standing rectangular-logo issue #144 remains open and reports aspect-ratio distortion when image sizing is used.
+
+Qraft therefore stores a portable logo-area percentage, performs the ECC-relative translation only inside the adapter and normalizes source art to a square transparent PNG before renderer hand-off.
+
+### Object URLs — MDN
+
+- `https://developer.mozilla.org/en-US/docs/Web/API/URL/createObjectURL_static`
+- `https://developer.mozilla.org/en-US/docs/Web/API/URL/revokeObjectURL_static`
+
+Every object URL retains a reference to its backing object until released. Phase 2C revokes logo URLs on replacement, removal and component unmount.
+
+### Browser file type / image verification — MDN + OWASP
+
+- `https://developer.mozilla.org/en-US/docs/Web/API/Blob/type`
+- `https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/accept`
+- `https://developer.mozilla.org/en-US/docs/Web/API/Window/createImageBitmap`
+- `https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html`
+
+Implementation implications:
+
+- `accept` is only a chooser hint,
+- `Blob.type` is not bytestream inspection,
+- Qraft checks PNG/JPEG/WebP signatures and dimensions itself before browser decode,
+- the browser must successfully decode the bounded image,
+- Qraft re-encodes the decoded pixels before renderer use.

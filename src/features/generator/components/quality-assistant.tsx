@@ -109,6 +109,15 @@ export function QualityAssistant({ assessment, selfTest, onRunSelfTest }: Qualit
         </strong>
         <span>ECC</span>
         <strong>{assessment.metrics.errorCorrectionLevel}</strong>
+        {assessment.metrics.logo ? (
+          <>
+            <span>LOGO</span>
+            <strong>
+              {assessment.metrics.logo.areaSidePercent}% SIDE · ~
+              {assessment.metrics.logo.estimatedCenterCoveragePercent.toFixed(1)}% CENTER
+            </strong>
+          </>
+        ) : null}
       </div>
 
       {assessment.findings.length > 0 ? (

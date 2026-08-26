@@ -2,10 +2,17 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { prepareQrLogo } from "@/application/assets/prepare-qr-logo";
 import type { GeneratedCode } from "@/application/generate/generate-code";
 import { exportCode, generateCode, selfTestQr } from "@/composition/core-qr";
-import { CodeRenderError, type QrErrorCorrectionLevel } from "@/core/code/render";
+import {
+  CodeRenderError,
+  type QrErrorCorrectionLevel,
+  type QrLogoRenderAsset,
+} from "@/core/code/render";
 import { DEFAULT_QR_DESIGN, type QraftQrDesign } from "@/core/design/qr-design";
+import { DEFAULT_QR_LOGO_CONFIG, type QraftQrLogoConfig } from "@/core/design/qr-logo";
+import { QrLogoFileValidationError } from "@/core/design/qr-logo-file";
 import { payloadRegistry } from "@/core/payload/payload-registry";
 import { evaluateQrQuality } from "@/core/quality/evaluate-qr-quality";
 import type { QrSelfTestResult } from "@/core/quality/self-test";
@@ -15,6 +22,7 @@ import {
   type QualitySelfTestState,
 } from "@/features/generator/components/quality-assistant";
 import { QrDesignPanel } from "@/features/generator/components/qr-design-panel";
+import { QrLogoPanel, type QrLogoPanelAsset } from "@/features/generator/components/qr-logo-panel";
 import { QrPreview } from "@/features/generator/components/qr-preview";
 import { getPayloadEditorRegistration } from "@/features/generator/components/payload-editor-registry";
 import { downloadArtifact } from "@/features/generator/lib/download";
@@ -48,6 +56,11 @@ type GenerationState =
     }>
   | Readonly<{ status: "waiting" }>;
 
+type SelectedLogo = Readonly<{
+  renderAsset: QrLogoRenderAsset;
+  panelAsset: QrLogoPanelAsset;
+}>;
+
 type SelfTestGenerationState =
   | Readonly<{ status: "idle" }>
   | Readonly<{ status: "running"; requestKey: string }>
@@ -78,18 +91,39 @@ export function GenerateStudio() {
   );
   const [errorCorrectionLevel, setErrorCorrectionLevel] = useState<QrErrorCorrectionLevel>("M");
   const [design, setDesign] = useState<QraftQrDesign>(DEFAULT_QR_DESIGN);
+  const [logo, setLogo] = useState<SelectedLogo | null>(null);
+  const [logoPreparing, setLogoPreparing] = useState(false);
+  const [logoIssue, setLogoIssue] = useState<string | null>(null);
   const [generation, setGeneration] = useState<GenerationState>({ status: "waiting" });
   const [exporting, setExporting] = useState<"svg" | "png" | null>(null);
   const [exportIssue, setExportIssue] = useState<string | null>(null);
   const [selfTest, setSelfTest] = useState<SelfTestGenerationState>({ status: "idle" });
   const selfTestAttempt = useRef(0);
+  const logoPrepareAttempt = useRef(0);
+  const logoObjectUrl = useRef<string | null>(null);
   const currentDraft = drafts[payloadId];
   const editorRegistration = getPayloadEditorRegistration(payloadId);
   const PayloadEditor = editorRegistration.component;
   const requestKey = useMemo(
-    () => JSON.stringify([payloadId, currentDraft, errorCorrectionLevel, design]),
-    [currentDraft, design, errorCorrectionLevel, payloadId],
+    () =>
+      JSON.stringify([
+        payloadId,
+        currentDraft,
+        errorCorrectionLevel,
+        design,
+        logo?.renderAsset.id ?? null,
+      ]),
+    [currentDraft, design, errorCorrectionLevel, logo, payloadId],
   );
+
+  useEffect(() => {
+    return () => {
+      if (logoObjectUrl.current) {
+        URL.revokeObjectURL(logoObjectUrl.current);
+        logoObjectUrl.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -99,6 +133,7 @@ export function GenerateStudio() {
       input: currentDraft,
       errorCorrectionLevel,
       design,
+      logoAsset: logo?.renderAsset,
     })
       .then((value) => {
         if (active) {
@@ -115,7 +150,7 @@ export function GenerateStudio() {
     return () => {
       active = false;
     };
-  }, [currentDraft, design, errorCorrectionLevel, payloadId, requestKey]);
+  }, [currentDraft, design, errorCorrectionLevel, logo, payloadId, requestKey]);
 
   const selectPayload = (nextPayloadId: PayloadId) => {
     setPayloadId(nextPayloadId);
@@ -126,6 +161,83 @@ export function GenerateStudio() {
       ...current,
       [payloadId]: value,
     }));
+  };
+
+  const chooseLogo = async (file: File) => {
+    const attempt = logoPrepareAttempt.current + 1;
+    logoPrepareAttempt.current = attempt;
+    setLogoPreparing(true);
+    setLogoIssue(null);
+
+    try {
+      const prepared = await prepareQrLogo(file);
+
+      if (logoPrepareAttempt.current !== attempt) {
+        return;
+      }
+
+      const uri = URL.createObjectURL(prepared.blob);
+      const previousUri = logoObjectUrl.current;
+      logoObjectUrl.current = uri;
+
+      setLogo({
+        renderAsset: {
+          id: `logo-${attempt}-${prepared.blob.size}`,
+          uri,
+          width: prepared.normalizedDimension,
+          height: prepared.normalizedDimension,
+        },
+        panelAsset: {
+          name: file.name || "Local logo",
+          sourceWidth: prepared.source.width,
+          sourceHeight: prepared.source.height,
+          normalizedDimension: prepared.normalizedDimension,
+        },
+      });
+      setDesign((current) => ({
+        ...current,
+        logo: current.logo ?? DEFAULT_QR_LOGO_CONFIG,
+      }));
+
+      if (previousUri) {
+        URL.revokeObjectURL(previousUri);
+      }
+    } catch (error) {
+      if (logoPrepareAttempt.current === attempt) {
+        setLogoIssue(
+          error instanceof QrLogoFileValidationError
+            ? error.message
+            : "Qraft could not prepare this logo image.",
+        );
+      }
+    } finally {
+      if (logoPrepareAttempt.current === attempt) {
+        setLogoPreparing(false);
+      }
+    }
+  };
+
+  const updateLogoConfig = (config: QraftQrLogoConfig) => {
+    setDesign((current) => ({ ...current, logo: config }));
+  };
+
+  const applyConservativeLogoSettings = () => {
+    setDesign((current) => ({ ...current, logo: DEFAULT_QR_LOGO_CONFIG }));
+    setErrorCorrectionLevel("Q");
+  };
+
+  const removeLogo = () => {
+    logoPrepareAttempt.current += 1;
+    setLogoPreparing(false);
+    setLogoIssue(null);
+
+    if (logoObjectUrl.current) {
+      URL.revokeObjectURL(logoObjectUrl.current);
+      logoObjectUrl.current = null;
+    }
+
+    setLogo(null);
+    setDesign((current) => ({ ...current, logo: undefined }));
   };
 
   const currentGeneration: GenerationState =
@@ -224,11 +336,11 @@ export function GenerateStudio() {
           ))}
           <div
             className="type-row type-row--locked"
-            aria-label="Quality Assistant is active; logo upload is next"
+            aria-label="Quality Assistant and local logo safety are active"
           >
             <span>
-              <strong>Quality · Local test</strong>
-              <small>Active now. Logo guardrails are next.</small>
+              <strong>Logo · Quality</strong>
+              <small>Local logo guardrails + self-test are active.</small>
             </span>
             <span className="type-row__index">LIVE</span>
           </div>
@@ -267,6 +379,18 @@ export function GenerateStudio() {
 
           <QrDesignPanel onChange={setDesign} value={design} />
 
+          <QrLogoPanel
+            asset={logo?.panelAsset ?? null}
+            config={design.logo}
+            errorCorrectionLevel={errorCorrectionLevel}
+            issue={logoIssue}
+            onApplyConservative={applyConservativeLogoSettings}
+            onChangeConfig={updateLogoConfig}
+            onChooseFile={(file) => void chooseLogo(file)}
+            onRemove={removeLogo}
+            preparing={logoPreparing}
+          />
+
           <fieldset className="ecc-control">
             <legend>Error correction</legend>
             <div className="ecc-grid">
@@ -298,8 +422,8 @@ export function GenerateStudio() {
             <ul>
               <li>4-module quiet zone</li>
               <li>Contrast + inversion checks</li>
-              <li>Explicit ECC guidance</li>
-              <li>Independent local self-test</li>
+              <li>Logo occlusion + ECC guidance</li>
+              <li>Independent final-artifact self-test</li>
             </ul>
           </div>
         </div>

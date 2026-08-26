@@ -5,8 +5,8 @@
 Phase 2 is being delivered as small gated slices after the Phase 1 Core QR baseline.
 
 - **Phase 2A — Visual Studio foundation: complete**
-- **Phase 2B — Quality Assistant foundation: current**
-- Phase 2C — local logo + occlusion guardrails: next
+- **Phase 2B — Quality Assistant foundation: complete**
+- **Phase 2C — local logo + occlusion guardrails: current**
 - later Phase 2 slices — JPEG/WebP and `.qraft.json`
 
 The full roadmap gate remains: shipped presets must round-trip decode on representative golden/reference artifacts before Phase 2 is considered complete.
@@ -177,15 +177,41 @@ Automated Phase 2 coverage now includes:
 
 The same-package Phase 1 QR decoder remains only a structural regression oracle. Phase 2B's self-test uses an independent decoder implementation on the canonical visible artifact.
 
-## Next Phase 2 slice
+## Phase 2C — Local logo + safety guardrails
 
-Phase 2C should add:
+Phase 2C adds local logo support without putting user files into the portable design model:
 
-1. local image logo upload,
-2. strict type/size/dimension limits,
-3. object-URL cleanup and no server upload,
-4. logo size and padding controls,
-5. center-occlusion/ECC guidance,
-6. self-test interaction with the final logo-bearing artifact.
+```text
+File input
+→ raster signature + size/dimension preflight
+→ browser decode
+→ aspect-preserving square PNG normalization
+→ short-lived object URL
+→ RenderRequest.logoAsset
+→ DesignerQrRenderer
+→ self-contained canonical SVG
+→ Quality Assistant + explicit local self-test
+```
 
-After logo safety is established, continue Phase 2 with JPEG/WebP and the versioned `.qraft.json` project envelope.
+The portable `QraftQrDesign.logo` contains only visual geometry (`sizePercent`, `paddingModules`). The selected image itself is an ephemeral runtime asset and never becomes a `File`, `Blob`, base64 string or vendor option object in the core design state.
+
+Current upload policy:
+
+- PNG, JPEG and WebP only,
+- 4 MiB maximum source file,
+- 4096px maximum decoded/source dimension,
+- 16-megapixel maximum source area,
+- actual raster signatures are checked before browser decode,
+- SVG is rejected in this slice instead of accepting active/external SVG content,
+- decoded content is re-encoded locally as a bounded square PNG with the original artwork fitted without distortion,
+- object URLs are revoked on replacement, removal and unmount.
+
+The logo area is expressed as a Qraft-owned percentage of the QR symbol (excluding quiet zone), not the vendor package's `imageSize` coefficient. The designer adapter translates that geometry into the installed renderer's ECC-relative image budget and keeps vendor semantics inside `engines/`.
+
+Quality Assistant estimates centered coverage from the Qraft logo area, compares it against approximate ECC restoration headroom, and exposes advisory/medium/high-risk findings. The conservative action returns the logo to 20% area, 0.5-module internal padding and ECC Q. These are product guardrails, not scan certification.
+
+The exact logo-bearing SVG remains the canonical artifact. Logo rendering requests require the vendor output to contain an embedded PNG data URI rather than a `blob:` or external image reference, so SVG download and independent self-test exercise the final self-contained artifact.
+
+## Remaining Phase 2 slices
+
+Continue with JPEG/WebP export and the versioned `.qraft.json` project envelope. Phase 2 is complete only after the full roadmap gate remains green.
