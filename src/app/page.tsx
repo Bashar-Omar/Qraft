@@ -4,7 +4,7 @@ import { PhaseCard } from "@/components/foundation/phase-card";
 import { QrMotif } from "@/components/foundation/qr-motif";
 
 const systemNotes = [
-  ["PHASE", "01B / CORE QR"],
+  ["PHASE", "02A / VISUAL STUDIO"],
   ["RUNTIME", "BROWSER-FIRST"],
   ["PERSISTENCE", "NO ACCOUNT"],
   ["DEPLOYMENT", "STATIC-EXPORT READY"],
@@ -15,7 +15,7 @@ export default function HomePage() {
     <>
       <section className="hero shell">
         <div className="hero__copy">
-          <span className="mono-label accent-marker">QRAFT / SYSTEM / 01B</span>
+          <span className="mono-label accent-marker">QRAFT / SYSTEM / 02A</span>
           <h1>Craft codes that work.</h1>
           <p className="hero__lede">
             A privacy-first QR and barcode studio designed as a serious creative tool — precise,
@@ -30,15 +30,15 @@ export default function HomePage() {
             </Link>
           </div>
           <p className="hero__honesty">
-            Phase 1B expands the same local pipeline to URL, Wi-Fi, Email, Phone, SMS and Text, with
-            standard QR output plus real SVG and PNG export.
+            Phase 2A keeps the Core QR payloads and adds local designer rendering, Qraft-owned
+            presets, gradients, module/eye styles and styled SVG/PNG export.
           </p>
         </div>
 
-        <div className="hero-visual" aria-label="Qraft Core QR preview">
+        <div className="hero-visual" aria-label="Qraft Visual Studio preview">
           <div className="hero-visual__toolbar">
             <span className="mono-label">QRAFT / LOCAL ENGINE</span>
-            <span className="status-dot">CORE QR / LIVE</span>
+            <span className="status-dot">DESIGNER / LIVE</span>
           </div>
           <div className="hero-visual__canvas">
             <div className="hero-visual__code">
@@ -46,7 +46,7 @@ export default function HomePage() {
             </div>
             <div className="hero-visual__annotation">
               <span>CLIENT FIRST</span>
-              <strong>01B</strong>
+              <strong>02A</strong>
               <span>NO CLOUD DATA</span>
             </div>
           </div>
@@ -58,7 +58,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="system-strip shell" aria-label="Core QR status">
+      <section className="system-strip shell" aria-label="Visual Studio status">
         {systemNotes.map(([label, value]) => (
           <div className="system-strip__item" key={label}>
             <span className="mono-label">{label}</span>

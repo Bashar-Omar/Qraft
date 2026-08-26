@@ -94,7 +94,7 @@ export class StandardQrRenderer implements CodeRenderer {
       }
 
       return {
-        matrix,
+        verificationMatrix: matrix,
         svg: matrixToSvg(matrix),
         metadata: {
           rendererId: this.id,

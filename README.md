@@ -4,8 +4,8 @@
 
 Qraft is a public-source, privacy-first QR and barcode studio being built as a portfolio-grade product: designer-friendly, standards-aware, responsive, testable and local-first.
 
-> **Current status:** Phase 1B — Core QR payload breadth.
-> Phase 1A is merged and green. The current slice adds Email, Phone, SMS and Wi-Fi to the same registry-driven local QR pipeline, with field-level validation, structured editors and broader golden vectors.
+> **Current status:** Phase 2A — Visual Studio foundation.
+> Phase 1 Core QR is complete. The current slice adds a Qraft-owned design model, presets, gradients/module/eye styling, a lazy browser-only designer adapter and styled SVG/PNG artifacts.
 
 ## Product principles
 
@@ -29,14 +29,15 @@ Qraft is a public-source, privacy-first QR and barcode studio being built as a p
 - ESLint 9 + `eslint-config-next`
 - Prettier `3.9.6`
 - `qr` `0.6.0` behind Qraft's standard QR renderer adapter
+- `qr-code-styling` `1.9.2` behind the browser-only designer QR adapter
 
 Node.js `24 LTS` is the project/CI standard.
 
-## Why the standard QR engine is isolated
+## Why the QR engines are isolated
 
-Phase 1 uses `qr@0.6.0` for the standards-first QR baseline. It is a TypeScript package with zero runtime dependencies and exposes both raw QR matrices and decoding. Qraft consumes it only inside `src/engines/`; the payload domain, application use cases, UI and export schema do not depend on vendor types.
+`qr@0.6.0` remains the standards-first structural baseline and golden-vector oracle. Phase 2 adds `qr-code-styling@1.9.2` only behind `src/engines/render/designer-qr/`, loaded dynamically in the browser. Qraft design values live in `src/core/design/`; no vendor option object becomes product state.
 
-The designer QR engine remains a later, separate adapter. Standard output is proven before creative styling is introduced. See `docs/18-ADR-DECISIONS.md` and `docs/22-PHASE-1-CORE-QR.md`.
+See `docs/18-ADR-DECISIONS.md`, `docs/22-PHASE-1-CORE-QR.md` and `docs/23-PHASE-2-VISUAL-STUDIO.md`.
 
 ## Why TypeScript 5.9?
 
@@ -89,11 +90,18 @@ application use-case
         ↓
 Qraft rendering port
         ↓
-standard QR adapter
-        ↓
-Qraft-owned matrix + metadata
-        ↓
-SVG / PNG exporters
+    QR router
+   ↙        ↘
+default      styled design
+   ↓             ↓
+standard      designer adapter
+renderer       ↙        ↘
+   ↓      standard      lazy styling
+canonical    oracle        engine
+SVG +       ↓                ↓
+matrix   verification   canonical SVG
+             matrix          ↓
+                 ↘      preview / SVG / PNG
 ```
 
 Vendor package types stay inside `engines/`. The architecture contract is documented in `docs/06-ARCHITECTURE-SOLID.md`.
@@ -134,18 +142,20 @@ Protected `main` requires pull requests and CI. The CI gate checks formatting, E
 
 See `CONTRIBUTING.md` and `docs/15-GITHUB-CI-CD.md` for workflow policy.
 
-## Next product phase
+## Current Visual Studio capability
 
-Once this Phase 1B PR passes the protected-main gate, the roadmap moves to **Phase 2 — Visual Studio**:
+Phase 2A adds:
 
-1. designer QR adapter behind the existing renderer boundary,
-2. foreground/background colors and gradients,
-3. module and eye styles,
-4. local logo placement with safe limits,
-5. Qraft-owned presets,
-6. Quality Assistant v1,
-7. JPEG/WebP export,
-8. versioned `.qraft.json` project files.
+1. Qraft-owned design schema,
+2. Pure Mono / Qraft Mint / Soft Mint / Packaging presets,
+3. solid and linear-gradient foregrounds,
+4. solid or transparent backgrounds,
+5. module and eye shapes,
+6. default-design fast path on the standard renderer,
+7. lazy browser-only designer rendering,
+8. styled SVG and PNG artifacts.
+
+Next: Quality Assistant foundation and local logo handling before broader export/project-file work.
 
 ## Privacy
 

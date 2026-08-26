@@ -1,10 +1,19 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
+async function clickPayloadType(page: Page, name: RegExp) {
+  const viewportWidth = page.viewportSize()?.width ?? 1280;
+  const picker =
+    viewportWidth <= 1050 ? page.locator(".studio-mobile-types") : page.locator(".type-list");
+  const button = picker.getByRole("button", { name });
+
+  await expect(button).toBeVisible();
+  await button.click();
+}
 
 test("Core QR landing and Generate studio are reachable", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByRole("heading", { name: "Craft codes that work." })).toBeVisible();
-  await expect(page.getByText("CORE QR / LIVE")).toBeVisible();
+  await expect(page.getByText("02A / VISUAL STUDIO", { exact: true })).toBeVisible();
 
   await page.getByRole("link", { name: "Open QR studio" }).click();
 
@@ -41,17 +50,16 @@ test("URL generation normalizes locally and exports SVG and PNG", async ({ page 
 test("Text payload and ECC controls update the live QR", async ({ page }) => {
   await page.goto("/generate");
 
-  const viewportWidth = page.viewportSize()?.width ?? 1280;
-  const typePicker =
-    viewportWidth <= 1050 ? page.locator(".studio-mobile-types") : page.locator(".type-list");
-
-  await typePicker.getByRole("button", { name: /Text/ }).click();
+  await clickPayloadType(page, /Text/);
   const textInput = page.getByLabel("Text");
   await textInput.fill("Qraft — مرحبًا 👋");
-  await page.getByRole("button", { name: /High/ }).click();
+  const highEcc = page
+    .getByRole("group", { name: "Error correction" })
+    .getByRole("button", { name: /^H High ~30%$/ });
+  await highEcc.click();
 
   await expect(textInput).toHaveValue("Qraft — مرحبًا 👋");
-  await expect(page.getByRole("button", { name: /High/ })).toHaveAttribute("aria-pressed", "true");
+  await expect(highEcc).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("img", { name: "Generated QR code preview" })).toBeVisible();
   await expect(page.locator(".preview-meta")).toContainText("H");
 });
@@ -61,26 +69,22 @@ test("Email, Phone, SMS and Wi-Fi editors generate through the shared pipeline",
 }) => {
   await page.goto("/generate");
 
-  const viewportWidth = page.viewportSize()?.width ?? 1280;
-  const typePicker =
-    viewportWidth <= 1050 ? page.locator(".studio-mobile-types") : page.locator(".type-list");
-
-  await typePicker.getByRole("button", { name: /Email/ }).click();
+  await clickPayloadType(page, /Email/);
   await page.getByLabel("Recipients").fill("hello@example.com");
   await page.getByLabel("Subject").fill("Qraft hello");
   await page.getByLabel("Email body").fill("Generated locally");
   await expect(page.getByRole("img", { name: "Generated QR code preview" })).toBeVisible();
 
-  await typePicker.getByRole("button", { name: /Phone/ }).click();
+  await clickPayloadType(page, /Phone/);
   await page.getByLabel("Phone number").fill("+1 (202) 555-0123");
   await expect(page.getByLabel("Phone number")).toHaveValue("+1 (202) 555-0123");
 
-  await typePicker.getByRole("button", { name: /^SMS/ }).click();
+  await clickPayloadType(page, /^SMS/);
   await page.getByLabel("Recipient number").fill("+1 202 555 0123");
   await page.getByLabel("SMS message").fill("Hello from Qraft");
   await expect(page.getByLabel("SMS message")).toHaveValue("Hello from Qraft");
 
-  await typePicker.getByRole("button", { name: /Wi-Fi/ }).click();
+  await clickPayloadType(page, /Wi-Fi/);
   await page.getByLabel("Network name (SSID)").fill("Qraft;Lab");
   await page.getByLabel("Password").fill("example:only");
   await page.getByLabel("Hidden network").check();
@@ -89,6 +93,37 @@ test("Email, Phone, SMS and Wi-Fi editors generate through the shared pipeline",
   await page.getByRole("button", { name: "Download SVG" }).click();
   const wifiSvgDownload = await wifiSvgDownloadPromise;
   expect(wifiSvgDownload.suggestedFilename()).toBe("qraft-wifi.svg");
+});
+
+test("Designer controls update the canonical SVG and PNG artifacts", async ({ page }) => {
+  await page.goto("/generate");
+
+  await clickPayloadType(page, /Text/);
+  await page.getByLabel("Text").fill("Qraft — مرحبًا 👋");
+
+  const qraftMint = page.getByRole("button", { name: /Qraft Mint/ });
+  await qraftMint.click();
+  await expect(qraftMint).toHaveAttribute("aria-pressed", "true");
+
+  await page.getByLabel("Module shape").selectOption("dots");
+  await page.getByRole("button", { name: "Gradient", exact: true }).click();
+  await page.getByLabel("Gradient start color").fill("#04120d");
+  await page.getByLabel("Gradient end color").fill("#0b6b55");
+  await page.getByRole("button", { name: "90°" }).click();
+  await page.getByRole("checkbox", { name: /Transparent background/ }).check();
+
+  await expect(page.getByRole("img", { name: "Generated QR code preview" })).toBeVisible();
+  await expect(page.locator(".preview-meta")).toContainText("QR / DESIGNER");
+
+  const svgDownloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download SVG" }).click();
+  const svgDownload = await svgDownloadPromise;
+  expect(svgDownload.suggestedFilename()).toBe("qraft-text.svg");
+
+  const pngDownloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download PNG" }).click();
+  const pngDownload = await pngDownloadPromise;
+  expect(pngDownload.suggestedFilename()).toBe("qraft-text.png");
 });
 
 test("theme selector persists the chosen preference", async ({ page }) => {

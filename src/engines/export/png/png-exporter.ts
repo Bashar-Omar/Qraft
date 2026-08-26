@@ -1,5 +1,5 @@
-import type { ExportArtifact, Exporter, ExportRequest } from "@/core/export/export";
 import type { RenderedCode } from "@/core/code/render";
+import type { ExportArtifact, Exporter, ExportRequest } from "@/core/export/export";
 import { sanitizeFilenameBase } from "@/lib/files/filename";
 
 const DEFAULT_PIXEL_SIZE = 1024;
@@ -19,12 +19,32 @@ function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
   });
 }
 
+function loadSvgImage(svg: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const source = new Blob([svg], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(source);
+    const image = new Image();
+
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      resolve(image);
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("The browser could not rasterize the generated SVG."));
+    };
+    image.src = url;
+  });
+}
+
 export class PngExporter implements Exporter {
   readonly format = "png" as const;
 
   supports(rendered: RenderedCode): boolean {
     void rendered;
-    return typeof document !== "undefined";
+    return (
+      typeof document !== "undefined" && typeof Image !== "undefined" && typeof URL !== "undefined"
+    );
   }
 
   async export(request: ExportRequest): Promise<ExportArtifact> {
@@ -36,7 +56,7 @@ export class PngExporter implements Exporter {
       MAX_PIXEL_SIZE,
       Math.max(MIN_PIXEL_SIZE, Math.round(request.pixelSize ?? DEFAULT_PIXEL_SIZE)),
     );
-    const totalModules = request.rendered.matrix.length;
+    const totalModules = request.rendered.metadata.totalModules;
     const modulePixels = Math.max(1, Math.floor(requestedSize / totalModules));
     const actualSize = modulePixels * totalModules;
     const canvas = document.createElement("canvas");
@@ -48,20 +68,10 @@ export class PngExporter implements Exporter {
 
     canvas.width = actualSize;
     canvas.height = actualSize;
-    context.imageSmoothingEnabled = false;
-    context.fillStyle = "#ffffff";
-    context.fillRect(0, 0, actualSize, actualSize);
-    context.fillStyle = "#000000";
+    context.clearRect(0, 0, actualSize, actualSize);
 
-    for (let row = 0; row < request.rendered.matrix.length; row += 1) {
-      const modules = request.rendered.matrix[row];
-
-      for (let column = 0; column < modules.length; column += 1) {
-        if (modules[column]) {
-          context.fillRect(column * modulePixels, row * modulePixels, modulePixels, modulePixels);
-        }
-      }
-    }
+    const image = await loadSvgImage(request.rendered.svg);
+    context.drawImage(image, 0, 0, actualSize, actualSize);
 
     const filenameBase = sanitizeFilenameBase(request.filenameBase);
 

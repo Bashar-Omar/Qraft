@@ -50,7 +50,7 @@ describe("Phase 1 common payload golden vectors", () => {
         options: SAFE_QR_DEFAULTS,
       });
 
-      expect(decodeQrMatrixForGoldenTest(rendered.matrix)).toBe(encoded.payload);
+      expect(decodeQrMatrixForGoldenTest(rendered.verificationMatrix)).toBe(encoded.payload);
     });
   }
 });

@@ -14,7 +14,7 @@ describe("standardQrRenderer", () => {
     expect(rendered.metadata.quietZoneModules).toBe(4);
     expect(rendered.metadata.errorCorrectionLevel).toBe("M");
     expect(rendered.metadata.version).toBeGreaterThanOrEqual(1);
-    expect(rendered.matrix.length).toBe(rendered.metadata.symbolModules + 8);
+    expect(rendered.verificationMatrix.length).toBe(rendered.metadata.symbolModules + 8);
   });
 
   it("round-trips UTF-8 payloads through the golden decoder", async () => {
@@ -25,6 +25,6 @@ describe("standardQrRenderer", () => {
       options: { errorCorrectionLevel: "Q", quietZoneModules: 4 },
     });
 
-    expect(decodeQrMatrixForGoldenTest(rendered.matrix)).toBe(payload);
+    expect(decodeQrMatrixForGoldenTest(rendered.verificationMatrix)).toBe(payload);
   });
 });
