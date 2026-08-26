@@ -4,8 +4,8 @@
 
 Qraft is a public-source, privacy-first QR and barcode studio being built as a portfolio-grade product: designer-friendly, standards-aware, responsive, testable and local-first.
 
-> **Current status:** Phase 1A — Core QR vertical slice.
-> Phase 0 is green locally and in GitHub CI. URL and Text payloads now generate real standard QR codes locally, with live preview, selectable error correction, SVG/PNG export and a render→decode regression test. The broader Phase 1 payload set is intentionally still staged.
+> **Current status:** Phase 1B — Core QR payload breadth.
+> Phase 1A is merged and green. The current slice adds Email, Phone, SMS and Wi-Fi to the same registry-driven local QR pipeline, with field-level validation, structured editors and broader golden vectors.
 
 ## Product principles
 
@@ -34,7 +34,7 @@ Node.js `24 LTS` is the project/CI standard.
 
 ## Why the standard QR engine is isolated
 
-Phase 1A uses `qr@0.6.0` for the standards-first QR baseline. It is a TypeScript package with zero runtime dependencies and exposes both raw QR matrices and decoding. Qraft consumes it only inside `src/engines/`; the payload domain, application use cases, UI and export schema do not depend on vendor types.
+Phase 1 uses `qr@0.6.0` for the standards-first QR baseline. It is a TypeScript package with zero runtime dependencies and exposes both raw QR matrices and decoding. Qraft consumes it only inside `src/engines/`; the payload domain, application use cases, UI and export schema do not depend on vendor types.
 
 The designer QR engine remains a later, separate adapter. Standard output is proven before creative styling is introduced. See `docs/18-ADR-DECISIONS.md` and `docs/22-PHASE-1-CORE-QR.md`.
 
@@ -101,27 +101,32 @@ Vendor package types stay inside `engines/`. The architecture contract is docume
 ## Current routes
 
 - `/` — product landing and current capability status
-- `/generate` — live Core QR studio for URL and Text
+- `/generate` — live Core QR studio for URL, Wi-Fi, Email, Phone, SMS and Text
 - `/scan` — planned scanner surface
 - `/batch` — planned batch surface
 - `/guides` — guide/documentation surface
 
-## Phase 1A capability
+## Phase 1 capability
 
-Implemented in this slice:
+Implemented across Phase 1A + 1B:
 
 1. typed payload contracts and registry,
 2. URL codec with local validation and `https://` normalization,
 3. exact plain-text codec,
-4. safe standard QR adapter,
-5. ECC L/M/Q/H with Medium as the default,
-6. fixed four-module quiet-zone baseline,
-7. live local preview,
-8. Qraft-owned SVG export,
-9. crisp browser-canvas PNG export,
-10. unit coverage plus render→decode regression coverage.
+4. Email `mailto:` codec with recipients, subject and body,
+5. standards-oriented `tel:` Phone codec,
+6. `sms:` codec with recipient and message body,
+7. Wi-Fi codec with WPA/WPA2, WEP, open-network and hidden-network handling,
+8. Wi-Fi reserved-character escaping and 32-byte SSID validation,
+9. safe standard QR adapter,
+10. ECC L/M/Q/H with Medium as the default,
+11. fixed four-module quiet-zone baseline,
+12. live local preview,
+13. Qraft-owned SVG export,
+14. crisp browser-canvas PNG export,
+15. codec/registry/render golden coverage plus desktop/mobile Playwright flows.
 
-The same-engine round-trip is a software regression check, **not scanner certification**. Independent decoder/device checks belong to the later Quality/Hardening gates.
+The current same-engine render→decode tests are software regression checks, **not scanner certification**. Physical-device and independent-decoder validation remain release-hardening work.
 
 ## Repository quality
 
@@ -129,17 +134,18 @@ Protected `main` requires pull requests and CI. The CI gate checks formatting, E
 
 See `CONTRIBUTING.md` and `docs/15-GITHUB-CI-CD.md` for workflow policy.
 
-## Next Phase 1 work
+## Next product phase
 
-Phase 1B expands the payload layer without changing renderer internals:
+Once this Phase 1B PR passes the protected-main gate, the roadmap moves to **Phase 2 — Visual Studio**:
 
-1. Email, Phone and SMS codecs,
-2. Wi-Fi codec with escaping and security modes,
-3. richer payload-specific editors,
-4. broader golden fixtures and an independent decode path,
-5. mobile/accessibility hardening for the full curated payload set.
-
-Designer QR styling remains Phase 2.
+1. designer QR adapter behind the existing renderer boundary,
+2. foreground/background colors and gradients,
+3. module and eye styles,
+4. local logo placement with safe limits,
+5. Qraft-owned presets,
+6. Quality Assistant v1,
+7. JPEG/WebP export,
+8. versioned `.qraft.json` project files.
 
 ## Privacy
 

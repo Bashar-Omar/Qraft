@@ -540,7 +540,8 @@ html[data-theme="dark"] .phase-pill {
 }
 
 .studio-field input,
-.studio-field textarea {
+.studio-field textarea,
+.studio-field select {
   width: 100%;
   border: 1px solid var(--border-strong);
   border-radius: 14px;
@@ -564,8 +565,25 @@ html[data-theme="dark"] .phase-pill {
   line-height: 1.55;
 }
 
+.studio-field select {
+  min-height: 52px;
+  padding: 0 38px 0 14px;
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-tertiary) 50%),
+    linear-gradient(135deg, var(--text-tertiary) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 22px,
+    calc(100% - 13px) 22px;
+  background-repeat: no-repeat;
+  background-size:
+    5px 5px,
+    5px 5px;
+}
+
 .studio-field input:focus,
-.studio-field textarea:focus {
+.studio-field textarea:focus,
+.studio-field select:focus {
   border-color: rgb(15 191 143 / 56%);
   background: var(--surface-1);
   box-shadow: 0 0 0 4px rgb(15 191 143 / 8%);
@@ -573,7 +591,8 @@ html[data-theme="dark"] .phase-pill {
 }
 
 .studio-field input[aria-invalid="true"],
-.studio-field textarea[aria-invalid="true"] {
+.studio-field textarea[aria-invalid="true"],
+.studio-field select[aria-invalid="true"] {
   border-color: rgb(214 69 69 / 55%);
 }
 
@@ -591,6 +610,58 @@ html[data-theme="dark"] .phase-pill {
 
 .studio-field__issue {
   color: var(--qraft-signal-red);
+}
+
+.studio-fields-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.studio-field--full {
+  grid-column: 1 / -1;
+}
+
+.studio-field--compact textarea {
+  min-height: 120px;
+}
+
+.studio-checkbox {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  color: var(--text-secondary);
+  background: var(--surface-0);
+  cursor: pointer;
+}
+
+.studio-checkbox input {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  accent-color: var(--qraft-mint);
+}
+
+.studio-checkbox span,
+.studio-checkbox strong,
+.studio-checkbox small {
+  display: block;
+}
+
+.studio-checkbox strong {
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+.studio-checkbox small {
+  margin-top: 3px;
+  color: var(--text-tertiary);
+  font-size: 10px;
+  line-height: 1.4;
 }
 
 .studio-inline-note {
@@ -1243,6 +1314,9 @@ html[data-theme="dark"] .type-row.is-active {
   .studio-mobile-types {
     display: flex;
     gap: 6px;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
     margin-bottom: 22px;
     padding: 4px;
     border: 1px solid var(--border-soft);
@@ -1251,8 +1325,9 @@ html[data-theme="dark"] .type-row.is-active {
   }
 
   .studio-mobile-types button {
-    min-height: 38px;
-    flex: 1;
+    min-width: 78px;
+    min-height: 44px;
+    flex: 0 0 auto;
     border: 0;
     border-radius: 9px;
     color: var(--text-tertiary);
@@ -1260,6 +1335,10 @@ html[data-theme="dark"] .type-row.is-active {
     cursor: pointer;
     font-size: 11px;
     font-weight: 620;
+  }
+
+  .studio-mobile-types::-webkit-scrollbar {
+    display: none;
   }
 
   .studio-mobile-types button.is-active {
@@ -1281,6 +1360,14 @@ html[data-theme="dark"] .type-row.is-active {
 }
 
 @media (max-width: 820px) {
+  .studio-fields-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .studio-field--full {
+    grid-column: auto;
+  }
+
   :root {
     --header-height: 64px;
   }

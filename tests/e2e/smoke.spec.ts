@@ -56,6 +56,41 @@ test("Text payload and ECC controls update the live QR", async ({ page }) => {
   await expect(page.locator(".preview-meta")).toContainText("H");
 });
 
+test("Email, Phone, SMS and Wi-Fi editors generate through the shared pipeline", async ({
+  page,
+}) => {
+  await page.goto("/generate");
+
+  const viewportWidth = page.viewportSize()?.width ?? 1280;
+  const typePicker =
+    viewportWidth <= 1050 ? page.locator(".studio-mobile-types") : page.locator(".type-list");
+
+  await typePicker.getByRole("button", { name: /Email/ }).click();
+  await page.getByLabel("Recipients").fill("hello@example.com");
+  await page.getByLabel("Subject").fill("Qraft hello");
+  await page.getByLabel("Email body").fill("Generated locally");
+  await expect(page.getByRole("img", { name: "Generated QR code preview" })).toBeVisible();
+
+  await typePicker.getByRole("button", { name: /Phone/ }).click();
+  await page.getByLabel("Phone number").fill("+1 (202) 555-0123");
+  await expect(page.getByLabel("Phone number")).toHaveValue("+1 (202) 555-0123");
+
+  await typePicker.getByRole("button", { name: /^SMS/ }).click();
+  await page.getByLabel("Recipient number").fill("+1 202 555 0123");
+  await page.getByLabel("SMS message").fill("Hello from Qraft");
+  await expect(page.getByLabel("SMS message")).toHaveValue("Hello from Qraft");
+
+  await typePicker.getByRole("button", { name: /Wi-Fi/ }).click();
+  await page.getByLabel("Network name (SSID)").fill("Qraft;Lab");
+  await page.getByLabel("Password").fill("example:only");
+  await page.getByLabel("Hidden network").check();
+
+  const wifiSvgDownloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download SVG" }).click();
+  const wifiSvgDownload = await wifiSvgDownloadPromise;
+  expect(wifiSvgDownload.suggestedFilename()).toBe("qraft-wifi.svg");
+});
+
 test("theme selector persists the chosen preference", async ({ page }) => {
   await page.goto("/");
 

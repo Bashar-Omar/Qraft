@@ -3,7 +3,7 @@ $ErrorActionPreference = "Stop"
 $RequiredPnpmVersion = "11.23.0"
 
 Write-Host ""
-Write-Host "Qraft / Phase 0 verification" -ForegroundColor Green
+Write-Host "Qraft / repository verification" -ForegroundColor Green
 Write-Host "----------------------------"
 
 function Resolve-Pnpm {
@@ -44,7 +44,7 @@ $nodeVersion = node -p "process.versions.node"
 $nodeMajor = [int]($nodeVersion.Split(".")[0])
 
 if ($nodeMajor -ne 24) {
-  throw "Qraft Phase 0 verification requires Node 24 LTS. Found Node $nodeVersion."
+  throw "Qraft repository verification requires Node 24 LTS. Found Node $nodeVersion."
 }
 
 $pnpmCommand = Resolve-Pnpm
@@ -90,4 +90,4 @@ if ($LASTEXITCODE -ne 0) { throw "Playwright Chromium install failed." }
 if ($LASTEXITCODE -ne 0) { throw "E2E tests failed." }
 
 Write-Host ""
-Write-Host "Phase 0 local verification passed." -ForegroundColor Green
+Write-Host "Qraft local verification passed." -ForegroundColor Green

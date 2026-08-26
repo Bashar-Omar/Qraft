@@ -1,4 +1,4 @@
-export type PayloadId = "url" | "text";
+export type PayloadId = "url" | "wifi" | "email" | "phone" | "sms" | "text";
 
 export type PayloadCategory = "popular" | "general";
 

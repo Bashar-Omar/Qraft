@@ -21,8 +21,8 @@ export default function GuidesPage() {
         <h1>Technical depth without technical clutter.</h1>
         <p>
           The implementation decisions and quality gates are versioned under <code>/docs</code>.
-          Phase 1A now proves the standard QR contract; public-facing guides expand after the
-          curated payload set is complete.
+          Phase 1 now proves the curated Core QR payload contract; public-facing guides expand as
+          the Visual Studio and quality systems come online.
         </p>
       </div>
 

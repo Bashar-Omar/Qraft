@@ -1,9 +1,13 @@
 import type { ComponentType } from "react";
 
 import type { PayloadId } from "@/core/payload/payload";
-import { TextEditor } from "@/features/generator/components/text-editor";
+import { EmailEditor } from "@/features/generator/components/email-editor";
 import type { PayloadEditorProps } from "@/features/generator/components/payload-editor.types";
+import { PhoneEditor } from "@/features/generator/components/phone-editor";
+import { SmsEditor } from "@/features/generator/components/sms-editor";
+import { TextEditor } from "@/features/generator/components/text-editor";
 import { UrlEditor } from "@/features/generator/components/url-editor";
+import { WifiEditor } from "@/features/generator/components/wifi-editor";
 
 export type PayloadEditorRegistration = Readonly<{
   component: ComponentType<PayloadEditorProps>;
@@ -23,10 +27,41 @@ function getUrlNotice(parsedData: unknown): string | null {
   return null;
 }
 
+function getWifiNotice(parsedData: unknown): string | null {
+  if (typeof parsedData !== "object" || parsedData === null || !("security" in parsedData)) {
+    return null;
+  }
+
+  const security = parsedData.security;
+
+  if (security === "WEP") {
+    return "WEP is a legacy Wi-Fi security mode. Prefer WPA/WPA2 when the network supports it.";
+  }
+
+  if (security === "nopass") {
+    return "Open networks do not include a password in the generated Wi-Fi payload.";
+  }
+
+  return null;
+}
+
 const payloadEditors: Readonly<Record<PayloadId, PayloadEditorRegistration>> = {
   url: {
     component: UrlEditor,
     getNotice: getUrlNotice,
+  },
+  wifi: {
+    component: WifiEditor,
+    getNotice: getWifiNotice,
+  },
+  email: {
+    component: EmailEditor,
+  },
+  phone: {
+    component: PhoneEditor,
+  },
+  sms: {
+    component: SmsEditor,
   },
   text: {
     component: TextEditor,

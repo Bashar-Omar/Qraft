@@ -3,12 +3,25 @@ import { describe, expect, it } from "vitest";
 import { payloadRegistry } from "@/core/payload/payload-registry";
 
 describe("payloadRegistry", () => {
-  it("exposes the first curated payloads in a stable order", () => {
-    expect(payloadRegistry.list().map((definition) => definition.id)).toEqual(["url", "text"]);
+  it("exposes the Phase 1 curated payloads in a stable order", () => {
+    expect(payloadRegistry.list().map((definition) => definition.id)).toEqual([
+      "url",
+      "wifi",
+      "email",
+      "phone",
+      "sms",
+      "text",
+    ]);
   });
 
   it("encodes through the registered codec instead of UI conditionals", () => {
-    const encoded = payloadRegistry.get("url").parseAndEncode("example.com");
-    expect(encoded.payload).toBe("https://example.com");
+    const encoded = payloadRegistry.get("wifi").parseAndEncode({
+      ssid: "Qraft Lab",
+      security: "WPA",
+      password: "example-only",
+      hidden: false,
+    });
+
+    expect(encoded.payload).toBe("WIFI:T:WPA;S:Qraft Lab;P:example-only;;");
   });
 });

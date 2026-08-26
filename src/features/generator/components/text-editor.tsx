@@ -1,8 +1,14 @@
 import type { ChangeEvent } from "react";
 
-import type { PayloadEditorProps } from "@/features/generator/components/payload-editor.types";
+import {
+  getPayloadFieldIssue,
+  type PayloadEditorProps,
+} from "@/features/generator/components/payload-editor.types";
 
-export function TextEditor({ value, issue, onChange }: PayloadEditorProps) {
+export function TextEditor({ value, issues, onChange }: PayloadEditorProps) {
+  const draft = typeof value === "string" ? value : "";
+  const issue = getPayloadFieldIssue(issues, "text");
+
   return (
     <div className="studio-field">
       <label htmlFor="payload-text">Text</label>
@@ -13,7 +19,7 @@ export function TextEditor({ value, issue, onChange }: PayloadEditorProps) {
         onChange={(event: ChangeEvent<HTMLTextAreaElement>) => onChange(event.target.value)}
         placeholder="Type the text to encode"
         rows={8}
-        value={value}
+        value={draft}
       />
       <p className="studio-field__hint" id="payload-text-hint">
         Plain text is encoded locally and preserved exactly, including line breaks.

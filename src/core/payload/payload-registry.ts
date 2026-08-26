@@ -1,5 +1,9 @@
+import { emailPayloadDefinition } from "@/core/payload/codecs/email.codec";
+import { phonePayloadDefinition } from "@/core/payload/codecs/phone.codec";
+import { smsPayloadDefinition } from "@/core/payload/codecs/sms.codec";
 import { textPayloadDefinition } from "@/core/payload/codecs/text.codec";
 import { urlPayloadDefinition } from "@/core/payload/codecs/url.codec";
+import { wifiPayloadDefinition } from "@/core/payload/codecs/wifi.codec";
 import {
   registerPayloadDefinition,
   type PayloadId,
@@ -8,6 +12,10 @@ import {
 
 const registeredPayloads = [
   registerPayloadDefinition(urlPayloadDefinition),
+  registerPayloadDefinition(wifiPayloadDefinition),
+  registerPayloadDefinition(emailPayloadDefinition),
+  registerPayloadDefinition(phonePayloadDefinition),
+  registerPayloadDefinition(smsPayloadDefinition),
   registerPayloadDefinition(textPayloadDefinition),
 ] as const;
 
