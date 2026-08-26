@@ -90,4 +90,34 @@ describe("evaluateQrQuality", () => {
     expect(assessment.status).toBe("check");
     expect(assessment.findings.map((finding) => finding.id)).toContain("qr-ecc-styling");
   });
+
+  it("estimates logo center coverage and recommends more ECC headroom", () => {
+    const design = parseQrDesign({
+      ...DEFAULT_QR_DESIGN,
+      logo: { sizePercent: 20, paddingModules: 0.5 },
+    });
+    const assessment = evaluateQrQuality({ design, metadata });
+
+    expect(assessment.status).toBe("check");
+    expect(assessment.metrics.logo).toMatchObject({
+      areaSidePercent: 20,
+      estimatedCenterCoveragePercent: 4,
+      paddingModules: 0.5,
+    });
+    expect(assessment.findings.map((finding) => finding.id)).toContain("qr-logo-ecc-advisory");
+  });
+
+  it("marks the same logo as high risk when ECC headroom is too small", () => {
+    const design = parseQrDesign({
+      ...DEFAULT_QR_DESIGN,
+      logo: { sizePercent: 20, paddingModules: 0.5 },
+    });
+    const assessment = evaluateQrQuality({
+      design,
+      metadata: { ...metadata, errorCorrectionLevel: "L" },
+    });
+
+    expect(assessment.status).toBe("risk");
+    expect(assessment.findings.map((finding) => finding.id)).toContain("qr-logo-occlusion-high");
+  });
 });

@@ -1,3 +1,5 @@
+import { parseQrLogoConfig, type QraftQrLogoConfig } from "@/core/design/qr-logo";
+
 export type QrHexColor = `#${string}`;
 
 export type QrSolidPaint = Readonly<{
@@ -33,6 +35,7 @@ export type QraftQrDesign = Readonly<{
   eyeFrame: QrEyeFrameShape;
   eyeDot: QrEyeDotShape;
   quietZoneModules: number;
+  logo?: QraftQrLogoConfig;
 }>;
 
 const HEX_COLOR = /^#[0-9a-f]{6}$/i;
@@ -162,6 +165,7 @@ export function parseQrDesign(value: unknown): QraftQrDesign {
     eyeFrame: eyeFrame as QrEyeFrameShape,
     eyeDot: eyeDot as QrEyeDotShape,
     quietZoneModules: parseQuietZone(value.quietZoneModules),
+    ...(value.logo === undefined ? {} : { logo: parseQrLogoConfig(value.logo) }),
   };
 }
 
@@ -174,6 +178,7 @@ export function isDefaultQrDesign(design: QraftQrDesign): boolean {
     design.moduleShape === "square" &&
     design.eyeFrame === "square" &&
     design.eyeDot === "square" &&
-    design.quietZoneModules === 4
+    design.quietZoneModules === 4 &&
+    design.logo === undefined
   );
 }

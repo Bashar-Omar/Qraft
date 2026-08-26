@@ -38,6 +38,7 @@ export class QrRenderer implements CodeRenderer {
           ...request.options,
           quietZoneModules: design.quietZoneModules,
           design: undefined,
+          logoAsset: undefined,
         },
       });
     }

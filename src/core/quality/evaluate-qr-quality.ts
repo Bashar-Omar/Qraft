@@ -1,6 +1,8 @@
+import { estimateQrLogoGeometry } from "@/core/design/qr-logo";
 import { qrContrastRule, calculateQrContrast } from "@/core/quality/rules/qr-contrast";
 import { qrEccRule } from "@/core/quality/rules/qr-ecc";
 import { qrInversionRule } from "@/core/quality/rules/qr-inversion";
+import { qrLogoOcclusionRule } from "@/core/quality/rules/qr-logo-occlusion";
 import { qrQuietZoneRule } from "@/core/quality/rules/qr-quiet-zone";
 import {
   summarizeQuality,
@@ -13,6 +15,7 @@ export const DEFAULT_QR_QUALITY_RULES: readonly QualityRule[] = [
   qrQuietZoneRule,
   qrContrastRule,
   qrInversionRule,
+  qrLogoOcclusionRule,
   qrEccRule,
 ];
 
@@ -33,6 +36,9 @@ export function evaluateQrQuality(
       symbolModules: context.metadata.symbolModules,
       totalModules: context.metadata.totalModules,
       payloadBytes: context.metadata.payloadBytes,
+      logo: context.design.logo
+        ? estimateQrLogoGeometry(context.design.logo, context.metadata.symbolModules)
+        : null,
     },
   };
 }

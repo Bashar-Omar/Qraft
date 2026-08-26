@@ -4,8 +4,8 @@
 
 Qraft is a public-source, privacy-first QR and barcode studio being built as a portfolio-grade product: designer-friendly, standards-aware, responsive, testable and local-first.
 
-> **Current status:** Phase 2B — Quality Assistant foundation.
-> Phase 1 Core QR and Phase 2A Visual Studio are complete. The current slice adds explainable QR quality rules plus an independent, lazy local self-decode of the exact generated SVG artifact.
+> **Current status:** Phase 2C — Local logo + safety guardrails.
+> Phase 1 Core QR, Phase 2A Visual Studio and Phase 2B Quality Assistant are complete. The current slice adds bounded browser-local raster-logo preparation, portable logo geometry, center-occlusion/ECC guidance and final-artifact self-testing.
 
 ## Product principles
 
@@ -38,7 +38,7 @@ Node.js `24 LTS` is the project/CI standard.
 
 `qr@0.6.0` remains the standards-first structural baseline and golden-vector oracle. Phase 2A adds `qr-code-styling@1.9.2` only behind `src/engines/render/designer-qr/`, loaded dynamically in the browser. Phase 2B adds `@zxing/library@0.23.0` only behind `src/engines/decode/zxing/` for explicit artifact self-tests. Qraft design and quality contracts remain vendor-neutral.
 
-See `docs/18-ADR-DECISIONS.md`, `docs/22-PHASE-1-CORE-QR.md`, `docs/23-PHASE-2-VISUAL-STUDIO.md` and `docs/24-PHASE-2B-QUALITY-ASSISTANT.md`.
+See `docs/18-ADR-DECISIONS.md`, `docs/22-PHASE-1-CORE-QR.md`, `docs/23-PHASE-2-VISUAL-STUDIO.md`, `docs/24-PHASE-2B-QUALITY-ASSISTANT.md` and `docs/25-PHASE-2C-LOGO-SAFETY.md`.
 
 ## Why TypeScript 5.9?
 
@@ -167,7 +167,18 @@ Phase 2B adds:
 7. explicit local self-test of the canonical SVG with an independent ZXing decoder,
 8. Good / Check / Risk presentation without certification claims.
 
-Next: local logo upload, size/padding limits and logo-occlusion guidance, followed by JPEG/WebP and the versioned `.qraft.json` project envelope.
+Phase 2C adds:
+
+1. local PNG/JPEG/WebP logo upload with real-signature and dimension preflight,
+2. a 4 MiB / 4096px / 16-megapixel source boundary,
+3. local decode and re-encode to a bounded square PNG that preserves source aspect ratio,
+4. object-URL lifecycle cleanup with no File/Blob persistence in the domain model,
+5. Qraft-owned logo size/padding geometry separate from runtime image bytes,
+6. designer-adapter logo embedding with a self-contained canonical SVG,
+7. explainable center-occlusion and ECC guidance,
+8. conservative one-click logo settings plus final-artifact local self-test.
+
+Next: JPEG/WebP export and the versioned `.qraft.json` project envelope.
 
 ## Privacy
 

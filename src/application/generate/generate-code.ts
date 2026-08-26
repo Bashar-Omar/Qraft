@@ -2,6 +2,7 @@ import {
   SAFE_QR_DEFAULTS,
   type CodeRenderer,
   type QrErrorCorrectionLevel,
+  type QrLogoRenderAsset,
   type RenderedCode,
 } from "@/core/code/render";
 import { DEFAULT_QR_DESIGN, parseQrDesign, type QraftQrDesign } from "@/core/design/qr-design";
@@ -13,6 +14,7 @@ export type GenerateCodeRequest = Readonly<{
   input: unknown;
   errorCorrectionLevel?: QrErrorCorrectionLevel;
   design?: QraftQrDesign;
+  logoAsset?: QrLogoRenderAsset;
 }>;
 
 export type GeneratedCode = Readonly<{
@@ -40,6 +42,7 @@ export function createGenerateCode({ payloads, renderer }: GenerateCodeDependenc
         errorCorrectionLevel: request.errorCorrectionLevel ?? SAFE_QR_DEFAULTS.errorCorrectionLevel,
         quietZoneModules: design.quietZoneModules,
         design,
+        logoAsset: request.logoAsset,
       },
     });
 

@@ -415,3 +415,21 @@ Quality findings and self-test have different responsibilities:
 - neither path is certification.
 
 The seam is intentionally ready for Phase 2C logo occlusion and later barcode-specific quality rules without putting vendor logic into `GenerateStudio`.
+
+## Phase 2C implementation note — portable logo geometry, ephemeral runtime asset
+
+Phase 2C deliberately separates **logo configuration** from **logo bytes**.
+
+`QraftQrDesign.logo` stores only portable geometry (`sizePercent`, `paddingModules`). The prepared browser image travels separately as `RenderRequest.options.logoAsset`, containing a per-selection fingerprint, an object URL and normalized square dimensions. The source `File`, normalized `Blob` and base64 data are never persisted in the domain design object.
+
+```text
+QraftQrDesign.logo            RenderRequest.logoAsset
+portable geometry             ephemeral browser locator
+        \                         /
+         \                       /
+          → DesignerQrRenderer ←
+                   ↓
+          self-contained SVG
+```
+
+The application owns input decoding/normalization and object-URL lifetime. The designer adapter owns the translation from Qraft logo geometry to renderer-specific image options. Quality rules consume only Qraft geometry + render metadata. This keeps future project-file migrations, renderer replacement and scanner work independent from browser object URLs and vendor option names.

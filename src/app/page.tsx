@@ -4,7 +4,7 @@ import { PhaseCard } from "@/components/foundation/phase-card";
 import { QrMotif } from "@/components/foundation/qr-motif";
 
 const systemNotes = [
-  ["PHASE", "02B / QUALITY ASSISTANT"],
+  ["PHASE", "02C / LOGO SAFETY"],
   ["RUNTIME", "BROWSER-FIRST"],
   ["PERSISTENCE", "NO ACCOUNT"],
   ["DEPLOYMENT", "STATIC-EXPORT READY"],
@@ -15,7 +15,7 @@ export default function HomePage() {
     <>
       <section className="hero shell">
         <div className="hero__copy">
-          <span className="mono-label accent-marker">QRAFT / SYSTEM / 02B</span>
+          <span className="mono-label accent-marker">QRAFT / SYSTEM / 02C</span>
           <h1>Craft codes that work.</h1>
           <p className="hero__lede">
             A privacy-first QR and barcode studio designed as a serious creative tool — precise,
@@ -30,8 +30,8 @@ export default function HomePage() {
             </Link>
           </div>
           <p className="hero__honesty">
-            Phase 2B keeps the designer workflow and adds explainable contrast, inversion,
-            quiet-zone and ECC guidance plus an independent local decode of the exact generated
+            Phase 2C adds local raster-logo preparation, bounded size/padding controls and
+            logo-occlusion guidance while the independent self-test still validates the exact final
             artifact.
           </p>
         </div>
@@ -47,14 +47,14 @@ export default function HomePage() {
             </div>
             <div className="hero-visual__annotation">
               <span>CLIENT FIRST</span>
-              <strong>02B</strong>
+              <strong>02C</strong>
               <span>NO CLOUD DATA</span>
             </div>
           </div>
           <div className="hero-visual__footer">
             <span>STATIC EXPORT</span>
             <span>TYPE-SAFE</span>
-            <span>LOCAL SELF-TEST</span>
+            <span>LOGO + SELF-TEST</span>
           </div>
         </div>
       </section>

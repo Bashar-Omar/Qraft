@@ -77,4 +77,34 @@ describe("DesignerQrRenderer", () => {
     });
     expect(render).not.toHaveBeenCalled();
   });
+
+  it("translates portable logo geometry to vendor-only image options", () => {
+    const logoDesign = {
+      ...DEFAULT_QR_DESIGN,
+      logo: { sizePercent: 20, paddingModules: 0.5 },
+    } as const;
+    const options = toQrCodeStylingOptions(
+      {
+        ...request,
+        options: {
+          ...request.options,
+          design: logoDesign,
+          logoAsset: {
+            id: "logo-1",
+            uri: "blob:https://qraft.local/logo-1",
+            width: 256,
+            height: 256,
+          },
+        },
+      },
+      baseline,
+      logoDesign,
+    );
+
+    expect(options.image).toBe("blob:https://qraft.local/logo-1");
+    expect(options.imageOptions?.hideBackgroundDots).toBe(true);
+    expect(options.imageOptions?.imageSize).toBeCloseTo(0.04 / 0.15);
+    expect(options.imageOptions?.margin).toBe(4);
+    expect(options.imageOptions?.saveAsBlob).toBe(true);
+  });
 });

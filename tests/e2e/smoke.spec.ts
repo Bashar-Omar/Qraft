@@ -13,7 +13,7 @@ test("Core QR landing and Generate studio are reachable", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByRole("heading", { name: "Craft codes that work." })).toBeVisible();
-  await expect(page.getByText("02B / QUALITY ASSISTANT", { exact: true })).toBeVisible();
+  await expect(page.getByText("02C / LOGO SAFETY", { exact: true })).toBeVisible();
 
   await page.getByRole("link", { name: "Open QR studio" }).click();
 
@@ -148,6 +148,67 @@ test("Quality Assistant self-tests every shipped preset and surfaces design risk
 
   await expect(quality.getByText("RISK", { exact: true })).toBeVisible();
   await expect(quality.getByText("Low visual contrast", { exact: true })).toBeVisible();
+});
+
+test("Local logo upload stays browser-only, embeds safely, and self-tests the final artifact", async ({
+  page,
+}) => {
+  await page.goto("/generate");
+
+  const logoInput = page.getByLabel("Logo image");
+  await logoInput.setInputFiles({
+    name: "unsafe.svg",
+    mimeType: "image/svg+xml",
+    buffer: Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'),
+  });
+  await expect(page.getByText(/Use a real PNG, JPEG or WebP image/)).toBeVisible();
+
+  await logoInput.setInputFiles({
+    name: "qraft-logo.png",
+    mimeType: "image/png",
+    buffer: Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAACAAAAAQCAYAAAB3AH1ZAAAAKElEQVR4nGPk39//n2EAAdNAWj7qgFEHjDpg1AGjDhh1wKgDGBgYGACItwJ8cuH6owAAAABJRU5ErkJggg==",
+      "base64",
+    ),
+  });
+
+  await expect(page.getByText("LOGO READY", { exact: true })).toBeVisible();
+  await expect(page.getByText("qraft-logo.png", { exact: true })).toBeVisible();
+  await expect(page.locator(".preview-meta")).toContainText("QR / DESIGNER");
+
+  const quality = page.locator(".quality-assistant");
+  await expect(quality).toContainText("20% SIDE · ~4.0% CENTER");
+  await expect(
+    quality.getByText("Branded QR benefits from stronger ECC", { exact: true }),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "Apply conservative settings" }).click();
+  await expect(
+    page
+      .getByRole("group", { name: "Error correction" })
+      .getByRole("button", { name: /^Q Quartile ~25%$/ }),
+  ).toHaveAttribute("aria-pressed", "true");
+
+  await quality.getByRole("button", { name: "Run self-test" }).click();
+  await expect(quality.getByText("Passed local self-test", { exact: true })).toBeVisible({
+    timeout: 15_000,
+  });
+
+  const svgDownloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download SVG" }).click();
+  const svgDownload = await svgDownloadPromise;
+  const stream = await svgDownload.createReadStream();
+  let svg = "";
+  for await (const chunk of stream) {
+    svg += chunk.toString();
+  }
+
+  expect(svg).toContain("data:image/png;base64,");
+  expect(svg).not.toContain("blob:");
+
+  await page.getByRole("button", { name: "Remove logo" }).click();
+  await expect(page.getByText("Choose logo", { exact: true })).toBeVisible();
+  await expect(page.locator(".preview-meta")).toContainText("QR / STANDARD");
 });
 
 test("theme selector persists the chosen preference", async ({ page }) => {

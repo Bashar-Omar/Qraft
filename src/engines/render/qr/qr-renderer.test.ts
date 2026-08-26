@@ -70,4 +70,29 @@ describe("QrRenderer", () => {
     expect(designerRender).toHaveBeenCalledOnce();
     expect(standardRender).not.toHaveBeenCalled();
   });
+
+  it("routes a logo-bearing standard visual design through the designer adapter", async () => {
+    const standardRender = vi.fn(async () => rendered("standard-qr"));
+    const designerRender = vi.fn(async () => rendered("designer-qr"));
+    const renderer = new QrRenderer(
+      { id: "standard", supports: () => true, render: standardRender } satisfies CodeRenderer,
+      { id: "designer", supports: () => true, render: designerRender } satisfies CodeRenderer,
+    );
+
+    const result = await renderer.render({
+      ...request,
+      options: {
+        ...request.options,
+        design: {
+          ...DEFAULT_QR_DESIGN,
+          logo: { sizePercent: 20, paddingModules: 0.5 },
+        },
+        logoAsset: { id: "logo-1", uri: "blob:qraft-logo", width: 256, height: 256 },
+      },
+    });
+
+    expect(result.metadata.rendererId).toBe("designer-qr");
+    expect(designerRender).toHaveBeenCalledOnce();
+    expect(standardRender).not.toHaveBeenCalled();
+  });
 });
