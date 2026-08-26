@@ -198,3 +198,31 @@ Therefore:
 - vendor option types never enter Qraft design state,
 - gradient degrees are converted to vendor radians only in the adapter,
 - logo support waits for Quality Assistant guardrails.
+
+---
+
+## ADR-015 — Independent local artifact self-test behind a decoder port
+
+**Status:** Accepted
+
+Phase 2B validates the exact canonical QR SVG with an independent decoder rather than treating the encoder's own round-trip tests as sufficient evidence.
+
+Decision:
+
+- deterministic quality heuristics remain pure Qraft domain logic,
+- the user explicitly runs artifact self-test rather than paying decoder cost on every keystroke,
+- the canonical SVG is rasterized locally at a bounded representative size,
+- transparent art is tested on a documented white representative surface,
+- decoded raw data must exactly equal the generated raw payload,
+- the result exposes only pass/failure reason, not the payload,
+- `@zxing/library@0.23.0` is isolated behind `QrArtifactDecoder` and dynamically imported in the browser,
+- a self-test failure elevates the visible Quality Assistant summary to Risk,
+- the UI never calls a synthetic pass "certified" or "guaranteed".
+
+Why use the narrow library package now:
+
+Phase 2B needs QR image-decoder primitives, not camera/session helpers. The later Scanner phase can evaluate `@zxing/browser` separately. This avoids coupling today's self-test to tomorrow's camera UI.
+
+Risk:
+
+The ZXing JS library is in maintenance mode. The adapter boundary is therefore mandatory and keeps a future replacement local to `engines/decode/`.

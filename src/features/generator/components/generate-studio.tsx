@@ -1,13 +1,19 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { GeneratedCode } from "@/application/generate/generate-code";
-import { exportCode, generateCode } from "@/composition/core-qr";
+import { exportCode, generateCode, selfTestQr } from "@/composition/core-qr";
 import { CodeRenderError, type QrErrorCorrectionLevel } from "@/core/code/render";
 import { DEFAULT_QR_DESIGN, type QraftQrDesign } from "@/core/design/qr-design";
 import { payloadRegistry } from "@/core/payload/payload-registry";
+import { evaluateQrQuality } from "@/core/quality/evaluate-qr-quality";
+import type { QrSelfTestResult } from "@/core/quality/self-test";
 import { PayloadValidationError, type PayloadId, type PayloadIssue } from "@/core/payload/payload";
+import {
+  QualityAssistant,
+  type QualitySelfTestState,
+} from "@/features/generator/components/quality-assistant";
 import { QrDesignPanel } from "@/features/generator/components/qr-design-panel";
 import { QrPreview } from "@/features/generator/components/qr-preview";
 import { getPayloadEditorRegistration } from "@/features/generator/components/payload-editor-registry";
@@ -42,6 +48,11 @@ type GenerationState =
     }>
   | Readonly<{ status: "waiting" }>;
 
+type SelfTestGenerationState =
+  | Readonly<{ status: "idle" }>
+  | Readonly<{ status: "running"; requestKey: string }>
+  | Readonly<{ status: "complete"; requestKey: string; result: QrSelfTestResult }>;
+
 function toGenerationError(
   error: unknown,
 ): Readonly<{ message: string; issues?: readonly PayloadIssue[] }> {
@@ -70,6 +81,8 @@ export function GenerateStudio() {
   const [generation, setGeneration] = useState<GenerationState>({ status: "waiting" });
   const [exporting, setExporting] = useState<"svg" | "png" | null>(null);
   const [exportIssue, setExportIssue] = useState<string | null>(null);
+  const [selfTest, setSelfTest] = useState<SelfTestGenerationState>({ status: "idle" });
+  const selfTestAttempt = useRef(0);
   const currentDraft = drafts[payloadId];
   const editorRegistration = getPayloadEditorRegistration(payloadId);
   const PayloadEditor = editorRegistration.component;
@@ -119,6 +132,44 @@ export function GenerateStudio() {
     generation.status === "waiting" || generation.requestKey === requestKey
       ? generation
       : { status: "waiting" };
+
+  const qualityAssessment =
+    currentGeneration.status === "ready"
+      ? evaluateQrQuality({
+          design: currentGeneration.value.design,
+          metadata: currentGeneration.value.rendered.metadata,
+        })
+      : null;
+
+  const currentSelfTest: QualitySelfTestState =
+    selfTest.status === "idle" || selfTest.requestKey === requestKey
+      ? selfTest.status === "complete"
+        ? { status: "complete", result: selfTest.result }
+        : selfTest.status === "running"
+          ? { status: "running" }
+          : { status: "idle" }
+      : { status: "idle" };
+
+  const runSelfTest = async () => {
+    if (currentGeneration.status !== "ready") {
+      return;
+    }
+
+    const selfTestRequestKey = requestKey;
+    const attempt = selfTestAttempt.current + 1;
+    selfTestAttempt.current = attempt;
+    setSelfTest({ status: "running", requestKey: selfTestRequestKey });
+
+    const result = await selfTestQr({
+      rendered: currentGeneration.value.rendered,
+      design: currentGeneration.value.design,
+      expectedPayload: currentGeneration.value.payload,
+    });
+
+    if (selfTestAttempt.current === attempt) {
+      setSelfTest({ status: "complete", requestKey: selfTestRequestKey, result });
+    }
+  };
 
   const download = async (format: "svg" | "png") => {
     if (currentGeneration.status !== "ready") {
@@ -173,13 +224,13 @@ export function GenerateStudio() {
           ))}
           <div
             className="type-row type-row--locked"
-            aria-label="Logo and Quality Assistant are next"
+            aria-label="Quality Assistant is active; logo upload is next"
           >
             <span>
-              <strong>Logo · Quality</strong>
-              <small>Next Visual Studio capability slice.</small>
+              <strong>Quality · Local test</strong>
+              <small>Active now. Logo guardrails are next.</small>
             </span>
-            <span className="type-row__index">NEXT</span>
+            <span className="type-row__index">LIVE</span>
           </div>
         </div>
       </aside>
@@ -246,9 +297,9 @@ export function GenerateStudio() {
             </div>
             <ul>
               <li>4-module quiet zone</li>
-              <li>Qraft-owned design model</li>
-              <li>Explicit ECC</li>
-              <li>Local designer engine</li>
+              <li>Contrast + inversion checks</li>
+              <li>Explicit ECC guidance</li>
+              <li>Independent local self-test</li>
             </ul>
           </div>
         </div>
@@ -292,17 +343,13 @@ export function GenerateStudio() {
               <strong>{currentGeneration.value.rendered.metadata.payloadBytes} BYTES</strong>
             </div>
 
-            <div className="preview-quality">
-              <div>
-                <span className="quality-dot" />
-                <span>
-                  {currentGeneration.value.rendered.metadata.rendererId === "designer-qr"
-                    ? "Designer renderer active"
-                    : "Safe standard renderer active"}
-                </span>
-              </div>
-              <small>Quality heuristics and local self-test arrive in the next slice.</small>
-            </div>
+            {qualityAssessment ? (
+              <QualityAssistant
+                assessment={qualityAssessment}
+                onRunSelfTest={() => void runSelfTest()}
+                selfTest={currentSelfTest}
+              />
+            ) : null}
 
             <div className="export-actions">
               <button

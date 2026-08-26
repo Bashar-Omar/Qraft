@@ -5,7 +5,7 @@ const guideGroups = [
   },
   {
     title: "QR quality",
-    items: ["Error correction", "Quiet zones", "Logo occlusion"],
+    items: ["Error correction", "Quiet zones", "Contrast & inversion", "Local self-test"],
   },
   {
     title: "Print & export",
@@ -21,8 +21,9 @@ export default function GuidesPage() {
         <h1>Technical depth without technical clutter.</h1>
         <p>
           The implementation decisions and quality gates are versioned under <code>/docs</code>.
-          Phase 1 proves the curated Core QR payload contract; Phase 2A now adds the Qraft-owned
-          design model and browser-only designer adapter while the Quality Assistant is built next.
+          Phase 1 proves the curated Core QR payload contract; Phase 2A adds the Qraft-owned design
+          model and browser-only designer adapter, while Phase 2B now adds explainable quality
+          findings and an independent local artifact self-test.
         </p>
       </div>
 

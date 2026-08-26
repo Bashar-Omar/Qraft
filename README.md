@@ -4,8 +4,8 @@
 
 Qraft is a public-source, privacy-first QR and barcode studio being built as a portfolio-grade product: designer-friendly, standards-aware, responsive, testable and local-first.
 
-> **Current status:** Phase 2A — Visual Studio foundation.
-> Phase 1 Core QR is complete. The current slice adds a Qraft-owned design model, presets, gradients/module/eye styling, a lazy browser-only designer adapter and styled SVG/PNG artifacts.
+> **Current status:** Phase 2B — Quality Assistant foundation.
+> Phase 1 Core QR and Phase 2A Visual Studio are complete. The current slice adds explainable QR quality rules plus an independent, lazy local self-decode of the exact generated SVG artifact.
 
 ## Product principles
 
@@ -30,14 +30,15 @@ Qraft is a public-source, privacy-first QR and barcode studio being built as a p
 - Prettier `3.9.6`
 - `qr` `0.6.0` behind Qraft's standard QR renderer adapter
 - `qr-code-styling` `1.9.2` behind the browser-only designer QR adapter
+- `@zxing/library` `0.23.0` behind the lazy local QR self-test adapter
 
 Node.js `24 LTS` is the project/CI standard.
 
 ## Why the QR engines are isolated
 
-`qr@0.6.0` remains the standards-first structural baseline and golden-vector oracle. Phase 2 adds `qr-code-styling@1.9.2` only behind `src/engines/render/designer-qr/`, loaded dynamically in the browser. Qraft design values live in `src/core/design/`; no vendor option object becomes product state.
+`qr@0.6.0` remains the standards-first structural baseline and golden-vector oracle. Phase 2A adds `qr-code-styling@1.9.2` only behind `src/engines/render/designer-qr/`, loaded dynamically in the browser. Phase 2B adds `@zxing/library@0.23.0` only behind `src/engines/decode/zxing/` for explicit artifact self-tests. Qraft design and quality contracts remain vendor-neutral.
 
-See `docs/18-ADR-DECISIONS.md`, `docs/22-PHASE-1-CORE-QR.md` and `docs/23-PHASE-2-VISUAL-STUDIO.md`.
+See `docs/18-ADR-DECISIONS.md`, `docs/22-PHASE-1-CORE-QR.md`, `docs/23-PHASE-2-VISUAL-STUDIO.md` and `docs/24-PHASE-2B-QUALITY-ASSISTANT.md`.
 
 ## Why TypeScript 5.9?
 
@@ -155,7 +156,18 @@ Phase 2A adds:
 7. lazy browser-only designer rendering,
 8. styled SVG and PNG artifacts.
 
-Next: Quality Assistant foundation and local logo handling before broader export/project-file work.
+Phase 2B adds:
+
+1. a Qraft-owned QR quality context, findings and rule seam,
+2. four-module quiet-zone validation,
+3. luminance-based contrast guidance with multi-point gradient sampling,
+4. inversion/transparency warnings,
+5. ECC + styling guidance,
+6. version/module/density metadata,
+7. explicit local self-test of the canonical SVG with an independent ZXing decoder,
+8. Good / Check / Risk presentation without certification claims.
+
+Next: local logo upload, size/padding limits and logo-occlusion guidance, followed by JPEG/WebP and the versioned `.qraft.json` project envelope.
 
 ## Privacy
 
