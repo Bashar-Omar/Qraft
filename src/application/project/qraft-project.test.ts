@@ -42,6 +42,25 @@ describe("portable Qraft projects", () => {
     expect(imported.logo).toBeUndefined();
   });
 
+  it("round-trips a Phase 3A structured payload through schema v1", async () => {
+    const input = {
+      latitude: "30.0444",
+      longitude: "31.2357",
+      altitude: "",
+      uncertainty: "25",
+    };
+    const artifact = await exportQraftProject({
+      payloadId: "location",
+      input,
+      errorCorrectionLevel: "M",
+      design: DEFAULT_QR_DESIGN,
+      rasterPixelSize: 1024,
+    });
+
+    const imported = await importQraftProject(artifact.blob);
+    expect(imported).toMatchObject({ payloadId: "location", input });
+  });
+
   it("round-trips a bounded normalized PNG logo", async () => {
     const logoBytes = fakePngHeader();
     const design = {

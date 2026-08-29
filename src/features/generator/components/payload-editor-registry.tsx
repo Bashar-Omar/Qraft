@@ -3,10 +3,13 @@ import type { ComponentType } from "react";
 import type { PayloadId } from "@/core/payload/payload";
 import { EmailEditor } from "@/features/generator/components/email-editor";
 import type { PayloadEditorProps } from "@/features/generator/components/payload-editor.types";
+import { LocationEditor } from "@/features/generator/components/location-editor";
 import { PhoneEditor } from "@/features/generator/components/phone-editor";
 import { SmsEditor } from "@/features/generator/components/sms-editor";
 import { TextEditor } from "@/features/generator/components/text-editor";
 import { UrlEditor } from "@/features/generator/components/url-editor";
+import { VCardEditor } from "@/features/generator/components/vcard-editor";
+import { WhatsAppEditor } from "@/features/generator/components/whatsapp-editor";
 import { WifiEditor } from "@/features/generator/components/wifi-editor";
 
 export type PayloadEditorRegistration = Readonly<{
@@ -65,6 +68,15 @@ const payloadEditors: Readonly<Record<PayloadId, PayloadEditorRegistration>> = {
   },
   text: {
     component: TextEditor,
+  },
+  vcard: {
+    component: VCardEditor,
+  },
+  whatsapp: {
+    component: WhatsAppEditor,
+  },
+  location: {
+    component: LocationEditor,
   },
 };
 

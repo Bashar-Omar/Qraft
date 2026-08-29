@@ -4,7 +4,7 @@ import { PhaseCard } from "@/components/foundation/phase-card";
 import { QrMotif } from "@/components/foundation/qr-motif";
 
 const systemNotes = [
-  ["PHASE", "02D / EXPORT + PROJECTS"],
+  ["PHASE", "03A / STRUCTURED PAYLOADS"],
   ["RUNTIME", "BROWSER-FIRST"],
   ["PERSISTENCE", "NO ACCOUNT"],
   ["DEPLOYMENT", "STATIC-EXPORT READY"],
@@ -15,7 +15,7 @@ export default function HomePage() {
     <>
       <section className="hero shell">
         <div className="hero__copy">
-          <span className="mono-label accent-marker">QRAFT / SYSTEM / 02D</span>
+          <span className="mono-label accent-marker">QRAFT / SYSTEM / 03A</span>
           <h1>Craft codes that work.</h1>
           <p className="hero__lede">
             A privacy-first QR and barcode studio designed as a serious creative tool — precise,
@@ -30,8 +30,8 @@ export default function HomePage() {
             </Link>
           </div>
           <p className="hero__honesty">
-            Phase 2D completes the Visual Studio gate with exact JPEG/WebP artifacts and versioned,
-            locally validated `.qraft.json` projects — including bounded portable logo assets.
+            Phase 3A expands the curated generator with standards-backed Contact, WhatsApp and
+            Location payloads while preserving the same local render, quality and export pipeline.
           </p>
         </div>
 
@@ -46,14 +46,14 @@ export default function HomePage() {
             </div>
             <div className="hero-visual__annotation">
               <span>CLIENT FIRST</span>
-              <strong>02D</strong>
+              <strong>03A</strong>
               <span>NO CLOUD DATA</span>
             </div>
           </div>
           <div className="hero-visual__footer">
             <span>STATIC EXPORT</span>
             <span>TYPE-SAFE</span>
-            <span>EXPORT + PROJECTS</span>
+            <span>STRUCTURED PAYLOADS</span>
           </div>
         </div>
       </section>

@@ -359,3 +359,29 @@ Object URLs retain backing Blob references until released. Project-imported logo
 ### Qraft blueprint — portable project security
 
 The project blueprint explicitly identifies large files, malicious object shapes, unknown schema versions and giant data URIs as `.qraft.json` threats. Phase 2D implements file/embedded-asset caps, fresh-object parsing, no unsafe deep merge and migration/version checks before imported state reaches the studio.
+
+## Phase 3A payload refresh — 2026-08-29
+
+### vCard
+
+- `https://www.rfc-editor.org/rfc/rfc6350.html`
+
+RFC 6350 is the IETF vCard Format Specification and obsoletes the older RFC 2426 vCard format. Phase 3A uses vCard 4.0 with CRLF content lines, escaped text and UTF-8-safe folding.
+
+### WhatsApp Click to Chat
+
+- `https://faq.whatsapp.com/5913398998672934/`
+
+WhatsApp documents `https://wa.me/<number>` with the full international number written without formatting characters, and `?text=<urlencodedtext>` for an optional pre-filled message. Qraft accepts a readable `+` international number in the editor, normalizes it locally and emits the documented digits-only path.
+
+### Geographic URI
+
+- `https://www.rfc-editor.org/rfc/rfc5870.html`
+
+RFC 5870 defines the standards-track `geo:` URI with WGS-84 latitude/longitude, optional altitude and optional uncertainty. Phase 3A uses the provider-neutral URI rather than a vendor map URL.
+
+### iCalendar scoping note
+
+- `https://www.rfc-editor.org/rfc/rfc5545.html`
+
+RFC 5545 requires UID and DTSTAMP in VEVENT and has explicit DATE/DATE-TIME/DTEND semantics. Event is therefore scoped to Phase 3B so Qraft can define deterministic timestamp/UID/time-zone behavior instead of emitting a superficially valid but semantically unstable string.
