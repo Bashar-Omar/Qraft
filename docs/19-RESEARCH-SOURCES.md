@@ -332,3 +332,30 @@ Implementation implications:
 - Qraft checks PNG/JPEG/WebP signatures and dimensions itself before browser decode,
 - the browser must successfully decode the bounded image,
 - Qraft re-encodes the decoded pixels before renderer use.
+
+## Phase 2D export/project refresh — 2026-08-29
+
+### HTML Canvas raster export — MDN
+
+- `https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob`
+- `https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toDataURL`
+
+Re-checked facts:
+
+- `toBlob()` accepts an optional output MIME type and quality for lossy encoders,
+- PNG is required by the platform,
+- browsers may support JPEG/WebP additionally,
+- when a requested format is unsupported, the platform may return PNG instead,
+- `toDataURL()` builds a large in-memory string and MDN recommends `toBlob()` for larger images.
+
+Qraft therefore uses Blob export and validates the actual returned MIME before assigning a JPEG/WebP filename.
+
+### Blob object URL lifecycle — MDN
+
+- `https://developer.mozilla.org/en-US/docs/Web/API/URL/revokeObjectURL_static`
+
+Object URLs retain backing Blob references until released. Project-imported logo URLs reuse Phase 2C's replacement/removal/unmount cleanup discipline.
+
+### Qraft blueprint — portable project security
+
+The project blueprint explicitly identifies large files, malicious object shapes, unknown schema versions and giant data URIs as `.qraft.json` threats. Phase 2D implements file/embedded-asset caps, fresh-object parsing, no unsafe deep merge and migration/version checks before imported state reaches the studio.

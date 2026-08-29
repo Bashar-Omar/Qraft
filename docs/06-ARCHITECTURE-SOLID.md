@@ -433,3 +433,27 @@ portable geometry             ephemeral browser locator
 ```
 
 The application owns input decoding/normalization and object-URL lifetime. The designer adapter owns the translation from Qraft logo geometry to renderer-specific image options. Quality rules consume only Qraft geometry + render metadata. This keeps future project-file migrations, renderer replacement and scanner work independent from browser object URLs and vendor option names.
+
+## Phase 2D implementation note — export policy and portable projects
+
+Phase 2D adds two boundaries without reversing earlier SOLID decisions.
+
+### Raster export
+
+Portable raster-size policy lives in `core/export/`; browser Canvas mechanics remain in `engines/export/`. PNG, JPEG and WebP all consume the same canonical SVG, so styling/logo behavior cannot drift between preview and export.
+
+### Project persistence
+
+`.qraft.json` is parsed as untrusted input and reconstructed into fresh Qraft domain values. The project schema never stores vendor renderer option objects or browser object URLs. The application layer may embed the already-normalized local PNG logo as bounded base64 only when the user explicitly saves a portable project.
+
+```text
+untrusted JSON
+→ size/schema/version checks
+→ explicit migration chain
+→ fresh Qraft domain values
+→ payload codec validation
+→ optional re-inspected PNG asset
+→ studio state
+```
+
+No generic deep merge is used for project import.

@@ -250,3 +250,43 @@ Decision:
 Why:
 
 This preserves privacy, avoids serializing browser/vendor state, keeps `.qraft.json` design data migration-friendly and makes the renderer replaceable without redefining saved logo controls.
+
+---
+
+## ADR-017 — Shared canonical raster pipeline with exact MIME verification
+
+**Status:** Accepted
+
+PNG, JPEG and WebP exporters rasterize `RenderedCode.svg` through one browser adapter. Raster-size policy is Qraft-owned core data; Canvas details remain in `engines/`.
+
+Decision:
+
+- preserve integer pixels-per-module,
+- PNG/WebP may preserve alpha,
+- JPEG always paints a solid white base,
+- request lossy encoders at quality 0.92,
+- verify the returned Blob MIME exactly,
+- fail clearly if the browser silently falls back to another format.
+
+This prevents extension/MIME mismatches and keeps all raster formats faithful to the same canonical styled artifact.
+
+---
+
+## ADR-018 — `.qraft.json` v1 is explicit, versioned and rebuilt into fresh domain objects
+
+**Status:** Accepted
+
+`.qraft.json` becomes Qraft's account-free persistence artifact.
+
+Decision:
+
+- schema v1 stores Qraft payload input, QR/ECC/design and export-size settings,
+- project import has a file-size cap, JSON depth/node limits and strict supported keys,
+- prototype-sensitive payload keys are rejected,
+- migration is explicit `n → n+1`; newer versions fail instead of being guessed,
+- imported payload data is checked again by the current payload codec,
+- no unsafe deep merge,
+- optional normalized PNG logo data is bounded and re-inspected on import,
+- runtime Blob/object URL values never enter the core project schema.
+
+This keeps saved projects stable across renderer replacements while preserving the privacy-first local workflow.

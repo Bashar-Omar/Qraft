@@ -6,8 +6,8 @@ Phase 2 is being delivered as small gated slices after the Phase 1 Core QR basel
 
 - **Phase 2A — Visual Studio foundation: complete**
 - **Phase 2B — Quality Assistant foundation: complete**
-- **Phase 2C — local logo + occlusion guardrails: current**
-- later Phase 2 slices — JPEG/WebP and `.qraft.json`
+- **Phase 2C — local logo + occlusion guardrails: complete**
+- **Phase 2D — JPEG/WebP + `.qraft.json`: current**
 
 The full roadmap gate remains: shipped presets must round-trip decode on representative golden/reference artifacts before Phase 2 is considered complete.
 
@@ -212,6 +212,10 @@ Quality Assistant estimates centered coverage from the Qraft logo area, compares
 
 The exact logo-bearing SVG remains the canonical artifact. Logo rendering requests require the vendor output to contain an embedded PNG data URI rather than a `blob:` or external image reference, so SVG download and independent self-test exercise the final self-contained artifact.
 
-## Remaining Phase 2 slices
+## Phase 2D — Export + portable projects
 
-Continue with JPEG/WebP export and the versioned `.qraft.json` project envelope. Phase 2 is complete only after the full roadmap gate remains green.
+Phase 2D completes the planned Visual Studio deliverables with JPEG/WebP export and schema-versioned `.qraft.json` files. Raster exporters share one canonical-SVG → Canvas path, project files restore validated Qraft-owned payload/design/ECC/export state, and optional normalized PNG logos remain bounded and local. See `docs/26-PHASE-2D-EXPORT-PROJECT.md`.
+
+## Phase 2 gate
+
+The shipped Pure Mono, Qraft Mint, Soft Mint and Packaging presets continue to run through independent browser self-decode at reference size, while raster and project-file flows have artifact-level desktop/mobile tests. Phase 2 is complete only when the repository verification gate remains green after these additions.

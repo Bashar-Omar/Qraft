@@ -3,8 +3,10 @@ import type { ExportArtifact, Exporter, ExportRequest } from "@/core/export/expo
 import { canvasToExactBlob, rasterizeRenderedSvg } from "@/engines/export/raster/rasterize-svg";
 import { sanitizeFilenameBase } from "@/lib/files/filename";
 
-export class PngExporter implements Exporter {
-  readonly format = "png" as const;
+const JPEG_QUALITY = 0.92;
+
+export class JpegExporter implements Exporter {
+  readonly format = "jpeg" as const;
 
   supports(rendered: RenderedCode): boolean {
     void rendered;
@@ -15,20 +17,25 @@ export class PngExporter implements Exporter {
 
   async export(request: ExportRequest): Promise<ExportArtifact> {
     if (!this.supports(request.rendered)) {
-      throw new Error("PNG export requires a browser canvas environment.");
+      throw new Error("JPEG export requires a browser canvas environment.");
     }
 
-    const { canvas, pixelSize } = await rasterizeRenderedSvg(request.rendered, request.pixelSize);
+    const { canvas, pixelSize } = await rasterizeRenderedSvg(
+      request.rendered,
+      request.pixelSize,
+      "#ffffff",
+    );
+    const blob = await canvasToExactBlob(canvas, "image/jpeg", JPEG_QUALITY);
     const filenameBase = sanitizeFilenameBase(request.filenameBase);
 
     return {
-      blob: await canvasToExactBlob(canvas, "image/png"),
-      filename: `${filenameBase}.png`,
-      mimeType: "image/png",
+      blob,
+      filename: `${filenameBase}.jpg`,
+      mimeType: "image/jpeg",
       width: pixelSize,
       height: pixelSize,
     };
   }
 }
 
-export const pngExporter = new PngExporter();
+export const jpegExporter = new JpegExporter();

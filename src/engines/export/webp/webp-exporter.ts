@@ -3,8 +3,10 @@ import type { ExportArtifact, Exporter, ExportRequest } from "@/core/export/expo
 import { canvasToExactBlob, rasterizeRenderedSvg } from "@/engines/export/raster/rasterize-svg";
 import { sanitizeFilenameBase } from "@/lib/files/filename";
 
-export class PngExporter implements Exporter {
-  readonly format = "png" as const;
+const WEBP_QUALITY = 0.92;
+
+export class WebpExporter implements Exporter {
+  readonly format = "webp" as const;
 
   supports(rendered: RenderedCode): boolean {
     void rendered;
@@ -15,20 +17,21 @@ export class PngExporter implements Exporter {
 
   async export(request: ExportRequest): Promise<ExportArtifact> {
     if (!this.supports(request.rendered)) {
-      throw new Error("PNG export requires a browser canvas environment.");
+      throw new Error("WebP export requires a browser canvas environment.");
     }
 
     const { canvas, pixelSize } = await rasterizeRenderedSvg(request.rendered, request.pixelSize);
+    const blob = await canvasToExactBlob(canvas, "image/webp", WEBP_QUALITY);
     const filenameBase = sanitizeFilenameBase(request.filenameBase);
 
     return {
-      blob: await canvasToExactBlob(canvas, "image/png"),
-      filename: `${filenameBase}.png`,
-      mimeType: "image/png",
+      blob,
+      filename: `${filenameBase}.webp`,
+      mimeType: "image/webp",
       width: pixelSize,
       height: pixelSize,
     };
   }
 }
 
-export const pngExporter = new PngExporter();
+export const webpExporter = new WebpExporter();
