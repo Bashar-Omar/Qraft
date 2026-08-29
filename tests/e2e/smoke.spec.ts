@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Download, type Page } from "@playwright/test";
 async function clickPayloadType(page: Page, name: RegExp) {
   const viewportWidth = page.viewportSize()?.width ?? 1280;
   const picker =
@@ -9,11 +9,20 @@ async function clickPayloadType(page: Page, name: RegExp) {
   await button.click();
 }
 
+async function readDownloadBytes(download: Download) {
+  const stream = await download.createReadStream();
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks);
+}
+
 test("Core QR landing and Generate studio are reachable", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByRole("heading", { name: "Craft codes that work." })).toBeVisible();
-  await expect(page.getByText("02C / LOGO SAFETY", { exact: true })).toBeVisible();
+  await expect(page.getByText("02D / EXPORT + PROJECTS", { exact: true })).toBeVisible();
 
   await page.getByRole("link", { name: "Open QR studio" }).click();
 
@@ -209,6 +218,131 @@ test("Local logo upload stays browser-only, embeds safely, and self-tests the fi
   await page.getByRole("button", { name: "Remove logo" }).click();
   await expect(page.getByText("Choose logo", { exact: true })).toBeVisible();
   await expect(page.locator(".preview-meta")).toContainText("QR / STANDARD");
+});
+
+test("Raster export produces real PNG, JPEG and WebP artifacts at the selected size", async ({
+  page,
+}) => {
+  await page.goto("/generate");
+  await page.getByRole("checkbox", { name: /Transparent background/ }).check();
+  await expect(page.locator(".preview-meta")).toContainText("QR / DESIGNER");
+  await page.getByLabel("Raster size").selectOption("512");
+
+  const pngPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download PNG" }).click();
+  const png = await pngPromise;
+  const pngBytes = await readDownloadBytes(png);
+  expect(png.suggestedFilename()).toBe("qraft-url.png");
+  expect([...pngBytes.subarray(0, 8)]).toEqual([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+
+  const jpegPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download JPEG" }).click();
+  const jpeg = await jpegPromise;
+  const jpegBytes = await readDownloadBytes(jpeg);
+  expect(jpeg.suggestedFilename()).toBe("qraft-url.jpg");
+  expect([...jpegBytes.subarray(0, 3)]).toEqual([0xff, 0xd8, 0xff]);
+
+  const webpPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download WebP" }).click();
+  const webp = await webpPromise;
+  const webpBytes = await readDownloadBytes(webp);
+  expect(webp.suggestedFilename()).toBe("qraft-url.webp");
+  expect(webpBytes.subarray(0, 4).toString("ascii")).toBe("RIFF");
+  expect(webpBytes.subarray(8, 12).toString("ascii")).toBe("WEBP");
+
+  const cornerPixels = await page.evaluate(
+    async ({
+      pngData,
+      jpegData,
+      webpData,
+    }: {
+      pngData: string;
+      jpegData: string;
+      webpData: string;
+    }) => {
+      async function corner(data: string, type: string) {
+        const binary = atob(data);
+        const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+        const bitmap = await createImageBitmap(new Blob([bytes], { type }));
+        const canvas = document.createElement("canvas");
+        canvas.width = bitmap.width;
+        canvas.height = bitmap.height;
+        const context = canvas.getContext("2d");
+        if (!context) throw new Error("Canvas unavailable in raster artifact test.");
+        context.drawImage(bitmap, 0, 0);
+        const pixel = [...context.getImageData(0, 0, 1, 1).data];
+        bitmap.close();
+        return pixel;
+      }
+
+      return {
+        png: await corner(pngData, "image/png"),
+        jpeg: await corner(jpegData, "image/jpeg"),
+        webp: await corner(webpData, "image/webp"),
+      };
+    },
+    {
+      pngData: pngBytes.toString("base64"),
+      jpegData: jpegBytes.toString("base64"),
+      webpData: webpBytes.toString("base64"),
+    },
+  );
+
+  expect(cornerPixels.png[3]).toBe(0);
+  expect(cornerPixels.webp[3]).toBe(0);
+  expect(cornerPixels.jpeg.slice(0, 3).every((channel: number) => channel >= 250)).toBe(true);
+  expect(cornerPixels.jpeg[3]).toBe(255);
+});
+
+test("Portable project export and import restores the validated studio state", async ({ page }) => {
+  await page.goto("/generate");
+
+  await clickPayloadType(page, /Text/);
+  await page.getByLabel("Text").fill("Qraft project — مرحبًا 👋");
+  await page.getByRole("button", { name: /Qraft Mint/ }).click();
+  await page
+    .getByRole("group", { name: "Error correction" })
+    .getByRole("button", { name: /^H High ~30%$/ })
+    .click();
+  await page.getByLabel("Raster size").selectOption("2048");
+
+  const savePromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save .qraft.json" }).click();
+  const projectDownload = await savePromise;
+  expect(projectDownload.suggestedFilename()).toBe("qraft-text.qraft.json");
+  const projectBytes = await readDownloadBytes(projectDownload);
+  const project = JSON.parse(projectBytes.toString("utf8")) as Record<string, unknown>;
+  expect(project).toMatchObject({ kind: "qraft-project", schemaVersion: 1 });
+
+  await clickPayloadType(page, /URL/);
+  await page.getByRole("button", { name: /Pure Mono/ }).click();
+  await page
+    .getByRole("group", { name: "Error correction" })
+    .getByRole("button", { name: /^L Low ~7%$/ })
+    .click();
+  await page.getByLabel("Raster size").selectOption("512");
+
+  await page.getByLabel("Open Qraft project").setInputFiles({
+    name: "restored.qraft.json",
+    mimeType: "application/json",
+    buffer: projectBytes,
+  });
+
+  await expect(
+    page.getByText("Opened restored.qraft.json locally.", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Text")).toHaveValue("Qraft project — مرحبًا 👋");
+  await expect(page.getByRole("button", { name: /Qraft Mint/ })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await expect(
+    page
+      .getByRole("group", { name: "Error correction" })
+      .getByRole("button", { name: /^H High ~30%$/ }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByLabel("Raster size")).toHaveValue("2048");
+  await expect(page.getByRole("img", { name: "Generated QR code preview" })).toBeVisible();
 });
 
 test("theme selector persists the chosen preference", async ({ page }) => {

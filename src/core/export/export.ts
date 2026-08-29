@@ -1,6 +1,6 @@
 import type { RenderedCode } from "@/core/code/render";
 
-export type ExportFormat = "svg" | "png";
+export type ExportFormat = "svg" | "png" | "jpeg" | "webp";
 
 export type ExportRequest = Readonly<{
   rendered: RenderedCode;

@@ -15,7 +15,7 @@ const guideGroups = [
   },
   {
     title: "Print & export",
-    items: ["SVG vs raster", "Physical sizing", "Batch output"],
+    items: ["SVG / PNG / JPEG / WebP", "Portable .qraft.json", "Physical sizing", "Batch output"],
   },
 ] as const;
 
@@ -29,8 +29,9 @@ export default function GuidesPage() {
           The implementation decisions and quality gates are versioned under <code>/docs</code>.
           Phase 1 proves the curated Core QR payload contract; Phase 2A adds the Qraft-owned design
           model and browser-only designer adapter; Phase 2B adds explainable quality findings and an
-          independent local artifact self-test; Phase 2C now adds local logo preparation and
-          occlusion/ECC guardrails.
+          independent local artifact self-test; Phase 2C adds local logo preparation and
+          occlusion/ECC guardrails; Phase 2D completes the Visual Studio with JPEG/WebP artifacts
+          and versioned portable project import/export.
         </p>
       </div>
 

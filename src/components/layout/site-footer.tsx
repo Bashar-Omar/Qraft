@@ -10,7 +10,7 @@ export function SiteFooter() {
           <p>Craft codes that work.</p>
         </div>
         <div className="site-footer__meta">
-          <span>PHASE 02C / LOGO SAFETY</span>
+          <span>PHASE 02D / EXPORT + PROJECTS</span>
           <a href={SITE.githubUrl} rel="noreferrer" target="_blank">
             PUBLIC REPOSITORY ↗
           </a>

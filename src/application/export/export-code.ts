@@ -8,6 +8,7 @@ export function createExportCode(exporters: ExporterRegistry) {
     rendered: RenderedCode,
     format: ExportFormat,
     filenameBase: string,
+    options: Readonly<{ pixelSize?: number }> = {},
   ): Promise<ExportArtifact> {
     const exporter = exporters[format];
 
@@ -18,6 +19,7 @@ export function createExportCode(exporters: ExporterRegistry) {
     return exporter.export({
       rendered,
       filenameBase,
+      pixelSize: options.pixelSize,
     });
   };
 }

@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { prepareQrLogo } from "@/application/assets/prepare-qr-logo";
+import { exportQraftProject } from "@/application/project/export-qraft-project";
+import { importQraftProject } from "@/application/project/import-qraft-project";
 import type { GeneratedCode } from "@/application/generate/generate-code";
 import { exportCode, generateCode, selfTestQr } from "@/composition/core-qr";
 import {
@@ -25,7 +27,16 @@ import { QrDesignPanel } from "@/features/generator/components/qr-design-panel";
 import { QrLogoPanel, type QrLogoPanelAsset } from "@/features/generator/components/qr-logo-panel";
 import { QrPreview } from "@/features/generator/components/qr-preview";
 import { getPayloadEditorRegistration } from "@/features/generator/components/payload-editor-registry";
+import {
+  ExportProjectPanel,
+  type ExportBusyState,
+} from "@/features/generator/components/export-project-panel";
 import { downloadArtifact } from "@/features/generator/lib/download";
+import {
+  DEFAULT_RASTER_PIXEL_SIZE,
+  resolveRasterPixelSize,
+  type RasterPixelSize,
+} from "@/core/export/raster";
 
 const ECC_OPTIONS: readonly Readonly<{
   id: QrErrorCorrectionLevel;
@@ -59,6 +70,7 @@ type GenerationState =
 type SelectedLogo = Readonly<{
   renderAsset: QrLogoRenderAsset;
   panelAsset: QrLogoPanelAsset;
+  blob: Blob;
 }>;
 
 type SelfTestGenerationState =
@@ -95,8 +107,11 @@ export function GenerateStudio() {
   const [logoPreparing, setLogoPreparing] = useState(false);
   const [logoIssue, setLogoIssue] = useState<string | null>(null);
   const [generation, setGeneration] = useState<GenerationState>({ status: "waiting" });
-  const [exporting, setExporting] = useState<"svg" | "png" | null>(null);
+  const [rasterPixelSize, setRasterPixelSize] =
+    useState<RasterPixelSize>(DEFAULT_RASTER_PIXEL_SIZE);
+  const [exporting, setExporting] = useState<ExportBusyState>(null);
   const [exportIssue, setExportIssue] = useState<string | null>(null);
+  const [projectNotice, setProjectNotice] = useState<string | null>(null);
   const [selfTest, setSelfTest] = useState<SelfTestGenerationState>({ status: "idle" });
   const selfTestAttempt = useRef(0);
   const logoPrepareAttempt = useRef(0);
@@ -181,6 +196,7 @@ export function GenerateStudio() {
       logoObjectUrl.current = uri;
 
       setLogo({
+        blob: prepared.blob,
         renderAsset: {
           id: `logo-${attempt}-${prepared.blob.size}`,
           uri,
@@ -283,25 +299,124 @@ export function GenerateStudio() {
     }
   };
 
-  const download = async (format: "svg" | "png") => {
+  const download = async (format: "svg" | "png" | "jpeg" | "webp") => {
     if (currentGeneration.status !== "ready") {
       return;
     }
 
     setExporting(format);
     setExportIssue(null);
+    setProjectNotice(null);
 
     try {
       const artifact = await exportCode(
         currentGeneration.value.rendered,
         format,
         `qraft-${currentGeneration.value.definition.id}`,
+        { pixelSize: rasterPixelSize },
       );
       downloadArtifact(artifact);
-    } catch {
-      setExportIssue(`Qraft could not prepare the ${format.toUpperCase()} download.`);
+    } catch (error) {
+      setExportIssue(
+        error instanceof Error
+          ? error.message
+          : `Qraft could not prepare the ${format.toUpperCase()} download.`,
+      );
     } finally {
       setExporting(null);
+    }
+  };
+
+  const saveProject = async () => {
+    setExporting("project");
+    setExportIssue(null);
+    setProjectNotice(null);
+
+    try {
+      const artifact = await exportQraftProject({
+        payloadId,
+        input: currentDraft,
+        errorCorrectionLevel,
+        design,
+        rasterPixelSize,
+        ...(logo
+          ? {
+              logo: {
+                blob: logo.blob,
+                name: logo.panelAsset.name,
+                width: logo.renderAsset.width,
+                height: logo.renderAsset.height,
+              },
+            }
+          : {}),
+      });
+      downloadArtifact(artifact);
+      setProjectNotice("Portable project saved locally as schema v1.");
+    } catch (error) {
+      setExportIssue(error instanceof Error ? error.message : "Qraft could not save this project.");
+    } finally {
+      setExporting(null);
+    }
+  };
+
+  const openProject = async (file: File) => {
+    const attempt = logoPrepareAttempt.current + 1;
+    logoPrepareAttempt.current = attempt;
+    setExporting("import");
+    setExportIssue(null);
+    setProjectNotice(null);
+
+    try {
+      const imported = await importQraftProject(file);
+
+      if (logoPrepareAttempt.current !== attempt) {
+        return;
+      }
+
+      const previousUri = logoObjectUrl.current;
+      let nextLogo: SelectedLogo | null = null;
+
+      if (imported.logo) {
+        const uri = URL.createObjectURL(imported.logo.blob);
+        logoObjectUrl.current = uri;
+        nextLogo = {
+          blob: imported.logo.blob,
+          renderAsset: {
+            id: `project-logo-${attempt}-${imported.logo.blob.size}`,
+            uri,
+            width: imported.logo.width,
+            height: imported.logo.height,
+          },
+          panelAsset: {
+            name: imported.logo.name,
+            sourceWidth: imported.logo.width,
+            sourceHeight: imported.logo.height,
+            normalizedDimension: imported.logo.width,
+          },
+        };
+      } else {
+        logoObjectUrl.current = null;
+      }
+
+      setPayloadId(imported.payloadId);
+      setDrafts((current) => ({ ...current, [imported.payloadId]: imported.input }));
+      setErrorCorrectionLevel(imported.errorCorrectionLevel);
+      setDesign(imported.design);
+      setRasterPixelSize(imported.rasterPixelSize);
+      setLogo(nextLogo);
+      setLogoIssue(null);
+
+      if (previousUri) {
+        URL.revokeObjectURL(previousUri);
+      }
+
+      setProjectNotice(`Opened ${file.name || "Qraft project"} locally.`);
+    } catch (error) {
+      setExportIssue(error instanceof Error ? error.message : "Qraft could not open this project.");
+    } finally {
+      if (logoPrepareAttempt.current === attempt) {
+        setExporting(null);
+      }
     }
   };
 
@@ -310,6 +425,10 @@ export function GenerateStudio() {
     currentGeneration.status === "ready"
       ? (editorRegistration.getNotice?.(currentGeneration.value.parsedData) ?? null)
       : null;
+  const actualRasterPixelSize =
+    currentGeneration.status === "ready"
+      ? resolveRasterPixelSize(currentGeneration.value.rendered, rasterPixelSize)
+      : undefined;
 
   return (
     <div className="studio-shell" data-testid="studio-shell">
@@ -474,36 +593,21 @@ export function GenerateStudio() {
                 selfTest={currentSelfTest}
               />
             ) : null}
-
-            <div className="export-actions">
-              <button
-                className="button button--primary button--full"
-                disabled={exporting !== null}
-                onClick={() => void download("svg")}
-                type="button"
-              >
-                {exporting === "svg" ? "Preparing SVG…" : "Download SVG"}
-              </button>
-              <button
-                className="button button--secondary button--full"
-                disabled={exporting !== null}
-                onClick={() => void download("png")}
-                type="button"
-              >
-                {exporting === "png" ? "Preparing PNG…" : "Download PNG"}
-              </button>
-            </div>
-            {exportIssue ? (
-              <p className="export-issue" role="alert">
-                {exportIssue}
-              </p>
-            ) : null}
           </>
-        ) : (
-          <button className="button button--primary button--full" disabled type="button">
-            Fix content to export
-          </button>
-        )}
+        ) : null}
+
+        <ExportProjectPanel
+          actualRasterPixelSize={actualRasterPixelSize}
+          busy={exporting}
+          canExport={currentGeneration.status === "ready"}
+          exportIssue={exportIssue}
+          onChangeRasterPixelSize={setRasterPixelSize}
+          onDownload={(format) => void download(format)}
+          onOpenProject={(file) => void openProject(file)}
+          onSaveProject={() => void saveProject()}
+          projectNotice={projectNotice}
+          rasterPixelSize={rasterPixelSize}
+        />
       </aside>
     </div>
   );
