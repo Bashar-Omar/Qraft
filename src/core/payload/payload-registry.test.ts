@@ -15,6 +15,8 @@ describe("payloadRegistry", () => {
       "whatsapp",
       "event",
       "location",
+      "app",
+      "social",
       "raw",
     ]);
   });
