@@ -2485,6 +2485,97 @@ html[data-theme="dark"] .type-row.is-active {
   font-size: 13px;
 }
 
+.payload-inspector__badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.inspection-basis-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  background: var(--surface-1);
+  color: var(--text-tertiary);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 7px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+}
+
+.payload-inspector__destination {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.payload-inspector__destination span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: var(--surface-1);
+}
+
+.payload-inspector__destination small {
+  color: var(--text-tertiary);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 7px;
+  letter-spacing: 0.06em;
+}
+
+.payload-inspector__destination strong {
+  overflow: hidden;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.payload-inspector__notices {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.payload-inspector__notices li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+  padding: 8px 10px;
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  font-size: 8px;
+  line-height: 1.45;
+}
+
+.payload-inspector__notices li strong {
+  color: var(--text-tertiary);
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 7px;
+  letter-spacing: 0.06em;
+}
+
+.payload-inspector__notices li.is-risk {
+  border-color: color-mix(in srgb, var(--qraft-signal-red) 38%, var(--border-soft));
+}
+
+.payload-inspector__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
 .payload-inspector__metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -2605,8 +2696,18 @@ html[data-theme="dark"] .type-row.is-active {
     flex-direction: column;
   }
 
+  .payload-inspector__actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
   .payload-inspector__footer .button {
     width: 100%;
+  }
+
+  .payload-inspector__destination {
+    grid-template-columns: 1fr;
   }
 
   .payload-inspector__footer p {

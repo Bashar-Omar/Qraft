@@ -22,6 +22,8 @@ const PAYLOAD_IDS = new Set<PayloadId>([
   "whatsapp",
   "location",
   "event",
+  "app",
+  "social",
   "raw",
 ]);
 const ECC_LEVELS = new Set<QrErrorCorrectionLevel>(["L", "M", "Q", "H"]);

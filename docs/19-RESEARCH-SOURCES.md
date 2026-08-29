@@ -446,3 +446,108 @@ RFC 3986 defines the generic `scheme:` structure but leaves scheme-specific sema
 ### Qraft blueprint — inspector boundary
 
 The blueprint requires raw + parsed inspection, explicit safe actions and no automatic URL opening. Step 3 establishes the reusable parser/presentation seam in Generate now; camera/image decoding and create-from-scan remain Phase 5 responsibilities.
+
+## Phase 3C App Link refresh — 2026-08-29
+
+### Apple Universal Links / Associated Domains
+
+- `https://developer.apple.com/documentation/xcode/allowing-apps-and-websites-to-link-to-your-content`
+- `https://developer.apple.com/documentation/xcode/supporting-associated-domains`
+- `https://developer.apple.com/documentation/xcode/supporting-universal-links-in-your-app`
+
+Re-checked implementation facts:
+
+- Universal Links use normal HTTP/HTTPS URLs,
+- an app and website establish a two-way association outside the link itself,
+- when the app is unavailable the web URL can continue in the browser,
+- apps must still validate parameters because deep links are an input/attack surface.
+
+Qraft therefore validates and encodes the HTTPS destination but does not claim that the website/app association is actually configured.
+
+### Android App Links
+
+- `https://developer.android.com/training/app-links/about`
+- `https://developer.android.com/training/app-links/add-applinks`
+
+Re-checked implementation facts:
+
+- Android App Links use HTTP/HTTPS,
+- Android verifies the relationship against website Digital Asset Links configuration,
+- verification belongs to the app/domain deployment rather than the QR payload.
+
+### Generic URI schemes — RFC 3986
+
+- `https://www.rfc-editor.org/rfc/rfc3986.html`
+
+The generic scheme grammar is `ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )`. Scheme-specific semantics are defined elsewhere. Qraft's advanced custom-scheme helper therefore validates generic structure and applies a conservative product/security block list; it does not pretend arbitrary schemes have verified application ownership.
+
+## Phase 3C Social Link refresh — 2026-08-29
+
+### X profile handles
+
+- `https://help.x.com/en/managing-your-account/change-x-handle`
+
+Re-checked facts:
+
+- an X username/handle appears in the profile URL,
+- current X Help documents 5–15 characters using letters, numbers and underscores.
+
+Qraft therefore applies that grammar only when it builds an X profile URL from shorthand. A pasted HTTPS X/Twitter URL is host-validated and preserved instead of being reconstructed.
+
+### Facebook / Instagram username URLs
+
+- `https://www.facebook.com/help/162586890471598`
+
+Meta's Help Center states that a Facebook username changes the profile URL to `facebook.com/username` and, when synced, the Instagram profile URL to `instagram.com/username`. It also documents Facebook usernames as alphanumeric characters or periods.
+
+Qraft uses these facts for shorthand profile construction while still allowing a full official-host HTTPS URL for page/profile forms that do not fit shorthand.
+
+### TikTok creator profiles
+
+- `https://developers.tiktok.com/docs/en/embed-creator-profiles`
+
+TikTok's developer documentation uses creator-profile URLs in the form `https://www.tiktok.com/@username`. Qraft uses that public URL shape for shorthand and does not call TikTok APIs or oEmbed to validate an account.
+
+### YouTube channel handles
+
+- `https://support.google.com/youtube/answer/6180214`
+- `https://support.google.com/youtube/answer/11585688`
+
+YouTube documents channel handle URLs such as `youtube.com/@youtubecreators`. It also notes that handles can use non-ASCII languages and that shared URLs may be percent-encoded. Qraft therefore uses `encodeURIComponent`-style percent encoding for shorthand YouTube handles rather than assuming ASCII.
+
+### LinkedIn public profile URLs
+
+- `https://www.linkedin.com/help/linkedin/answer/a522735/find-your-linkedin-public-profile-url`
+- `https://www.linkedin.com/help/linkedin/answer/a564298`
+
+LinkedIn documents public member URLs beginning with `linkedin.com/in` and notes that country-based LinkedIn subdomains can occur. LinkedIn Pages have their own public URLs. Qraft therefore builds `/in/` only for shorthand member slugs; company/page users can paste their full official LinkedIn HTTPS URL.
+
+### Product boundary
+
+Social Link generation is local and deterministic. Qraft does not verify that a profile exists, is public, belongs to the user or remains available, and it does not build a hosted bio-page/redirect/analytics service.
+
+## Phase 3C inspector action hardening — 2026-08-29
+
+### Explicit external navigation — HTML / MDN
+
+- `https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/a`
+- `https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/rel/noopener`
+
+Re-checked implementation facts:
+
+- an anchor is a semantic user-activated navigation control,
+- `target="_blank"` opens a separate browsing context,
+- `noopener` prevents the opened page from receiving a live `window.opener` reference back to Qraft,
+- Qraft still spells out `noopener noreferrer` rather than relying only on modern implicit `_blank` behavior.
+
+### Referrer privacy — MDN
+
+- `https://developer.mozilla.org/en-US/docs/Web/API/HTMLAnchorElement/referrerPolicy`
+- `https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Referrer-Policy`
+- `https://developer.mozilla.org/en-US/docs/Web/Security/Practical_implementation_guides/Referrer_policy`
+
+`referrerpolicy="no-referrer"` prevents the external navigation from sending a `Referer` header. Phase 3C uses it on inspector Open actions because generated/scanned destinations may be unrelated third-party sites and Qraft does not need referrer attribution for this workflow.
+
+### Product boundary
+
+A syntactically valid URL is not proof that the destination is trustworthy, non-malicious or owned by the user. The inspector therefore exposes deterministic syntax/classification metadata and an explicit HTTP(S)-only action, while custom/non-web schemes stay copy-only. Camera/image scanning remains Phase 5.

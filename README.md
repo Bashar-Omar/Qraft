@@ -4,8 +4,8 @@
 
 Qraft is a public-source, privacy-first QR and barcode studio being built as a portfolio-grade product: designer-friendly, standards-aware, responsive, testable and local-first.
 
-> **Current status:** Phase 3B — Event + Raw + payload-inspector integration.
-> Phase 2 Visual Studio is complete. Phase 3A added Contact, WhatsApp and Location; Phase 3B now adds standards-aware Event, an exact byte-transparent Raw escape hatch and a reusable local inspector seam for final encoded payloads.
+> **Current status:** Phase 3C — App/Social link helpers + richer inspector actions.
+> Phase 3 payload-breadth implementation is now complete across standards-backed structured payloads, Event, exact Raw mode, curated App/Social links and a reusable local inspector with explicit web-only actions. Physical-device smoke remains a release-QA gate.
 
 ## Product principles
 
@@ -38,7 +38,7 @@ Node.js `24 LTS` is the project/CI standard.
 
 `qr@0.6.0` remains the standards-first structural baseline and golden-vector oracle. Phase 2A adds `qr-code-styling@1.9.2` only behind `src/engines/render/designer-qr/`, loaded dynamically in the browser. Phase 2B adds `@zxing/library@0.23.0` only behind `src/engines/decode/zxing/` for explicit artifact self-tests. Qraft design and quality contracts remain vendor-neutral.
 
-See `docs/18-ADR-DECISIONS.md`, `docs/22-PHASE-1-CORE-QR.md`, `docs/23-PHASE-2-VISUAL-STUDIO.md`, `docs/24-PHASE-2B-QUALITY-ASSISTANT.md`, `docs/25-PHASE-2C-LOGO-SAFETY.md`, `docs/26-PHASE-2D-EXPORT-PROJECT.md`, `docs/27-PHASE-3A-STRUCTURED-PAYLOADS.md`, `docs/28-PHASE-3B-EVENT.md`, `docs/29-PHASE-3B-RAW.md` and `docs/30-PHASE-3B-INTEGRATION-INSPECTOR.md`.
+See `docs/18-ADR-DECISIONS.md`, `docs/22-PHASE-1-CORE-QR.md`, `docs/23-PHASE-2-VISUAL-STUDIO.md`, `docs/24-PHASE-2B-QUALITY-ASSISTANT.md`, `docs/25-PHASE-2C-LOGO-SAFETY.md`, `docs/26-PHASE-2D-EXPORT-PROJECT.md`, `docs/27-PHASE-3A-STRUCTURED-PAYLOADS.md`, `docs/28-PHASE-3B-EVENT.md`, `docs/29-PHASE-3B-RAW.md`, `docs/30-PHASE-3B-INTEGRATION-INSPECTOR.md`, `docs/31-PHASE-3C-APP-LINKS.md`, `docs/32-PHASE-3C-SOCIAL-LINKS.md` and `docs/33-PHASE-3C-INSPECTOR-HARDENING.md`.
 
 ## Why TypeScript 5.9?
 
@@ -112,7 +112,7 @@ Vendor package types stay inside `engines/`. The architecture contract is docume
 ## Current routes
 
 - `/` — product landing and current capability status
-- `/generate` — live QR studio for URL, Wi-Fi, Email, Phone, SMS, Text, Contact, WhatsApp, Event, Location and Raw payloads
+- `/generate` — live QR studio for URL, Wi-Fi, Email, Phone, SMS, Text, Contact, WhatsApp, Event, Location, App Link, Social Link and Raw payloads
 - `/scan` — planned scanner surface
 - `/batch` — planned batch surface
 - `/guides` — guide/documentation surface
@@ -228,7 +228,29 @@ Phase 3B step 3/3 adds:
 5. a local parsed/raw inspector panel that never auto-opens payload destinations,
 6. cross-registry encode → inspect contract coverage plus desktop/mobile inspector E2E.
 
-Next after the full Phase 3B verification/merge: Phase 3C — app/social helpers and the remaining richer-inspector product polish. The three-step cycle is now ready for its complete local gate and one GitHub PR.
+Phase 3C step 1/3 adds:
+
+1. curated HTTPS App/Universal Link intent without remote association verification,
+2. advanced app-owned custom URI schemes behind a conservative scheme policy,
+3. project/golden/inspector/E2E coverage without adding renderer or network branches.
+
+Phase 3C step 2/3 adds:
+
+1. direct Social Link helpers for X, Instagram, TikTok, YouTube, LinkedIn and Facebook,
+2. shorthand handle/profile construction plus validated full official-host HTTPS URLs,
+3. social-host inspector precedence before generic URL fallback,
+4. no OAuth, profile scraping, hosted bio pages, tracking or redirect backend.
+
+Phase 3C step 3/3 adds:
+
+1. explicit inspection provenance: known intent, signature detection or Text fallback,
+2. normalized scheme/host metadata for URI-like payloads,
+3. explicit web-only Open actions for credential-free HTTP(S) destinations,
+4. `noopener noreferrer` + `no-referrer` privacy hardening for external navigation,
+5. copy-only treatment and visible notices for custom/non-web schemes,
+6. a clear boundary that valid syntax is not malware/safety verification.
+
+Next after the full Phase 3C verification/merge: Phase 4 — barcode breadth and the capability-driven symbology catalog.
 
 ## Privacy
 

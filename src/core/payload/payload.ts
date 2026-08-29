@@ -9,6 +9,8 @@ export type PayloadId =
   | "whatsapp"
   | "location"
   | "event"
+  | "app"
+  | "social"
   | "raw";
 
 export type PayloadCategory = "popular" | "general";

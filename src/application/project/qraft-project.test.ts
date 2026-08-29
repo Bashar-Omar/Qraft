@@ -104,6 +104,40 @@ describe("portable Qraft projects", () => {
     expect(imported).toMatchObject({ payloadId: "raw", input });
   });
 
+  it("round-trips an App Link payload without turning Qraft into a redirect service", async () => {
+    const input = {
+      strategy: "custom-scheme",
+      destination: "qraftdemo://product/42?ref=portable-project",
+    };
+    const artifact = await exportQraftProject({
+      payloadId: "app",
+      input,
+      errorCorrectionLevel: "M",
+      design: DEFAULT_QR_DESIGN,
+      rasterPixelSize: 1024,
+    });
+
+    const imported = await importQraftProject(artifact.blob);
+    expect(imported).toMatchObject({ payloadId: "app", input });
+  });
+
+  it("round-trips a Social Link payload through the existing schema-v1 envelope", async () => {
+    const input = {
+      platform: "linkedin",
+      target: "avery-morgan",
+    };
+    const artifact = await exportQraftProject({
+      payloadId: "social",
+      input,
+      errorCorrectionLevel: "M",
+      design: DEFAULT_QR_DESIGN,
+      rasterPixelSize: 1024,
+    });
+
+    const imported = await importQraftProject(artifact.blob);
+    expect(imported).toMatchObject({ payloadId: "social", input });
+  });
+
   it("round-trips a bounded normalized PNG logo", async () => {
     const logoBytes = fakePngHeader();
     const design = {

@@ -381,3 +381,71 @@ Decision:
 Why:
 
 Scanner/Inspector later needs a stable way to classify decoded strings without rebuilding codec knowledge inside camera UI. Keeping detection/orchestration in the application layer lets codecs own syntax, avoids a second serialization parser, preserves Raw exactness and prevents permissive codecs from swallowing more specific payloads.
+
+---
+
+## ADR-023 — App links prefer HTTPS association and never imply verification
+
+**Status:** Accepted
+
+Phase 3C step 1 adds App Link as a curated payload intent without adding a redirect backend or network verifier.
+
+Decision:
+
+- the recommended strategy accepts one HTTPS destination suitable for Apple Universal Links / Android App Links,
+- Qraft validates URI syntax and host locally but does not fetch `apple-app-site-association`, `assetlinks.json` or claim the destination is platform-verified,
+- the same HTTPS value is the QR payload; Qraft does not invent a separate fallback URL,
+- an advanced custom-scheme strategy accepts an RFC 3986-style app-owned URI while blocking executable/dangerous schemes and schemes handled by dedicated Qraft editors,
+- generic inspection does not infer App Link semantics from an HTTPS URL or unknown custom scheme; it labels App Link only when the caller already knows that payload intent,
+- renderer/export/quality code remains unchanged and no destination is auto-opened.
+
+Why:
+
+Universal/App Link behavior depends on configuration owned by the destination website and installed app. Encoding an HTTPS URI is deterministic and local; proving the platform association would require external network state. Keeping that distinction explicit avoids false verification claims and preserves Qraft's privacy-first, static architecture.
+
+---
+
+## ADR-024 — Social links are direct HTTPS destinations, not hosted bio pages
+
+**Status:** Accepted
+
+Phase 3C step 2 adds Social Link as a curated profile/page/channel helper while preserving Qraft's static, privacy-first boundary.
+
+Decision:
+
+- one Social payload covers X, Instagram, TikTok, YouTube, LinkedIn and Facebook through a platform discriminator plus handle/identifier or full HTTPS URL,
+- shorthand identifiers expand locally to common public profile/channel URL forms; a pasted full URL is preserved after HTTPS and host validation,
+- Qraft does not fetch account metadata, verify ownership/existence/visibility or add tracking parameters,
+- generic inspection may classify known social HTTPS hosts as Social before the broader URL fallback because the host itself provides a bounded semantic signal,
+- WhatsApp keeps higher precedence because it already has a dedicated payload contract,
+- unknown HTTPS hosts remain ordinary URL payloads, and App Link semantics still require a preferred/known payload intent rather than being inferred from HTTPS alone,
+- Social remains a normal `PayloadCodec` registration so renderer/export/quality/project code stays unchanged.
+
+Why:
+
+The blueprint asks for social/profile helpers, not a hosted Linktree-style service. Direct HTTPS links are portable, scanner-friendly and deterministic. Keeping platform knowledge in one codec avoids React string-building branches while still giving the inspector a useful classification seam for later scanning.
+
+---
+
+## ADR-025 — Inspector navigation is explicit, web-only and privacy-hardened
+
+**Status:** Accepted
+
+Phase 3C step 3 turns the payload inspector into the reusable action boundary that later Scanner UI can consume without making decoded content executable by default.
+
+Decision:
+
+- inspection records how classification was reached: known/preferred intent, explicit signature detection or Text fallback,
+- URI-like payloads may expose normalized scheme/host metadata without fetching the destination,
+- only credential-free `http:` / `https:` payloads receive an Open action; HTTP(S) URLs with embedded credentials remain copy-only,
+- custom and other non-web schemes remain copy-only even when syntactically valid,
+- Open is an ordinary explicit anchor action with a new browsing context; Qraft never navigates automatically,
+- external Open uses `rel="noopener noreferrer"` plus `referrerpolicy="no-referrer"`,
+- HTTP destinations receive an explicit transport-risk notice,
+- App HTTPS links retain the distinction between URI validity and app↔website association verification,
+- custom App schemes retain an explicit unverified/collision risk notice,
+- Qraft does not treat URL syntax validation as malware, ownership or destination-safety verification.
+
+Why:
+
+Scanner phase results are untrusted input. Establishing the action contract before camera/image decoding exists prevents future scanner components from inventing their own navigation rules. Web-only explicit opening keeps the common useful action available while avoiding automatic execution of arbitrary custom schemes and reducing referrer leakage to external destinations.

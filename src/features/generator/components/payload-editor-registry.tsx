@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 
 import type { PayloadId } from "@/core/payload/payload";
+import { AppLinkEditor } from "@/features/generator/components/app-link-editor";
 import { EmailEditor } from "@/features/generator/components/email-editor";
 import { EventEditor } from "@/features/generator/components/event-editor";
 import type { PayloadEditorProps } from "@/features/generator/components/payload-editor.types";
@@ -8,6 +9,7 @@ import { LocationEditor } from "@/features/generator/components/location-editor"
 import { PhoneEditor } from "@/features/generator/components/phone-editor";
 import { RawEditor } from "@/features/generator/components/raw-editor";
 import { SmsEditor } from "@/features/generator/components/sms-editor";
+import { SocialLinkEditor } from "@/features/generator/components/social-link-editor";
 import { TextEditor } from "@/features/generator/components/text-editor";
 import { UrlEditor } from "@/features/generator/components/url-editor";
 import { VCardEditor } from "@/features/generator/components/vcard-editor";
@@ -79,6 +81,12 @@ const payloadEditors: Readonly<Record<PayloadId, PayloadEditorRegistration>> = {
   },
   location: {
     component: LocationEditor,
+  },
+  app: {
+    component: AppLinkEditor,
+  },
+  social: {
+    component: SocialLinkEditor,
   },
   event: {
     component: EventEditor,

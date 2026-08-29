@@ -22,7 +22,7 @@ test("Core QR landing and Generate studio are reachable", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByRole("heading", { name: "Craft codes that work." })).toBeVisible();
-  await expect(page.getByText("03B / INTEGRATED", { exact: true })).toBeVisible();
+  await expect(page.getByText("03C / LINK HELPERS", { exact: true })).toBeVisible();
 
   await page.getByRole("link", { name: "Open QR studio" }).click();
 
@@ -37,7 +37,7 @@ test("Core QR landing and Generate studio are reachable", async ({ page }) => {
 test("URL generation normalizes locally and exports SVG and PNG", async ({ page }) => {
   await page.goto("/generate");
 
-  const urlInput = page.getByLabel("Destination");
+  const urlInput = page.getByLabel("Destination", { exact: true });
   await urlInput.fill("openai.com/research");
 
   await expect(
@@ -228,7 +228,7 @@ test("Payload inspector classifies final Event and Raw payloads locally without 
 
   const inspector = page.locator(".payload-inspector");
   await expect(inspector).toContainText("URL");
-  await expect(inspector).toContainText("Inspected locally. Nothing is opened automatically.");
+  await expect(inspector).toContainText("Nothing opens automatically.");
 
   await clickPayloadType(page, /Event/);
   await page.getByLabel("Event title").fill("Inspector review");

@@ -33,11 +33,10 @@ export default function GuidesPage() {
           occlusion/ECC guardrails; Phase 2D completes the Visual Studio with JPEG/WebP artifacts
           and versioned portable project import/export. Phase 3A adds standards-backed vCard,
           WhatsApp and geo URI payloads through the same codec/editor architecture. Phase 3B adds
-          RFC 5545 Event serialization with persistent UID/DTSTAMP metadata, all-day end-date
-          semantics and explicit floating/UTC time modes, then adds exact Raw payload encoding with
-          UTF-8 byte-capacity feedback and no content normalization. Step 3 completes the slice with
-          a reusable local payload inspector that classifies final encoded values through the codec
-          registry without auto-opening destinations.
+          RFC 5545 Event serialization, exact Raw payload encoding and the reusable local inspector
+          seam. Phase 3C completes payload breadth with curated App and Social link helpers, then
+          hardens the inspector with deterministic classification provenance, scheme/host metadata
+          and explicit web-only navigation that never auto-opens a destination.
         </p>
       </div>
 

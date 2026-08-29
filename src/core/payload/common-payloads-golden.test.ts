@@ -75,6 +75,20 @@ const cases: readonly Readonly<{
     },
   },
   {
+    id: "app",
+    input: {
+      strategy: "https",
+      destination: "https://example.com/app/products/42?ref=qraft",
+    },
+  },
+  {
+    id: "social",
+    input: {
+      platform: "youtube",
+      target: "@youtubecreators",
+    },
+  },
+  {
     id: "raw",
     input: {
       value: "  RAW\r\nQraft — مرحبًا 👋\n  ",
