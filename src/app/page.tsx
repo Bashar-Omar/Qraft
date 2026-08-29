@@ -4,7 +4,7 @@ import { PhaseCard } from "@/components/foundation/phase-card";
 import { QrMotif } from "@/components/foundation/qr-motif";
 
 const systemNotes = [
-  ["PHASE", "03A / STRUCTURED PAYLOADS"],
+  ["PHASE", "03B / INTEGRATED"],
   ["RUNTIME", "BROWSER-FIRST"],
   ["PERSISTENCE", "NO ACCOUNT"],
   ["DEPLOYMENT", "STATIC-EXPORT READY"],
@@ -15,7 +15,7 @@ export default function HomePage() {
     <>
       <section className="hero shell">
         <div className="hero__copy">
-          <span className="mono-label accent-marker">QRAFT / SYSTEM / 03A</span>
+          <span className="mono-label accent-marker">QRAFT / SYSTEM / 03B</span>
           <h1>Craft codes that work.</h1>
           <p className="hero__lede">
             A privacy-first QR and barcode studio designed as a serious creative tool — precise,
@@ -30,8 +30,8 @@ export default function HomePage() {
             </Link>
           </div>
           <p className="hero__honesty">
-            Phase 3A expands the curated generator with standards-backed Contact, WhatsApp and
-            Location payloads while preserving the same local render, quality and export pipeline.
+            Phase 3B now adds standards-aware Event, exact Raw mode and a reusable local payload
+            inspector seam while preserving the same quality/export pipeline.
           </p>
         </div>
 
@@ -46,14 +46,14 @@ export default function HomePage() {
             </div>
             <div className="hero-visual__annotation">
               <span>CLIENT FIRST</span>
-              <strong>03A</strong>
+              <strong>03B</strong>
               <span>NO CLOUD DATA</span>
             </div>
           </div>
           <div className="hero-visual__footer">
             <span>STATIC EXPORT</span>
             <span>TYPE-SAFE</span>
-            <span>STRUCTURED PAYLOADS</span>
+            <span>EVENT / RAW / INSPECT</span>
           </div>
         </div>
       </section>

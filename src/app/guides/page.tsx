@@ -32,7 +32,12 @@ export default function GuidesPage() {
           independent local artifact self-test; Phase 2C adds local logo preparation and
           occlusion/ECC guardrails; Phase 2D completes the Visual Studio with JPEG/WebP artifacts
           and versioned portable project import/export. Phase 3A adds standards-backed vCard,
-          WhatsApp and geo URI payloads through the same codec/editor architecture.
+          WhatsApp and geo URI payloads through the same codec/editor architecture. Phase 3B adds
+          RFC 5545 Event serialization with persistent UID/DTSTAMP metadata, all-day end-date
+          semantics and explicit floating/UTC time modes, then adds exact Raw payload encoding with
+          UTF-8 byte-capacity feedback and no content normalization. Step 3 completes the slice with
+          a reusable local payload inspector that classifies final encoded values through the codec
+          registry without auto-opening destinations.
         </p>
       </div>
 

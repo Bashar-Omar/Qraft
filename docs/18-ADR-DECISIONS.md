@@ -293,7 +293,7 @@ This keeps saved projects stable across renderer replacements while preserving t
 
 ---
 
-## ADR-017 — Standards-backed structured payloads before Event/Raw expansion
+## ADR-019 — Standards-backed structured payloads before Event/Raw expansion
 
 **Status:** Accepted
 
@@ -311,3 +311,73 @@ Decision:
 Why:
 
 The three payloads add meaningful user breadth with minimal architectural surface and preserve the existing local/project/export pipeline unchanged.
+
+---
+
+## ADR-020 — Event drafts own persistent UID/DTSTAMP and named TZID waits for VTIMEZONE
+
+**Status:** Accepted
+
+Phase 3B step 1 models iCalendar Event as a normal Qraft payload while keeping RFC 5545 identity and time semantics explicit.
+
+Decision:
+
+- new Event drafts receive a fresh `urn:uuid:` UID and UTC DTSTAMP through an optional payload-initializer seam,
+- existing payloads keep static sample initialization,
+- Event edits refresh DTSTAMP while UID remains persistent,
+- all-day editor end dates are inclusive for humans and converted to RFC 5545 non-inclusive `DTEND`,
+- timed events support either floating local DATE-TIME or UTC DATE-TIME,
+- no bare named `TZID` is emitted because RFC 5545 requires a matching `VTIMEZONE` component,
+- Event remains behind `PayloadCodec` so renderer/export/quality/project code stays unchanged.
+
+Why:
+
+Generating random identity or current timestamps inside `encode()` would make identical draft renders unstable. Storing identity/revision metadata in the draft keeps the codec deterministic for a given state and makes `.qraft.json` a faithful portable representation. Deferring named time zones is more standards-honest than emitting an incomplete TZID reference.
+
+---
+
+## ADR-021 — Raw mode preserves exact payload data and exposes Qraft-owned byte capacity
+
+**Status:** Accepted
+
+Phase 3B step 2 adds Raw as a power-user payload rather than an unsafe renderer-configuration escape hatch.
+
+Decision:
+
+- Raw input is data only and is returned by the codec exactly as entered,
+- whitespace is not trimmed and line endings are not rewritten,
+- only the empty string is rejected as missing content,
+- UTF-8 byte metrics use the Web Platform `TextEncoder`,
+- current QR byte-mode Version 40 capacities are Qraft-owned core policy,
+- the editor receives current ECC through a small render-context prop and labels capacity pressure descriptively,
+- Raw project input remains ordinary validated JSON,
+- arbitrary JavaScript, HTML/SVG injection, vendor option objects and unsafe deep merge are outside Raw mode.
+
+Why:
+
+"Raw" should mean semantic non-interference, not bypassing architecture or security. Keeping exact payload semantics in a codec and capacity policy in core preserves the same registry/use-case/renderer boundaries as every curated payload while giving advanced users transparent byte-level feedback.
+
+---
+
+## ADR-022 — Payload inspection is an application seam with explicit detection precedence
+
+**Status:** Accepted
+
+Phase 3B step 3 adds a reusable payload-inspection use case before the Scanner phase exists.
+
+Decision:
+
+- final encoded payloads are inspected through registered `PayloadCodec.inspect()` contracts,
+- callers that already know the payload type may provide a preferred `PayloadId`,
+- generic detection uses explicit structured signatures before broader URL/Text fallbacks,
+- WhatsApp detection precedes generic HTTPS URL detection,
+- URL auto-detection requires an explicit `http://` or `https://` scheme,
+- Raw is never auto-detected because it intentionally accepts every non-empty value,
+- generic unknown non-empty payloads fall back to curated Text,
+- the inspector exposes UTF-8/code-point/line metrics through Qraft-owned core utilities,
+- UI rendering treats inspected values as text only and never dereferences or injects payload content,
+- no destination is opened automatically.
+
+Why:
+
+Scanner/Inspector later needs a stable way to classify decoded strings without rebuilding codec knowledge inside camera UI. Keeping detection/orchestration in the application layer lets codecs own syntax, avoids a second serialization parser, preserves Raw exactness and prevents permissive codecs from swallowing more specific payloads.

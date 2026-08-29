@@ -2,9 +2,11 @@ import type { ComponentType } from "react";
 
 import type { PayloadId } from "@/core/payload/payload";
 import { EmailEditor } from "@/features/generator/components/email-editor";
+import { EventEditor } from "@/features/generator/components/event-editor";
 import type { PayloadEditorProps } from "@/features/generator/components/payload-editor.types";
 import { LocationEditor } from "@/features/generator/components/location-editor";
 import { PhoneEditor } from "@/features/generator/components/phone-editor";
+import { RawEditor } from "@/features/generator/components/raw-editor";
 import { SmsEditor } from "@/features/generator/components/sms-editor";
 import { TextEditor } from "@/features/generator/components/text-editor";
 import { UrlEditor } from "@/features/generator/components/url-editor";
@@ -77,6 +79,25 @@ const payloadEditors: Readonly<Record<PayloadId, PayloadEditorRegistration>> = {
   },
   location: {
     component: LocationEditor,
+  },
+  event: {
+    component: EventEditor,
+    getNotice(parsedData) {
+      if (
+        typeof parsedData === "object" &&
+        parsedData !== null &&
+        "allDay" in parsedData &&
+        parsedData.allDay === false &&
+        "timeMode" in parsedData &&
+        parsedData.timeMode === "floating"
+      ) {
+        return "Floating event times keep the same wall-clock value on the receiving calendar. Choose UTC when the event must represent one absolute instant.";
+      }
+      return null;
+    },
+  },
+  raw: {
+    component: RawEditor,
   },
 };
 

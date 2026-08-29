@@ -83,4 +83,4 @@ Phase 3A adds:
 - QR render/decode golden vectors for all three new payloads,
 - desktop/mobile Playwright coverage that exercises all three curated editors and saves a Location project.
 
-Phase 3B continues with iCalendar Event, Raw mode, app/social helpers and richer inspector behavior. Event is intentionally separated because RFC 5545 requires UID/DTSTAMP/time semantics that deserve an explicit deterministic model rather than a quick string template.
+Phase 3B starts with a dedicated iCalendar Event slice, followed by Raw mode and a separate integration/hardening step before the branch is pushed. Event remains intentionally separated because RFC 5545 UID/DTSTAMP/time semantics require an explicit model rather than a quick string template.

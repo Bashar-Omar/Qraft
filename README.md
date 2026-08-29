@@ -4,8 +4,8 @@
 
 Qraft is a public-source, privacy-first QR and barcode studio being built as a portfolio-grade product: designer-friendly, standards-aware, responsive, testable and local-first.
 
-> **Current status:** Phase 3A — Structured payload breadth.
-> Phase 2 Visual Studio is complete. Phase 3A adds curated Contact (vCard 4.0), WhatsApp Click to Chat and RFC 5870 Location payloads through the existing typed codec/editor/project/export pipeline.
+> **Current status:** Phase 3B — Event + Raw + payload-inspector integration.
+> Phase 2 Visual Studio is complete. Phase 3A added Contact, WhatsApp and Location; Phase 3B now adds standards-aware Event, an exact byte-transparent Raw escape hatch and a reusable local inspector seam for final encoded payloads.
 
 ## Product principles
 
@@ -38,7 +38,7 @@ Node.js `24 LTS` is the project/CI standard.
 
 `qr@0.6.0` remains the standards-first structural baseline and golden-vector oracle. Phase 2A adds `qr-code-styling@1.9.2` only behind `src/engines/render/designer-qr/`, loaded dynamically in the browser. Phase 2B adds `@zxing/library@0.23.0` only behind `src/engines/decode/zxing/` for explicit artifact self-tests. Qraft design and quality contracts remain vendor-neutral.
 
-See `docs/18-ADR-DECISIONS.md`, `docs/22-PHASE-1-CORE-QR.md`, `docs/23-PHASE-2-VISUAL-STUDIO.md`, `docs/24-PHASE-2B-QUALITY-ASSISTANT.md`, `docs/25-PHASE-2C-LOGO-SAFETY.md`, `docs/26-PHASE-2D-EXPORT-PROJECT.md` and `docs/27-PHASE-3A-STRUCTURED-PAYLOADS.md`.
+See `docs/18-ADR-DECISIONS.md`, `docs/22-PHASE-1-CORE-QR.md`, `docs/23-PHASE-2-VISUAL-STUDIO.md`, `docs/24-PHASE-2B-QUALITY-ASSISTANT.md`, `docs/25-PHASE-2C-LOGO-SAFETY.md`, `docs/26-PHASE-2D-EXPORT-PROJECT.md`, `docs/27-PHASE-3A-STRUCTURED-PAYLOADS.md`, `docs/28-PHASE-3B-EVENT.md`, `docs/29-PHASE-3B-RAW.md` and `docs/30-PHASE-3B-INTEGRATION-INSPECTOR.md`.
 
 ## Why TypeScript 5.9?
 
@@ -112,7 +112,7 @@ Vendor package types stay inside `engines/`. The architecture contract is docume
 ## Current routes
 
 - `/` — product landing and current capability status
-- `/generate` — live QR studio for URL, Wi-Fi, Email, Phone, SMS, Text, Contact, WhatsApp and Location
+- `/generate` — live QR studio for URL, Wi-Fi, Email, Phone, SMS, Text, Contact, WhatsApp, Event, Location and Raw payloads
 - `/scan` — planned scanner surface
 - `/batch` — planned batch surface
 - `/guides` — guide/documentation surface
@@ -200,7 +200,35 @@ Phase 3A adds:
 3. RFC 5870 `geo:` locations with WGS-84 latitude/longitude plus optional altitude/uncertainty,
 4. curated editors, project-file support, codec inspection and QR golden round-trips for all three payloads.
 
-Next: Phase 3B — Event/iCalendar, Raw mode, app/social helpers and richer payload inspection.
+Phase 3B step 1/3 adds:
+
+1. RFC 5545 `VCALENDAR` / `VEVENT` serialization,
+2. persistent UID plus revision DTSTAMP metadata initialized locally,
+3. all-day events with correct non-inclusive `DTEND`,
+4. explicit floating-time vs UTC semantics,
+5. CRLF, TEXT escaping and UTF-8-safe 75-octet folding,
+6. Event project/golden/E2E coverage,
+7. an explicit boundary that defers named `TZID` output until Qraft can emit a complete tested `VTIMEZONE`.
+
+Phase 3B step 2/3 adds:
+
+1. exact Raw payload encoding with no trimming, URL normalization or semantic rewriting,
+2. UTF-8 byte/code-point/control-character metrics,
+3. ECC-aware byte-capacity pressure based on Qraft's current byte-mode QR renderer,
+4. explicit Version 40 byte-mode ceilings kept in Qraft-owned core policy,
+5. exact Raw `.qraft.json` round-trip plus golden/E2E coverage,
+6. a hard boundary against arbitrary renderer config, HTML/SVG injection or executable content.
+
+Phase 3B step 3/3 adds:
+
+1. a reusable application-level payload inspector built on registered codec `inspect()` contracts,
+2. conservative structured detection precedence with WhatsApp before generic HTTPS URL handling,
+3. preferred-type inspection so Generate preserves exact Raw/Text identity,
+4. shared UTF-8/code-point/line metrics outside React,
+5. a local parsed/raw inspector panel that never auto-opens payload destinations,
+6. cross-registry encode → inspect contract coverage plus desktop/mobile inspector E2E.
+
+Next after the full Phase 3B verification/merge: Phase 3C — app/social helpers and the remaining richer-inspector product polish. The three-step cycle is now ready for its complete local gate and one GitHub PR.
 
 ## Privacy
 

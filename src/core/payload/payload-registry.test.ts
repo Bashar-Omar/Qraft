@@ -13,7 +13,9 @@ describe("payloadRegistry", () => {
       "text",
       "vcard",
       "whatsapp",
+      "event",
       "location",
+      "raw",
     ]);
   });
 

@@ -22,7 +22,7 @@ test("Core QR landing and Generate studio are reachable", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByRole("heading", { name: "Craft codes that work." })).toBeVisible();
-  await expect(page.getByText("03A / STRUCTURED PAYLOADS", { exact: true })).toBeVisible();
+  await expect(page.getByText("03B / INTEGRATED", { exact: true })).toBeVisible();
 
   await page.getByRole("link", { name: "Open QR studio" }).click();
 
@@ -132,6 +132,123 @@ test("Contact, WhatsApp and Location payloads generate through typed curated edi
   await page.getByRole("button", { name: "Save .qraft.json" }).click();
   const project = await projectPromise;
   expect(project.suggestedFilename()).toBe("qraft-location.qraft.json");
+});
+
+test("Event editor emits timed and all-day calendar payloads through the shared QR pipeline", async ({
+  page,
+}) => {
+  await page.goto("/generate");
+
+  await clickPayloadType(page, /Event/);
+  await page.getByLabel("Event title").fill("Qraft planning");
+  await page.getByLabel("Start", { exact: true }).fill("2026-09-02T14:00");
+  await page.getByLabel("End", { exact: true }).fill("2026-09-02T15:30");
+  await page.getByLabel("Time basis").selectOption("utc");
+  await page.getByLabel("Location").fill("Studio B");
+  await page.getByLabel("Description").fill("Phase 3B event smoke test");
+  await expect(page.getByRole("img", { name: "Generated QR code preview" })).toBeVisible();
+
+  const quality = page.locator(".quality-assistant");
+  await quality.getByRole("button", { name: "Run self-test" }).click();
+  await expect(quality.getByText("Passed local self-test", { exact: true })).toBeVisible({
+    timeout: 15_000,
+  });
+
+  await page.getByLabel("All-day event").check();
+  await page.getByLabel("Start date", { exact: true }).fill("2026-09-05");
+  await page.getByLabel("End date", { exact: true }).fill("2026-09-06");
+  await expect(page.getByRole("img", { name: "Generated QR code preview" })).toBeVisible();
+
+  const projectPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save .qraft.json" }).click();
+  const project = await projectPromise;
+  expect(project.suggestedFilename()).toBe("qraft-event.qraft.json");
+  const projectBytes = await readDownloadBytes(project);
+  const document = JSON.parse(projectBytes.toString("utf8")) as {
+    payload?: { id?: string; input?: Record<string, unknown> };
+  };
+  expect(document.payload?.id).toBe("event");
+  expect(document.payload?.input).toMatchObject({
+    allDay: true,
+    startDate: "2026-09-05",
+    endDate: "2026-09-06",
+  });
+});
+
+test("Raw mode preserves exact UTF-8 content and exposes ECC-aware byte pressure", async ({
+  page,
+}) => {
+  await page.goto("/generate");
+
+  await clickPayloadType(page, /^Raw/);
+  const rawInput = page.getByLabel("Raw payload");
+  const metrics = page.locator(".raw-payload-metrics");
+
+  const highEcc = page
+    .getByRole("group", { name: "Error correction" })
+    .getByRole("button", { name: /^H High ~30%$/ });
+  await highEcc.click();
+  await rawInput.fill("x".repeat(1280));
+  await expect(metrics.getByText("OVER LIMIT", { exact: true })).toBeVisible();
+
+  const mediumEcc = page
+    .getByRole("group", { name: "Error correction" })
+    .getByRole("button", { name: /^M Medium ~15%$/ });
+  await mediumEcc.click();
+  await expect(metrics.getByText("MODERATE", { exact: true })).toBeVisible();
+
+  const exactValue = "  raw://example\nمرحبا 👋  ";
+  await rawInput.fill(exactValue);
+  await expect(rawInput).toHaveValue(exactValue);
+  await expect(metrics).toContainText("UTF-8");
+  await expect(page.getByRole("img", { name: "Generated QR code preview" })).toBeVisible();
+
+  const quality = page.locator(".quality-assistant");
+  await quality.getByRole("button", { name: "Run self-test" }).click();
+  await expect(quality.getByText("Passed local self-test", { exact: true })).toBeVisible({
+    timeout: 15_000,
+  });
+
+  const projectPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save .qraft.json" }).click();
+  const project = await projectPromise;
+  expect(project.suggestedFilename()).toBe("qraft-raw.qraft.json");
+  const projectBytes = await readDownloadBytes(project);
+  const document = JSON.parse(projectBytes.toString("utf8")) as {
+    payload?: { id?: string; input?: { value?: string } };
+  };
+  expect(document.payload?.id).toBe("raw");
+  expect(document.payload?.input?.value).toBe(exactValue);
+});
+
+test("Payload inspector classifies final Event and Raw payloads locally without navigation", async ({
+  page,
+}) => {
+  await page.goto("/generate");
+
+  const inspector = page.locator(".payload-inspector");
+  await expect(inspector).toContainText("URL");
+  await expect(inspector).toContainText("Inspected locally. Nothing is opened automatically.");
+
+  await clickPayloadType(page, /Event/);
+  await page.getByLabel("Event title").fill("Inspector review");
+  await page.getByLabel("Start", { exact: true }).fill("2026-09-03T10:00");
+  await page.getByLabel("End", { exact: true }).fill("2026-09-03T11:00");
+  await page.getByLabel("Time basis").selectOption("utc");
+
+  await expect(inspector).toContainText("Event");
+  await inspector.getByText("Raw encoded payload", { exact: true }).click();
+  await expect(inspector.locator("pre")).toContainText("BEGIN:VCALENDAR");
+  await expect(page).toHaveURL(/\/generate$/);
+
+  await clickPayloadType(page, /^Raw/);
+  const exact = "  raw://inspector\nمرحبا 👋  ";
+  await page.getByLabel("Raw payload").fill(exact);
+
+  await expect(inspector).toContainText("Raw");
+  await expect(inspector.getByLabel("Payload metrics")).toContainText("UTF-8");
+  await expect(inspector.locator("pre")).toHaveText(exact);
+  await expect(page).toHaveURL(/\/generate$/);
 });
 
 test("Designer controls update the canonical SVG and PNG artifacts", async ({ page }) => {

@@ -61,6 +61,49 @@ describe("portable Qraft projects", () => {
     expect(imported).toMatchObject({ payloadId: "location", input });
   });
 
+  it("round-trips an Event payload with persistent UID and revision metadata", async () => {
+    const input = {
+      title: "Qraft planning",
+      allDay: false,
+      startDate: "",
+      endDate: "",
+      startDateTime: "2026-09-02T14:00",
+      endDateTime: "2026-09-02T15:00",
+      timeMode: "utc",
+      location: "Studio B",
+      description: "Phase 3B event project",
+      url: "https://example.com/qraft-event",
+      uid: "urn:uuid:00000000-0000-4000-8000-000000000888",
+      dtstamp: "20260829T123000Z",
+    };
+    const artifact = await exportQraftProject({
+      payloadId: "event",
+      input,
+      errorCorrectionLevel: "M",
+      design: DEFAULT_QR_DESIGN,
+      rasterPixelSize: 1024,
+    });
+
+    const imported = await importQraftProject(artifact.blob);
+    expect(imported).toMatchObject({ payloadId: "event", input });
+  });
+
+  it("round-trips an exact Raw payload without trimming or normalization", async () => {
+    const input = {
+      value: "  raw://example\r\nمرحبا 👋\n  ",
+    };
+    const artifact = await exportQraftProject({
+      payloadId: "raw",
+      input,
+      errorCorrectionLevel: "Q",
+      design: DEFAULT_QR_DESIGN,
+      rasterPixelSize: 1024,
+    });
+
+    const imported = await importQraftProject(artifact.blob);
+    expect(imported).toMatchObject({ payloadId: "raw", input });
+  });
+
   it("round-trips a bounded normalized PNG logo", async () => {
     const logoBytes = fakePngHeader();
     const design = {

@@ -21,6 +21,8 @@ const PAYLOAD_IDS = new Set<PayloadId>([
   "vcard",
   "whatsapp",
   "location",
+  "event",
+  "raw",
 ]);
 const ECC_LEVELS = new Set<QrErrorCorrectionLevel>(["L", "M", "Q", "H"]);
 const DANGEROUS_KEYS = new Set(["__proto__", "prototype", "constructor"]);

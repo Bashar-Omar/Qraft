@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { prepareQrLogo } from "@/application/assets/prepare-qr-logo";
+import { inspectPayload } from "@/application/inspect/inspect-payload";
 import { exportQraftProject } from "@/application/project/export-qraft-project";
 import { importQraftProject } from "@/application/project/import-qraft-project";
 import type { GeneratedCode } from "@/application/generate/generate-code";
@@ -27,6 +28,7 @@ import { QrDesignPanel } from "@/features/generator/components/qr-design-panel";
 import { QrLogoPanel, type QrLogoPanelAsset } from "@/features/generator/components/qr-logo-panel";
 import { QrPreview } from "@/features/generator/components/qr-preview";
 import { getPayloadEditorRegistration } from "@/features/generator/components/payload-editor-registry";
+import { PayloadInspector } from "@/features/generator/components/payload-inspector";
 import {
   ExportProjectPanel,
   type ExportBusyState,
@@ -53,7 +55,7 @@ function createInitialDrafts(
   definitions: ReturnType<typeof payloadRegistry.list>,
 ): Record<PayloadId, unknown> {
   return Object.fromEntries(
-    definitions.map((definition) => [definition.id, definition.sampleInput]),
+    definitions.map((definition) => [definition.id, definition.createInitialInput()]),
   ) as Record<PayloadId, unknown>;
 }
 
@@ -429,6 +431,12 @@ export function GenerateStudio() {
     currentGeneration.status === "ready"
       ? resolveRasterPixelSize(currentGeneration.value.rendered, rasterPixelSize)
       : undefined;
+  const payloadInspection =
+    currentGeneration.status === "ready"
+      ? inspectPayload(currentGeneration.value.payload, {
+          preferredPayloadId: currentGeneration.value.definition.id,
+        })
+      : null;
 
   return (
     <div className="studio-shell" data-testid="studio-shell">
@@ -487,7 +495,12 @@ export function GenerateStudio() {
         </div>
 
         <div className="studio-editor-stack">
-          <PayloadEditor issues={fieldIssues} onChange={updateDraft} value={currentDraft} />
+          <PayloadEditor
+            issues={fieldIssues}
+            onChange={updateDraft}
+            renderContext={{ symbology: "qr", qrErrorCorrectionLevel: errorCorrectionLevel }}
+            value={currentDraft}
+          />
 
           {payloadNotice ? (
             <div className="studio-inline-note" role="status">
@@ -593,6 +606,8 @@ export function GenerateStudio() {
                 selfTest={currentSelfTest}
               />
             ) : null}
+
+            {payloadInspection ? <PayloadInspector result={payloadInspection} /> : null}
           </>
         ) : null}
 
