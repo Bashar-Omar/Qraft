@@ -49,12 +49,35 @@ const cases: readonly Readonly<{
     },
   },
   {
+    id: "event",
+    input: {
+      title: "Qraft review",
+      allDay: false,
+      startDate: "",
+      endDate: "",
+      startDateTime: "2026-09-01T10:00",
+      endDateTime: "2026-09-01T11:00",
+      timeMode: "utc",
+      location: "Studio A",
+      description: "Golden event fixture",
+      url: "https://example.com/event",
+      uid: "urn:uuid:00000000-0000-4000-8000-000000000777",
+      dtstamp: "20260829T120000Z",
+    },
+  },
+  {
     id: "location",
     input: {
       latitude: "30.0444",
       longitude: "31.2357",
       altitude: "",
       uncertainty: "",
+    },
+  },
+  {
+    id: "raw",
+    input: {
+      value: "  RAW\r\nQraft — مرحبًا 👋\n  ",
     },
   },
   {

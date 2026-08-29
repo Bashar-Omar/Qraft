@@ -1,5 +1,15 @@
 export type PayloadId =
-  "url" | "wifi" | "email" | "phone" | "sms" | "text" | "vcard" | "whatsapp" | "location";
+  | "url"
+  | "wifi"
+  | "email"
+  | "phone"
+  | "sms"
+  | "text"
+  | "vcard"
+  | "whatsapp"
+  | "location"
+  | "event"
+  | "raw";
 
 export type PayloadCategory = "popular" | "general";
 
@@ -36,6 +46,7 @@ export interface PayloadDefinition<TData> {
   readonly description: string;
   readonly category: PayloadCategory;
   readonly sampleInput: unknown;
+  readonly createInitialInput?: () => unknown;
   readonly codec: PayloadCodec<TData>;
 }
 
@@ -45,6 +56,7 @@ export type RegisteredPayloadDefinition = Readonly<{
   description: string;
   category: PayloadCategory;
   sampleInput: unknown;
+  createInitialInput(): unknown;
   parseAndEncode(input: unknown): Readonly<{ data: unknown; payload: string }>;
   inspect(payload: string): PayloadInspection<unknown> | null;
 }>;
@@ -58,6 +70,9 @@ export function registerPayloadDefinition<TData>(
     description: definition.description,
     category: definition.category,
     sampleInput: definition.sampleInput,
+    createInitialInput() {
+      return definition.createInitialInput?.() ?? definition.sampleInput;
+    },
     parseAndEncode(input) {
       const data = definition.codec.parseInput(input);
       return {

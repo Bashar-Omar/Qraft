@@ -10,7 +10,7 @@ export function SiteFooter() {
           <p>Craft codes that work.</p>
         </div>
         <div className="site-footer__meta">
-          <span>PHASE 03A / STRUCTURED PAYLOADS</span>
+          <span>PHASE 03B / INTEGRATED</span>
           <a href={SITE.githubUrl} rel="noreferrer" target="_blank">
             PUBLIC REPOSITORY ↗
           </a>

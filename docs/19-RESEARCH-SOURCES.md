@@ -385,3 +385,64 @@ RFC 5870 defines the standards-track `geo:` URI with WGS-84 latitude/longitude, 
 - `https://www.rfc-editor.org/rfc/rfc5545.html`
 
 RFC 5545 requires UID and DTSTAMP in VEVENT and has explicit DATE/DATE-TIME/DTEND semantics. Event is therefore scoped to Phase 3B so Qraft can define deterministic timestamp/UID/time-zone behavior instead of emitting a superficially valid but semantically unstable string.
+
+## Phase 3B Event refresh — 2026-08-29
+
+### iCalendar / VEVENT — RFC 5545
+
+- `https://www.rfc-editor.org/rfc/rfc5545.html`
+- `https://datatracker.ietf.org/doc/html/rfc5545`
+
+Implementation facts re-checked for Step 1:
+
+- `VCALENDAR` requires `PRODID` and `VERSION`,
+- `VEVENT` requires `UID` and `DTSTAMP`; `DTSTART` is required when no `METHOD` is present,
+- DTSTAMP is a UTC DATE-TIME,
+- all-day events use `VALUE=DATE`, and VEVENT `DTEND` is non-inclusive,
+- DATE-TIME with a `Z` suffix is UTC, while a DATE-TIME with neither `Z` nor `TZID` is floating time,
+- a named `TZID` reference requires a matching `VTIMEZONE` component in the iCalendar object,
+- content lines use CRLF and SHOULD be folded to at most 75 octets without splitting UTF-8 sequences.
+
+Qraft therefore supports all-day, UTC and floating Event modes in this slice, but intentionally defers named-zone output until a complete VTIMEZONE strategy is implemented and tested.
+
+## Phase 3B Raw refresh — 2026-08-29
+
+### UTF-8 byte measurement — WHATWG Encoding / MDN
+
+- `https://encoding.spec.whatwg.org/#interface-textencoder`
+- `https://developer.mozilla.org/en-US/docs/Web/API/TextEncoder`
+- `https://developer.mozilla.org/en-US/docs/Web/API/TextEncoder/encode`
+
+Implementation facts re-checked for Step 2:
+
+- `TextEncoder` encodes JavaScript strings as UTF-8,
+- `encode()` returns a `Uint8Array`,
+- byte length must therefore be measured from encoded bytes rather than JavaScript string length.
+
+Qraft uses this only for local metrics/validation; Raw content is never sent to an external service.
+
+### QR Version 40 binary capacity — DENSO WAVE
+
+- `https://www.qrcode.com/en/about/version.html`
+
+DENSO WAVE's version table documents Version 40 binary capacities of 2953 / 2331 / 1663 / 1273 bytes for ECC L / M / Q / H respectively.
+
+Qraft's current QR adapters intentionally force byte mode, so these values are used as current renderer-capacity policy. The UI calls them byte pressure/ceiling guidance rather than a universal QR or scanner guarantee.
+
+## Phase 3B integration/inspector refresh — 2026-08-29
+
+### URI generic syntax — RFC 3986
+
+- `https://www.rfc-editor.org/rfc/rfc3986.html`
+
+RFC 3986 defines the generic `scheme:` structure but leaves scheme-specific semantics to each registered scheme. Qraft's richer inspector therefore does not treat every colon-containing string as actionable. It first asks the registered structured codecs with explicit signatures, and its generic URL path only auto-detects explicit HTTP(S) payloads.
+
+### Async Clipboard — MDN
+
+- `https://developer.mozilla.org/en-US/docs/Web/API/Clipboard/writeText`
+
+`Clipboard.writeText()` is a user-initiated browser API and may be unavailable when secure-context/browser permission requirements are not met. The inspector therefore treats Copy as optional convenience: generation/inspection never depends on clipboard access and a failed copy is presented as a local UI status rather than a fatal workflow error.
+
+### Qraft blueprint — inspector boundary
+
+The blueprint requires raw + parsed inspection, explicit safe actions and no automatic URL opening. Step 3 establishes the reusable parser/presentation seam in Generate now; camera/image decoding and create-from-scan remain Phase 5 responsibilities.
