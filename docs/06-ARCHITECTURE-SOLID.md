@@ -457,3 +457,9 @@ untrusted JSON
 ```
 
 No generic deep merge is used for project import.
+
+## Phase 3A implementation note — payload breadth without renderer branching
+
+Contact, WhatsApp and Location extend `PayloadId`, the codec registry and the editor registry only. They do not add conditions to renderer/export/quality engines. A newly registered payload gains the complete QR pipeline through the existing application boundary.
+
+This is the intended proof that `Payload` and `Symbology` remain separate concepts: vCard/wa.me/geo semantics are normalized before the QR renderer sees only a canonical string.

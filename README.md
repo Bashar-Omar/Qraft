@@ -4,8 +4,8 @@
 
 Qraft is a public-source, privacy-first QR and barcode studio being built as a portfolio-grade product: designer-friendly, standards-aware, responsive, testable and local-first.
 
-> **Current status:** Phase 2D — Export + portable projects.
-> Phase 2 Visual Studio is now feature-complete against its planned gate: styled/local-logo QR, Quality Assistant v1, SVG/PNG/JPEG/WebP export and versioned `.qraft.json` import/export are integrated and covered by browser round-trip tests.
+> **Current status:** Phase 3A — Structured payload breadth.
+> Phase 2 Visual Studio is complete. Phase 3A adds curated Contact (vCard 4.0), WhatsApp Click to Chat and RFC 5870 Location payloads through the existing typed codec/editor/project/export pipeline.
 
 ## Product principles
 
@@ -38,7 +38,7 @@ Node.js `24 LTS` is the project/CI standard.
 
 `qr@0.6.0` remains the standards-first structural baseline and golden-vector oracle. Phase 2A adds `qr-code-styling@1.9.2` only behind `src/engines/render/designer-qr/`, loaded dynamically in the browser. Phase 2B adds `@zxing/library@0.23.0` only behind `src/engines/decode/zxing/` for explicit artifact self-tests. Qraft design and quality contracts remain vendor-neutral.
 
-See `docs/18-ADR-DECISIONS.md`, `docs/22-PHASE-1-CORE-QR.md`, `docs/23-PHASE-2-VISUAL-STUDIO.md`, `docs/24-PHASE-2B-QUALITY-ASSISTANT.md`, `docs/25-PHASE-2C-LOGO-SAFETY.md` and `docs/26-PHASE-2D-EXPORT-PROJECT.md`.
+See `docs/18-ADR-DECISIONS.md`, `docs/22-PHASE-1-CORE-QR.md`, `docs/23-PHASE-2-VISUAL-STUDIO.md`, `docs/24-PHASE-2B-QUALITY-ASSISTANT.md`, `docs/25-PHASE-2C-LOGO-SAFETY.md`, `docs/26-PHASE-2D-EXPORT-PROJECT.md` and `docs/27-PHASE-3A-STRUCTURED-PAYLOADS.md`.
 
 ## Why TypeScript 5.9?
 
@@ -112,7 +112,7 @@ Vendor package types stay inside `engines/`. The architecture contract is docume
 ## Current routes
 
 - `/` — product landing and current capability status
-- `/generate` — live Core QR studio for URL, Wi-Fi, Email, Phone, SMS and Text
+- `/generate` — live QR studio for URL, Wi-Fi, Email, Phone, SMS, Text, Contact, WhatsApp and Location
 - `/scan` — planned scanner surface
 - `/batch` — planned batch surface
 - `/guides` — guide/documentation surface
@@ -193,7 +193,14 @@ Phase 2D adds:
 9. project import validation through the current payload codecs,
 10. desktop/mobile E2E coverage for raster artifacts and project save/restore.
 
-Next: Phase 3 payload breadth — vCard, WhatsApp, Location, Event and Raw mode.
+Phase 3A adds:
+
+1. vCard 4.0 contact encoding with CRLF output, escaping and UTF-8-safe line folding,
+2. WhatsApp Click to Chat links using normalized international numbers and optional pre-filled text,
+3. RFC 5870 `geo:` locations with WGS-84 latitude/longitude plus optional altitude/uncertainty,
+4. curated editors, project-file support, codec inspection and QR golden round-trips for all three payloads.
+
+Next: Phase 3B — Event/iCalendar, Raw mode, app/social helpers and richer payload inspection.
 
 ## Privacy
 

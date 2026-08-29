@@ -290,3 +290,24 @@ Decision:
 - runtime Blob/object URL values never enter the core project schema.
 
 This keeps saved projects stable across renderer replacements while preserving the privacy-first local workflow.
+
+---
+
+## ADR-017 — Standards-backed structured payloads before Event/Raw expansion
+
+**Status:** Accepted
+
+Phase 3 begins with vCard 4.0, WhatsApp Click to Chat and RFC 5870 `geo:` URIs.
+
+Decision:
+
+- use the current IETF vCard format for the curated Contact encoder,
+- use WhatsApp's documented HTTPS `wa.me` link rather than a custom URL scheme,
+- use provider-neutral RFC 5870 `geo:` rather than hard-coding Google/Apple Maps,
+- keep all three behind the existing `PayloadCodec` and editor registries,
+- defer Event to Phase 3B so RFC 5545 UID/DTSTAMP/time-zone determinism is designed explicitly,
+- defer Raw mode until the curated structured payload boundary remains proven.
+
+Why:
+
+The three payloads add meaningful user breadth with minimal architectural surface and preserve the existing local/project/export pipeline unchanged.

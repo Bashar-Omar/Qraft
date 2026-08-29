@@ -31,7 +31,8 @@ export default function GuidesPage() {
           model and browser-only designer adapter; Phase 2B adds explainable quality findings and an
           independent local artifact self-test; Phase 2C adds local logo preparation and
           occlusion/ECC guardrails; Phase 2D completes the Visual Studio with JPEG/WebP artifacts
-          and versioned portable project import/export.
+          and versioned portable project import/export. Phase 3A adds standards-backed vCard,
+          WhatsApp and geo URI payloads through the same codec/editor architecture.
         </p>
       </div>
 

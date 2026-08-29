@@ -11,7 +11,17 @@ export const QRAFT_PROJECT_MAX_EMBEDDED_LOGO_BYTES = 4 * 1024 * 1024;
 export const QRAFT_PROJECT_MAX_JSON_DEPTH = 32;
 export const QRAFT_PROJECT_MAX_JSON_NODES = 5000;
 
-const PAYLOAD_IDS = new Set<PayloadId>(["url", "wifi", "email", "phone", "sms", "text"]);
+const PAYLOAD_IDS = new Set<PayloadId>([
+  "url",
+  "wifi",
+  "email",
+  "phone",
+  "sms",
+  "text",
+  "vcard",
+  "whatsapp",
+  "location",
+]);
 const ECC_LEVELS = new Set<QrErrorCorrectionLevel>(["L", "M", "Q", "H"]);
 const DANGEROUS_KEYS = new Set(["__proto__", "prototype", "constructor"]);
 const BASE64_PATTERN = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;

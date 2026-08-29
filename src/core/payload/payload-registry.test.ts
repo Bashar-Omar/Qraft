@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { payloadRegistry } from "@/core/payload/payload-registry";
 
 describe("payloadRegistry", () => {
-  it("exposes the Phase 1 curated payloads in a stable order", () => {
+  it("exposes curated payloads in a stable intent-first order", () => {
     expect(payloadRegistry.list().map((definition) => definition.id)).toEqual([
       "url",
       "wifi",
@@ -11,6 +11,9 @@ describe("payloadRegistry", () => {
       "phone",
       "sms",
       "text",
+      "vcard",
+      "whatsapp",
+      "location",
     ]);
   });
 

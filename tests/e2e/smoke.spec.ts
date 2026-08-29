@@ -22,7 +22,7 @@ test("Core QR landing and Generate studio are reachable", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByRole("heading", { name: "Craft codes that work." })).toBeVisible();
-  await expect(page.getByText("02D / EXPORT + PROJECTS", { exact: true })).toBeVisible();
+  await expect(page.getByText("03A / STRUCTURED PAYLOADS", { exact: true })).toBeVisible();
 
   await page.getByRole("link", { name: "Open QR studio" }).click();
 
@@ -102,6 +102,36 @@ test("Email, Phone, SMS and Wi-Fi editors generate through the shared pipeline",
   await page.getByRole("button", { name: "Download SVG" }).click();
   const wifiSvgDownload = await wifiSvgDownloadPromise;
   expect(wifiSvgDownload.suggestedFilename()).toBe("qraft-wifi.svg");
+});
+
+test("Contact, WhatsApp and Location payloads generate through typed curated editors", async ({
+  page,
+}) => {
+  await page.goto("/generate");
+
+  await clickPayloadType(page, /Contact/);
+  await page.getByLabel("First name").fill("Avery");
+  await page.getByLabel("Last name").fill("Morgan");
+  await page.getByLabel("Organization").fill("Qraft Studio");
+  await page.getByLabel("Mobile phone").fill("+1 202 555 0123");
+  await page.getByLabel("Email").fill("avery@example.com");
+  await expect(page.getByRole("img", { name: "Generated QR code preview" })).toBeVisible();
+
+  await clickPayloadType(page, /WhatsApp/);
+  await page.getByLabel("WhatsApp number").fill("+1 202 555 0123");
+  await page.getByLabel("Pre-filled message").fill("Hello from Qraft 👋");
+  await expect(page.getByRole("img", { name: "Generated QR code preview" })).toBeVisible();
+
+  await clickPayloadType(page, /Location/);
+  await page.getByLabel("Latitude").fill("30.0444");
+  await page.getByLabel("Longitude").fill("31.2357");
+  await page.getByLabel("Uncertainty · meters").fill("25");
+  await expect(page.getByRole("img", { name: "Generated QR code preview" })).toBeVisible();
+
+  const projectPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save .qraft.json" }).click();
+  const project = await projectPromise;
+  expect(project.suggestedFilename()).toBe("qraft-location.qraft.json");
 });
 
 test("Designer controls update the canonical SVG and PNG artifacts", async ({ page }) => {

@@ -1,8 +1,11 @@
 import { emailPayloadDefinition } from "@/core/payload/codecs/email.codec";
+import { locationPayloadDefinition } from "@/core/payload/codecs/location.codec";
 import { phonePayloadDefinition } from "@/core/payload/codecs/phone.codec";
 import { smsPayloadDefinition } from "@/core/payload/codecs/sms.codec";
 import { textPayloadDefinition } from "@/core/payload/codecs/text.codec";
 import { urlPayloadDefinition } from "@/core/payload/codecs/url.codec";
+import { vcardPayloadDefinition } from "@/core/payload/codecs/vcard.codec";
+import { whatsappPayloadDefinition } from "@/core/payload/codecs/whatsapp.codec";
 import { wifiPayloadDefinition } from "@/core/payload/codecs/wifi.codec";
 import {
   registerPayloadDefinition,
@@ -17,6 +20,9 @@ const registeredPayloads = [
   registerPayloadDefinition(phonePayloadDefinition),
   registerPayloadDefinition(smsPayloadDefinition),
   registerPayloadDefinition(textPayloadDefinition),
+  registerPayloadDefinition(vcardPayloadDefinition),
+  registerPayloadDefinition(whatsappPayloadDefinition),
+  registerPayloadDefinition(locationPayloadDefinition),
 ] as const;
 
 export class PayloadRegistry {
