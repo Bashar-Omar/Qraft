@@ -33,6 +33,7 @@ const rectangularBarcode: RenderedCode = {
     symbology: "code128",
     payloadBytes: 10,
     humanReadableText: true,
+      quietZoneModules: { top: 0, right: 10, bottom: 0, left: 10 },
   },
 };
 

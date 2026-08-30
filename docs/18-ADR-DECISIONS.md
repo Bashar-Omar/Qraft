@@ -477,3 +477,49 @@ Gate:
 
 - Phase 4B may add a barcode adapter without changing payload codecs or QR-specific quality types.
 - Phase 4C UI controls must derive from symbology capabilities instead of `if (type === ...)` styling branches.
+
+---
+
+## ADR-027 — BWIP is a lazy named-encoder runtime, not a core dependency
+
+**Status:** Accepted
+
+Phase 4B installs `@bwip-js/browser` as Qraft's broad barcode engine while deliberately exposing
+only the Code 128 and Data Matrix proof slice.
+
+Decision:
+
+- only `src/engines/render/bwip/bwip-browser-runtime.ts` may import `@bwip-js/browser`,
+- production uses the package's named `code128` and `datamatrix` encoders plus `drawingSVG()`,
+- the concrete runtime is dynamically imported behind `LazyBwipBarcodeRenderer`,
+- Qraft-owned adapter contracts remain independently testable without loading the package,
+- the generic 100+ encoder catalog is not eagerly linked into the existing QR path,
+- vendor SVG is validated before it becomes Qraft's canonical artifact.
+
+Why:
+
+The BWIP package deliberately exposes named encoders to support bundler tree-shaking. Qraft needs
+its breadth later, but Phase 4 must not make every QR visit pay for the full catalog or leak BWIPP
+option spelling throughout the product.
+
+---
+
+## ADR-028 — Data Matrix Unicode requires explicit ECI semantics
+
+**Status:** Accepted
+
+Phase 4B's curated Data Matrix proof encodes Latin-1 bytes only.
+
+Decision:
+
+- Qraft validates each current Data Matrix code point as `U+0000`–`U+00FF`,
+- the adapter hands the resulting eight-bit string to BWIP with `binarytext: true`,
+- arbitrary Unicode outside Latin-1 is rejected rather than silently UTF-8 encoded,
+- a future Unicode workflow must explicitly choose and test ECI semantics before becoming curated,
+- the current 1555-byte boundary is expressed as a byte limit, not a JavaScript character count.
+
+Why:
+
+A barcode can contain a valid byte sequence while a scanner still interprets those bytes with the
+wrong character set. Qraft's standards promise is stronger than “the renderer accepted the string”,
+so Unicode remains closed until its interpretation contract is explicit and independently tested.

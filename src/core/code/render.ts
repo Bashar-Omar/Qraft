@@ -74,10 +74,18 @@ export type QrRenderMetadata = BaseRenderMetadata &
     version: number;
   }>;
 
+export type BarcodeQuietZoneModules = Readonly<{
+  top: number;
+  right: number;
+  bottom: number;
+  left: number;
+}>;
+
 export type BarcodeRenderMetadata = BaseRenderMetadata &
   Readonly<{
     symbology: BarcodeSymbologyId;
     humanReadableText: boolean;
+    quietZoneModules: BarcodeQuietZoneModules;
   }>;
 
 export type RenderMetadata = QrRenderMetadata | BarcodeRenderMetadata;

@@ -39,6 +39,7 @@ function barcodeFixture(rendererId: string): RenderedBarcodeCode {
       symbology: "code128",
       payloadBytes: 4,
       humanReadableText: true,
+      quietZoneModules: { top: 0, right: 10, bottom: 0, left: 10 },
     },
   };
 }

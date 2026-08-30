@@ -73,7 +73,7 @@ Gate:
 
 ## Phase 4 — Barcode breadth
 
-**Status:** Active — Phase 4A step 1/3 establishes symbology contracts/registries and rectangular artifact geometry before the barcode engine is installed.
+**Status:** Active — Phase 4B step 2/3 adds the isolated lazy BWIP adapter proof for Code 128 and Data Matrix on top of the Phase 4A symbology/rectangular-artifact foundation. Both formats remain Planned until Phase 4C product/UI gates pass.
 
 Deliver:
 

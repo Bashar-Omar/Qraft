@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@bwip-js/browser':
+        specifier: 4.11.4
+        version: 4.11.4
       '@zxing/library':
         specifier: 0.23.0
         version: 0.23.0
@@ -913,6 +916,9 @@ packages:
 
   '@vitest/utils@4.1.11':
     resolution: {integrity: sha512-zTCVGpyFsGWBhllOyKlTw/vnr6D9qxsfSDyfbyZmTyjHw5N/VuvzHpHoQjm2ZJzn4RJgx5w4r7V0er69CmLgPQ==}
+
+  '@bwip-js/browser@4.11.4':
+    resolution: {integrity: sha512-WZtwXE7YrBw+do7rKqqr2c7pprLa2qTKCA63to1pkwKEBQZ22eBX+L/X6MhNhXY/qP6nIbeHo73R7emRDJpzZA==}
 
   '@zxing/library@0.23.0':
     resolution: {integrity: sha512-6fkkoFwP8CHxl6ugnPsj74PLJgX2iRv5zczGAyt5OBzQgxFhuhF0NCEc4t4OvSr8xAv2MRLlI0Iu9ZGDZQ2urA==}
@@ -3164,6 +3170,8 @@ snapshots:
       '@vitest/pretty-format': 4.1.11
       convert-source-map: 2.0.0
       tinyrainbow: 3.1.1
+
+  '@bwip-js/browser@4.11.4': {}
 
   '@zxing/library@0.23.0':
     dependencies:
