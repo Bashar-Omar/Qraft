@@ -3,7 +3,7 @@ import {
   type CodeRenderer,
   type QrErrorCorrectionLevel,
   type QrLogoRenderAsset,
-  type RenderedCode,
+  type RenderedQrCode,
 } from "@/core/code/render";
 import { DEFAULT_QR_DESIGN, parseQrDesign, type QraftQrDesign } from "@/core/design/qr-design";
 import type { PayloadRegistry } from "@/core/payload/payload-registry";
@@ -22,12 +22,12 @@ export type GeneratedCode = Readonly<{
   payload: string;
   parsedData: unknown;
   design: QraftQrDesign;
-  rendered: RenderedCode;
+  rendered: RenderedQrCode;
 }>;
 
 export type GenerateCodeDependencies = Readonly<{
   payloads: Pick<PayloadRegistry, "get">;
-  renderer: CodeRenderer;
+  renderer: CodeRenderer<RenderedQrCode>;
 }>;
 
 export function createGenerateCode({ payloads, renderer }: GenerateCodeDependencies) {

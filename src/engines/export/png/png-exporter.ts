@@ -18,15 +18,18 @@ export class PngExporter implements Exporter {
       throw new Error("PNG export requires a browser canvas environment.");
     }
 
-    const { canvas, pixelSize } = await rasterizeRenderedSvg(request.rendered, request.pixelSize);
+    const { canvas, pixelWidth, pixelHeight } = await rasterizeRenderedSvg(
+      request.rendered,
+      request.pixelSize,
+    );
     const filenameBase = sanitizeFilenameBase(request.filenameBase);
 
     return {
       blob: await canvasToExactBlob(canvas, "image/png"),
       filename: `${filenameBase}.png`,
       mimeType: "image/png",
-      width: pixelSize,
-      height: pixelSize,
+      width: pixelWidth,
+      height: pixelHeight,
     };
   }
 }

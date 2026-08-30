@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 
-import type { CodeRenderer, RenderRequest, RenderedCode } from "@/core/code/render";
+import type { CodeRenderer, QrRenderRequest, RenderedQrCode } from "@/core/code/render";
 import { DEFAULT_QR_DESIGN } from "@/core/design/qr-design";
 import {
   DesignerQrRenderer,
   toQrCodeStylingOptions,
 } from "@/engines/render/designer-qr/designer-qr-renderer";
 
-const request: RenderRequest = {
+const request: QrRenderRequest = {
   symbology: "qr",
   payload: "https://example.com",
   options: {
@@ -17,7 +17,9 @@ const request: RenderRequest = {
   },
 };
 
-const baseline: RenderedCode = {
+const baseline: RenderedQrCode = {
+  width: 29,
+  height: 29,
   verificationMatrix: [[false]],
   svg: '<svg viewBox="0 0 1 1"/>',
   metadata: {
@@ -64,7 +66,7 @@ describe("DesignerQrRenderer", () => {
 
   it("fails clearly outside the browser without loading the vendor engine", async () => {
     const render = vi.fn(async () => baseline);
-    const baselineRenderer: CodeRenderer = {
+    const baselineRenderer: CodeRenderer<RenderedQrCode> = {
       id: "baseline",
       supports: () => true,
       render,

@@ -1,11 +1,11 @@
-import type { RenderedCode } from "@/core/code/render";
+import type { RenderedQrCode } from "@/core/code/render";
 
 function svgToDataUri(svg: string): string {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
 type QrPreviewProps = Readonly<{
-  rendered: RenderedCode;
+  rendered: RenderedQrCode;
 }>;
 
 export function QrPreview({ rendered }: QrPreviewProps) {

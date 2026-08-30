@@ -73,6 +73,8 @@ Gate:
 
 ## Phase 4 — Barcode breadth
 
+**Status:** Active — Phase 4A step 1/3 establishes symbology contracts/registries and rectangular artifact geometry before the barcode engine is installed.
+
 Deliver:
 
 - bwip adapter,

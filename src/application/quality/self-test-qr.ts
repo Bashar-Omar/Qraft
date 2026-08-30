@@ -1,4 +1,4 @@
-import type { RenderedCode } from "@/core/code/render";
+import type { RenderedQrCode } from "@/core/code/render";
 import type { QraftQrDesign } from "@/core/design/qr-design";
 import type { QrArtifactDecoder, QrSelfTestResult } from "@/core/quality/self-test";
 
@@ -7,7 +7,7 @@ const TARGET_SELF_TEST_PIXELS_PER_MODULE = 16;
 const MIN_SELF_TEST_PIXELS_PER_MODULE = 4;
 
 export type SelfTestQrRequest = Readonly<{
-  rendered: RenderedCode;
+  rendered: RenderedQrCode;
   design: QraftQrDesign;
   expectedPayload: string;
 }>;

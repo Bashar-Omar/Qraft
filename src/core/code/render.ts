@@ -1,6 +1,7 @@
 import type { QraftQrDesign } from "@/core/design/qr-design";
+import type { BarcodeSymbologyId, SymbologyId } from "@/core/code/symbology";
 
-export type SymbologyId = "qr";
+export type { BarcodeSymbologyId, SymbologyId } from "@/core/code/symbology";
 
 export type QrErrorCorrectionLevel = "L" | "M" | "Q" | "H";
 
@@ -28,39 +29,88 @@ export type QrLogoRenderAsset = Readonly<{
   height: number;
 }>;
 
-export type RenderRequest = Readonly<{
-  symbology: SymbologyId;
-  payload: string;
-  options?: Readonly<{
-    errorCorrectionLevel?: QrErrorCorrectionLevel;
-    quietZoneModules?: number;
-    design?: QraftQrDesign;
-    logoAsset?: QrLogoRenderAsset;
-  }>;
+export type QrRenderOptions = Readonly<{
+  errorCorrectionLevel?: QrErrorCorrectionLevel;
+  quietZoneModules?: number;
+  design?: QraftQrDesign;
+  logoAsset?: QrLogoRenderAsset;
 }>;
 
-export type RenderMetadata = Readonly<{
+/**
+ * Phase 4A keeps barcode options intentionally Qraft-owned and minimal.
+ * Format-specific fields are added only after their validation contracts exist.
+ */
+export type BarcodeRenderOptions = Readonly<{
+  humanReadableText?: boolean;
+}>;
+
+export type QrRenderRequest = Readonly<{
+  symbology: "qr";
+  payload: string;
+  options?: QrRenderOptions;
+}>;
+
+export type BarcodeRenderRequest = Readonly<{
+  symbology: BarcodeSymbologyId;
+  payload: string;
+  options?: BarcodeRenderOptions;
+}>;
+
+export type RenderRequest = QrRenderRequest | BarcodeRenderRequest;
+
+export type BaseRenderMetadata = Readonly<{
   rendererId: string;
   symbology: SymbologyId;
-  errorCorrectionLevel: QrErrorCorrectionLevel;
-  quietZoneModules: number;
-  symbolModules: number;
-  totalModules: number;
-  version: number;
   payloadBytes: number;
 }>;
 
-export type RenderedCode = Readonly<{
-  /**
-   * Logical matrix used as a standards-oriented verification reference.
-   * Styled renderers may use a different mask while preserving the same
-   * payload/version/ECC. Preview/export must use `svg`, not this matrix.
-   */
-  verificationMatrix: QrMatrix;
+export type QrRenderMetadata = BaseRenderMetadata &
+  Readonly<{
+    symbology: "qr";
+    errorCorrectionLevel: QrErrorCorrectionLevel;
+    quietZoneModules: number;
+    symbolModules: number;
+    totalModules: number;
+    version: number;
+  }>;
+
+export type BarcodeRenderMetadata = BaseRenderMetadata &
+  Readonly<{
+    symbology: BarcodeSymbologyId;
+    humanReadableText: boolean;
+  }>;
+
+export type RenderMetadata = QrRenderMetadata | BarcodeRenderMetadata;
+
+export type RenderedCodeBase<TMetadata extends RenderMetadata> = Readonly<{
+  /** Natural dimensions from the canonical SVG viewBox/artifact. */
+  width: number;
+  height: number;
   /** Canonical vector artifact for preview and export. */
   svg: string;
-  metadata: RenderMetadata;
+  metadata: TMetadata;
 }>;
+
+export type RenderedQrCode = RenderedCodeBase<QrRenderMetadata> &
+  Readonly<{
+    /**
+     * Logical matrix used as a standards-oriented verification reference.
+     * Styled renderers may use a different mask while preserving the same
+     * payload/version/ECC. Preview/export must use `svg`, not this matrix.
+     */
+    verificationMatrix: QrMatrix;
+  }>;
+
+export type RenderedBarcodeCode = RenderedCodeBase<BarcodeRenderMetadata>;
+export type RenderedCode = RenderedQrCode | RenderedBarcodeCode;
+
+export function isQrRenderRequest(request: RenderRequest): request is QrRenderRequest {
+  return request.symbology === "qr";
+}
+
+export function isRenderedQrCode(rendered: RenderedCode): rendered is RenderedQrCode {
+  return rendered.metadata.symbology === "qr";
+}
 
 export type RenderErrorCode = "unsupported" | "capacity" | "invalid-request" | "engine";
 
@@ -74,8 +124,8 @@ export class CodeRenderError extends Error {
   }
 }
 
-export interface CodeRenderer {
+export interface CodeRenderer<TOutput extends RenderedCode = RenderedCode> {
   readonly id: string;
   supports(request: RenderRequest): boolean;
-  render(request: RenderRequest): Promise<RenderedCode>;
+  render(request: RenderRequest): Promise<TOutput>;
 }

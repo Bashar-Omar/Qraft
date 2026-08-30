@@ -449,3 +449,31 @@ Decision:
 Why:
 
 Scanner phase results are untrusted input. Establishing the action contract before camera/image decoding exists prevents future scanner components from inventing their own navigation rules. Web-only explicit opening keeps the common useful action available while avoiding automatic execution of arbitrary custom schemes and reducing referrer leakage to external destinations.
+
+---
+
+## ADR-026 — Generic symbology artifacts before barcode engine integration
+
+**Status:** Accepted
+
+Phase 4 widens Qraft's rendering boundary before adding the barcode vendor adapter.
+
+Decision:
+
+- Qraft owns stable symbology IDs and capability metadata; vendor encoder IDs stay inside adapters.
+- `RenderRequest` and `RenderedCode` are discriminated by symbology instead of pretending every artifact has QR ECC/version/matrix fields.
+- canonical SVG artifacts expose natural width/height so rectangular linear and stacked codes do not inherit a square-only export contract.
+- current QR raster sizing keeps its exact integer pixels-per-module behavior.
+- non-QR raster sizing preserves the canonical SVG aspect ratio and prefers integer scaling from natural dimensions.
+- the existing `.qraft.json` schema remains v1 while QR is the only saveable symbology. The first barcode project-writing feature will introduce schema v2 plus an explicit v1 → v2 migration instead of silently changing v1 semantics.
+
+Why:
+
+- Code 128/PDF417 and similar symbols are naturally rectangular.
+- BWIP exposes natural SVG `viewBox` dimensions and module-oriented scale behavior; forcing those through Qraft's historical square `pixelSize` contract would distort output.
+- preserving schema v1 avoids needless project-file churn before barcode state can actually be saved.
+
+Gate:
+
+- Phase 4B may add a barcode adapter without changing payload codecs or QR-specific quality types.
+- Phase 4C UI controls must derive from symbology capabilities instead of `if (type === ...)` styling branches.

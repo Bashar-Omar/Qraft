@@ -17,6 +17,8 @@ export class SvgExporter implements Exporter {
       blob: new Blob([request.rendered.svg], { type: "image/svg+xml;charset=utf-8" }),
       filename: `${filenameBase}.svg`,
       mimeType: "image/svg+xml",
+      width: request.rendered.width,
+      height: request.rendered.height,
     };
   }
 }
