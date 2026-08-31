@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import { RendererRegistry } from "@/core/code/renderer-registry";
 import {
-  CodeRenderError,
   type CodeRenderer,
   type RenderRequest,
   type RenderedBarcodeCode,
@@ -83,6 +82,6 @@ describe("renderer registry", () => {
 
     await expect(
       registry.render({ symbology: "datamatrix", payload: "phase-4" }),
-    ).rejects.toMatchObject<Partial<CodeRenderError>>({ code: "unsupported" });
+    ).rejects.toMatchObject({ code: "unsupported" });
   });
 });

@@ -33,7 +33,7 @@ const rectangularBarcode: RenderedCode = {
     symbology: "code128",
     payloadBytes: 10,
     humanReadableText: true,
-      quietZoneModules: { top: 0, right: 10, bottom: 0, left: 10 },
+    quietZoneModules: { top: 0, right: 10, bottom: 0, left: 10 },
   },
 };
 
@@ -60,5 +60,10 @@ describe("raster export sizing", () => {
       height: 800,
     });
     expect(() => resolveRasterPixelSize(rectangularBarcode, 1024)).toThrow(/square artifacts/i);
+  });
+
+  it("never downsamples a barcode below its canonical SVG pixel grid", () => {
+    const wideBarcode: RenderedCode = { ...rectangularBarcode, width: 1200, height: 120 };
+    expect(resolveRasterDimensions(wideBarcode, 512)).toEqual({ width: 1200, height: 120 });
   });
 });

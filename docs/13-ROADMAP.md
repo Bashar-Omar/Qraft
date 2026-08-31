@@ -73,7 +73,7 @@ Gate:
 
 ## Phase 4 — Barcode breadth
 
-**Status:** Active — Phase 4B step 2/3 adds the isolated lazy BWIP adapter proof for Code 128 and Data Matrix on top of the Phase 4A symbology/rectangular-artifact foundation. Both formats remain Planned until Phase 4C product/UI gates pass.
+**Status:** Active — first Phase 4 batch complete through Phase 4C. Code 128 and Data Matrix are Live with capability-driven UI, rectangular export, independent artifact decode and schema-v2 portable projects. Next cycle expands linear/retail breadth and then 2D/Expert Catalog coverage.
 
 Deliver:
 

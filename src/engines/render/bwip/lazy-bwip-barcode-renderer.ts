@@ -15,7 +15,10 @@ export class LazyBwipBarcodeRenderer implements CodeRenderer<RenderedBarcodeCode
 
   async render(request: RenderRequest): Promise<RenderedBarcodeCode> {
     if (!this.supports(request)) {
-      throw new CodeRenderError("unsupported", `Renderer ${this.id} does not support this symbology.`);
+      throw new CodeRenderError(
+        "unsupported",
+        `Renderer ${this.id} does not support this symbology.`,
+      );
     }
 
     const { bwipBarcodeRenderer } = await import("@/engines/render/bwip/bwip-barcode-renderer");

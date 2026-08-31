@@ -523,3 +523,25 @@ Why:
 A barcode can contain a valid byte sequence while a scanner still interprets those bytes with the
 wrong character set. Qraft's standards promise is stronger than “the renderer accepted the string”,
 so Unicode remains closed until its interpretation contract is explicit and independently tested.
+
+---
+
+## ADR-029 — Project schema v2 separates content from code representation
+
+**Status:** Accepted
+
+Phase 4C is the first feature that can persist a non-QR code, so Qraft advances portable projects to schema v2 instead of mutating the meaning of schema v1.
+
+Decision:
+
+- schema v2 stores a `content` union separately from a `code` union,
+- QR projects use `content.kind = "payload"` plus `code.symbology = "qr"`,
+- curated barcode projects use `content.kind = "barcode"` plus a validated barcode symbology/config,
+- schema v1 remains readable and migrates explicitly into the v2 QR branch before v2 parsing,
+- barcode projects cannot carry QR logo assets,
+- capability-invalid persisted state (for example Data Matrix + HRT) is rejected,
+- all imported payload/barcode content is revalidated through current Qraft domain policy.
+
+Why:
+
+Payload meaning and code representation are different product concepts. Keeping them separate prevents future Data Matrix/GS1/Expert work from turning project persistence into a growing QR-shaped object with optional fields. An explicit migration also preserves the portability promise made by earlier releases.

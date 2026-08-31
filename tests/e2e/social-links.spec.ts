@@ -64,10 +64,11 @@ test("Social Link helper builds curated profile URLs and keeps full links local"
 
   const projectBytes = await readDownloadBytes(project);
   const document = JSON.parse(projectBytes.toString("utf8")) as {
-    payload?: { id?: string; input?: Record<string, unknown> };
+    content?: { kind?: string; payloadId?: string; input?: Record<string, unknown> };
   };
-  expect(document.payload).toMatchObject({
-    id: "social",
+  expect(document.content).toMatchObject({
+    kind: "payload",
+    payloadId: "social",
     input: {
       platform: "linkedin",
       target: linkedInUrl,

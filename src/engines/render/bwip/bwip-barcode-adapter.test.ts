@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 
-import { CodeRenderError } from "@/core/code/render";
 import { BwipBarcodeAdapter } from "@/engines/render/bwip/bwip-barcode-adapter";
 import type { BwipSvgOptions, BwipSvgRuntime } from "@/engines/render/bwip/bwip-contract";
 
@@ -112,7 +111,7 @@ describe("BWIP barcode adapter", () => {
         payload: "QRAFT",
         options: { humanReadableText: true },
       }),
-    ).rejects.toMatchObject<Partial<CodeRenderError>>({ code: "invalid-request" });
+    ).rejects.toMatchObject({ code: "invalid-request" });
     expect(calls).toHaveLength(0);
   });
 
@@ -125,9 +124,9 @@ describe("BWIP barcode adapter", () => {
     };
     const renderer = new BwipBarcodeAdapter(runtime);
 
-    await expect(renderer.render({ symbology: "code128", payload: "ABC" })).rejects.toMatchObject<
-      Partial<CodeRenderError>
-    >({ code: "engine" });
+    await expect(renderer.render({ symbology: "code128", payload: "ABC" })).rejects.toMatchObject({
+      code: "engine",
+    });
   });
 
   it("maps known engine capacity failures to Qraft's typed failure model", async () => {
@@ -141,8 +140,8 @@ describe("BWIP barcode adapter", () => {
     };
     const renderer = new BwipBarcodeAdapter(runtime);
 
-    await expect(renderer.render({ symbology: "code128", payload: "ABC" })).rejects.toMatchObject<
-      Partial<CodeRenderError>
-    >({ code: "capacity" });
+    await expect(renderer.render({ symbology: "code128", payload: "ABC" })).rejects.toMatchObject({
+      code: "capacity",
+    });
   });
 });

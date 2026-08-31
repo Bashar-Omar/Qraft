@@ -1,9 +1,5 @@
 import { validateBarcodePayload } from "@/core/code/barcode-input";
-import {
-  CodeRenderError,
-  type CodeRenderer,
-  type RenderedBarcodeCode,
-} from "@/core/code/render";
+import { CodeRenderError, type CodeRenderer, type RenderedBarcodeCode } from "@/core/code/render";
 import type { SymbologyRegistry } from "@/core/code/symbology-registry";
 import type { BarcodeSymbologyId, SymbologyDefinition } from "@/core/code/symbology";
 
@@ -25,9 +21,8 @@ export type RenderBarcodeDependencies = Readonly<{
 }>;
 
 /**
- * Application seam for barcode generation before Phase 4C exposes it in React.
- * Availability is intentionally a presentation/product-release concern here:
- * Step 2 can contract-test engine-backed planned definitions without calling them live.
+ * Application seam for curated barcode generation. Product availability lives
+ * in the symbology registry; rendering stays independent from React.
  */
 export function createRenderBarcode({ symbologies, renderer }: RenderBarcodeDependencies) {
   return async function renderBarcode(input: RenderBarcodeInput): Promise<RenderBarcodeResult> {
@@ -45,8 +40,7 @@ export function createRenderBarcode({ symbologies, renderer }: RenderBarcodeDepe
       symbology: input.symbology,
       payload: validated.payload,
       options: {
-        humanReadableText:
-          input.humanReadableText ?? definition.capabilities.humanReadableText,
+        humanReadableText: input.humanReadableText ?? definition.capabilities.humanReadableText,
       },
     });
 

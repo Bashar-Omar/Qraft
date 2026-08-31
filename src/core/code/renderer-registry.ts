@@ -9,9 +9,9 @@ import {
  * Capability/adapter router. The application asks for a Qraft symbology and
  * never imports a vendor renderer directly.
  */
-export class RendererRegistry<TOutput extends RenderedCode = RenderedCode>
-  implements CodeRenderer<TOutput>
-{
+export class RendererRegistry<
+  TOutput extends RenderedCode = RenderedCode,
+> implements CodeRenderer<TOutput> {
   readonly id = "renderer-registry";
 
   constructor(private readonly renderers: readonly CodeRenderer<TOutput>[]) {}

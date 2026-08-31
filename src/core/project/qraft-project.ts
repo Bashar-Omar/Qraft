@@ -1,11 +1,14 @@
+import { validateBarcodePayload } from "@/core/code/barcode-input";
 import type { QrErrorCorrectionLevel } from "@/core/code/render";
+import type { BarcodeSymbologyId } from "@/core/code/symbology";
 import { parseQrDesign, type QraftQrDesign } from "@/core/design/qr-design";
 import { QR_LOGO_LIMITS } from "@/core/design/qr-logo";
-import type { PayloadId } from "@/core/payload/payload";
 import { parseRasterPixelSize, type RasterPixelSize } from "@/core/export/raster";
+import type { PayloadId } from "@/core/payload/payload";
 
 export const QRAFT_PROJECT_KIND = "qraft-project" as const;
-export const QRAFT_PROJECT_SCHEMA_VERSION = 1 as const;
+export const QRAFT_PROJECT_SCHEMA_VERSION = 2 as const;
+export const QRAFT_PROJECT_SCHEMA_VERSION_V1 = 1 as const;
 export const QRAFT_PROJECT_MAX_FILE_BYTES = 6 * 1024 * 1024;
 export const QRAFT_PROJECT_MAX_EMBEDDED_LOGO_BYTES = 4 * 1024 * 1024;
 export const QRAFT_PROJECT_MAX_JSON_DEPTH = 32;
@@ -26,6 +29,7 @@ const PAYLOAD_IDS = new Set<PayloadId>([
   "social",
   "raw",
 ]);
+const BARCODE_SYMBOLOGIES = new Set<BarcodeSymbologyId>(["code128", "datamatrix"]);
 const ECC_LEVELS = new Set<QrErrorCorrectionLevel>(["L", "M", "Q", "H"]);
 const DANGEROUS_KEYS = new Set(["__proto__", "prototype", "constructor"]);
 const BASE64_PATTERN = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
@@ -34,7 +38,7 @@ export type ProjectJsonPrimitive = string | number | boolean | null;
 export type ProjectJsonValue =
   ProjectJsonPrimitive | readonly ProjectJsonValue[] | { readonly [key: string]: ProjectJsonValue };
 
-export type QraftProjectEmbeddedLogoV1 = Readonly<{
+export type QraftProjectEmbeddedLogo = Readonly<{
   encoding: "base64";
   mimeType: "image/png";
   data: string;
@@ -44,9 +48,11 @@ export type QraftProjectEmbeddedLogoV1 = Readonly<{
   name: string;
 }>;
 
+export type QraftProjectEmbeddedLogoV1 = QraftProjectEmbeddedLogo;
+
 export type QraftProjectDocumentV1 = Readonly<{
   kind: typeof QRAFT_PROJECT_KIND;
-  schemaVersion: typeof QRAFT_PROJECT_SCHEMA_VERSION;
+  schemaVersion: typeof QRAFT_PROJECT_SCHEMA_VERSION_V1;
   payload: Readonly<{
     id: PayloadId;
     input: ProjectJsonValue;
@@ -60,11 +66,46 @@ export type QraftProjectDocumentV1 = Readonly<{
     rasterPixelSize: RasterPixelSize;
   }>;
   assets: Readonly<{
-    logo?: QraftProjectEmbeddedLogoV1;
+    logo?: QraftProjectEmbeddedLogo;
   }>;
 }>;
 
-export type QraftProjectDocument = QraftProjectDocumentV1;
+export type QraftProjectQrContentV2 = Readonly<{
+  kind: "payload";
+  payloadId: PayloadId;
+  input: ProjectJsonValue;
+}>;
+
+export type QraftProjectBarcodeContentV2 = Readonly<{
+  kind: "barcode";
+  value: string;
+}>;
+
+export type QraftProjectQrCodeV2 = Readonly<{
+  symbology: "qr";
+  errorCorrectionLevel: QrErrorCorrectionLevel;
+  design: QraftQrDesign;
+}>;
+
+export type QraftProjectBarcodeCodeV2 = Readonly<{
+  symbology: BarcodeSymbologyId;
+  humanReadableText: boolean;
+}>;
+
+export type QraftProjectDocumentV2 = Readonly<{
+  kind: typeof QRAFT_PROJECT_KIND;
+  schemaVersion: typeof QRAFT_PROJECT_SCHEMA_VERSION;
+  content: QraftProjectQrContentV2 | QraftProjectBarcodeContentV2;
+  code: QraftProjectQrCodeV2 | QraftProjectBarcodeCodeV2;
+  export: Readonly<{
+    rasterPixelSize: RasterPixelSize;
+  }>;
+  assets: Readonly<{
+    logo?: QraftProjectEmbeddedLogo;
+  }>;
+}>;
+
+export type QraftProjectDocument = QraftProjectDocumentV2;
 
 export class QraftProjectValidationError extends Error {
   constructor(message: string) {
@@ -81,7 +122,6 @@ function expectRecord(value: unknown, label: string): Record<string, unknown> {
   if (!isRecord(value)) {
     throw new QraftProjectValidationError(`${label} must be an object.`);
   }
-
   return value;
 }
 
@@ -99,10 +139,7 @@ function assertOnlyKeys(
 }
 
 function decodedBase64ByteLength(value: string): number {
-  if (value.length === 0) {
-    return 0;
-  }
-
+  if (value.length === 0) return 0;
   const padding = value.endsWith("==") ? 2 : value.endsWith("=") ? 1 : 0;
   return (value.length / 4) * 3 - padding;
 }
@@ -113,15 +150,22 @@ function parsePayloadId(value: unknown): PayloadId {
       "Project payload type is not supported by this Qraft version.",
     );
   }
-
   return value as PayloadId;
+}
+
+function parseBarcodeSymbology(value: unknown): BarcodeSymbologyId {
+  if (typeof value !== "string" || !BARCODE_SYMBOLOGIES.has(value as BarcodeSymbologyId)) {
+    throw new QraftProjectValidationError(
+      "Project barcode symbology is not supported by this Qraft version.",
+    );
+  }
+  return value as BarcodeSymbologyId;
 }
 
 function parseEcc(value: unknown): QrErrorCorrectionLevel {
   if (typeof value !== "string" || !ECC_LEVELS.has(value as QrErrorCorrectionLevel)) {
     throw new QraftProjectValidationError("Project QR error-correction level is invalid.");
   }
-
   return value as QrErrorCorrectionLevel;
 }
 
@@ -131,21 +175,17 @@ function validateJsonValue(root: unknown): ProjectJsonValue {
 
   while (stack.length > 0) {
     const current = stack.pop();
-    if (!current) {
-      break;
-    }
+    if (!current) break;
 
     nodes += 1;
     if (nodes > QRAFT_PROJECT_MAX_JSON_NODES) {
       throw new QraftProjectValidationError("Project payload input contains too many values.");
     }
-
     if (current.depth > QRAFT_PROJECT_MAX_JSON_DEPTH) {
       throw new QraftProjectValidationError("Project payload input is nested too deeply.");
     }
 
     const value = current.value;
-
     if (
       value === null ||
       typeof value === "string" ||
@@ -154,14 +194,10 @@ function validateJsonValue(root: unknown): ProjectJsonValue {
     ) {
       continue;
     }
-
     if (Array.isArray(value)) {
-      for (const item of value) {
-        stack.push({ value: item, depth: current.depth + 1 });
-      }
+      for (const item of value) stack.push({ value: item, depth: current.depth + 1 });
       continue;
     }
-
     if (isRecord(value)) {
       for (const [key, item] of Object.entries(value)) {
         if (DANGEROUS_KEYS.has(key)) {
@@ -171,14 +207,13 @@ function validateJsonValue(root: unknown): ProjectJsonValue {
       }
       continue;
     }
-
     throw new QraftProjectValidationError("Project payload input must contain JSON data only.");
   }
 
   return root as ProjectJsonValue;
 }
 
-function parseEmbeddedLogo(value: unknown): QraftProjectEmbeddedLogoV1 {
+function parseEmbeddedLogo(value: unknown): QraftProjectEmbeddedLogo {
   const logo = expectRecord(value, "Embedded logo");
   assertOnlyKeys(
     logo,
@@ -191,11 +226,9 @@ function parseEmbeddedLogo(value: unknown): QraftProjectEmbeddedLogoV1 {
       "Embedded project logos must be base64-encoded PNG data.",
     );
   }
-
   if (typeof logo.data !== "string" || logo.data.length === 0 || !BASE64_PATTERN.test(logo.data)) {
     throw new QraftProjectValidationError("Embedded project logo data is not valid base64.");
   }
-
   if (
     typeof logo.bytes !== "number" ||
     !Number.isInteger(logo.bytes) ||
@@ -207,7 +240,6 @@ function parseEmbeddedLogo(value: unknown): QraftProjectEmbeddedLogoV1 {
       "Embedded project logo size is outside the safe limit or does not match its data.",
     );
   }
-
   if (
     typeof logo.width !== "number" ||
     !Number.isInteger(logo.width) ||
@@ -221,7 +253,6 @@ function parseEmbeddedLogo(value: unknown): QraftProjectEmbeddedLogoV1 {
   ) {
     throw new QraftProjectValidationError("Embedded project logo dimensions are invalid.");
   }
-
   if (
     typeof logo.name !== "string" ||
     logo.name.trim().length < 1 ||
@@ -242,6 +273,25 @@ function parseEmbeddedLogo(value: unknown): QraftProjectEmbeddedLogoV1 {
   };
 }
 
+function parseAssets(value: unknown): QraftProjectDocumentV2["assets"] {
+  const assets = expectRecord(value, "Project assets");
+  assertOnlyKeys(assets, ["logo"], "Project assets");
+  const logo = assets.logo === undefined ? undefined : parseEmbeddedLogo(assets.logo);
+  return logo ? { logo } : {};
+}
+
+function parseExport(value: unknown): QraftProjectDocumentV2["export"] {
+  const exportSettings = expectRecord(value, "Project export settings");
+  assertOnlyKeys(exportSettings, ["rasterPixelSize"], "Project export settings");
+  try {
+    return { rasterPixelSize: parseRasterPixelSize(exportSettings.rasterPixelSize) };
+  } catch (error) {
+    throw new QraftProjectValidationError(
+      error instanceof Error ? error.message : "Project raster export size is invalid.",
+    );
+  }
+}
+
 function parseV1(value: unknown): QraftProjectDocumentV1 {
   const root = expectRecord(value, "Qraft project");
   assertOnlyKeys(
@@ -249,35 +299,21 @@ function parseV1(value: unknown): QraftProjectDocumentV1 {
     ["kind", "schemaVersion", "payload", "code", "export", "assets"],
     "Qraft project",
   );
-
-  if (root.kind !== QRAFT_PROJECT_KIND) {
-    throw new QraftProjectValidationError("This file is not a Qraft project.");
-  }
-
-  if (root.schemaVersion !== QRAFT_PROJECT_SCHEMA_VERSION) {
-    throw new QraftProjectValidationError(
-      "Qraft project schema version is invalid after migration.",
-    );
+  if (root.kind !== QRAFT_PROJECT_KIND || root.schemaVersion !== QRAFT_PROJECT_SCHEMA_VERSION_V1) {
+    throw new QraftProjectValidationError("Qraft project schema v1 is invalid.");
   }
 
   const payload = expectRecord(root.payload, "Project payload");
   const code = expectRecord(root.code, "Project code settings");
-  const exportSettings = expectRecord(root.export, "Project export settings");
-  const assets = expectRecord(root.assets, "Project assets");
   assertOnlyKeys(payload, ["id", "input"], "Project payload");
   assertOnlyKeys(code, ["symbology", "errorCorrectionLevel", "design"], "Project code settings");
-  assertOnlyKeys(exportSettings, ["rasterPixelSize"], "Project export settings");
-  assertOnlyKeys(assets, ["logo"], "Project assets");
-  const design = parseQrDesign(code.design);
-  const logo = assets.logo === undefined ? undefined : parseEmbeddedLogo(assets.logo);
-
   if (code.symbology !== "qr") {
-    throw new QraftProjectValidationError(
-      "This project uses a code type not supported by this Qraft version.",
-    );
+    throw new QraftProjectValidationError("Qraft project schema v1 supports QR projects only.");
   }
 
-  if (Boolean(design.logo) !== Boolean(logo)) {
+  const design = parseQrDesign(code.design);
+  const assets = parseAssets(root.assets);
+  if (Boolean(design.logo) !== Boolean(assets.logo)) {
     throw new QraftProjectValidationError(
       "Project logo geometry and embedded logo asset must either both be present or both be absent.",
     );
@@ -285,25 +321,132 @@ function parseV1(value: unknown): QraftProjectDocumentV1 {
 
   return {
     kind: QRAFT_PROJECT_KIND,
-    schemaVersion: QRAFT_PROJECT_SCHEMA_VERSION,
-    payload: {
-      id: parsePayloadId(payload.id),
-      input: validateJsonValue(payload.input),
-    },
-    code: {
-      symbology: "qr",
-      errorCorrectionLevel: parseEcc(code.errorCorrectionLevel),
-      design,
-    },
-    export: {
-      rasterPixelSize: parseRasterPixelSize(exportSettings.rasterPixelSize),
-    },
-    assets: logo ? { logo } : {},
+    schemaVersion: QRAFT_PROJECT_SCHEMA_VERSION_V1,
+    payload: { id: parsePayloadId(payload.id), input: validateJsonValue(payload.input) },
+    code: { symbology: "qr", errorCorrectionLevel: parseEcc(code.errorCorrectionLevel), design },
+    export: parseExport(root.export),
+    assets,
   };
 }
 
+function migrateV1ToV2(value: Record<string, unknown>): Record<string, unknown> {
+  const v1 = parseV1(value);
+  return {
+    kind: QRAFT_PROJECT_KIND,
+    schemaVersion: QRAFT_PROJECT_SCHEMA_VERSION,
+    content: {
+      kind: "payload",
+      payloadId: v1.payload.id,
+      input: v1.payload.input,
+    },
+    code: v1.code,
+    export: v1.export,
+    assets: v1.assets,
+  };
+}
+
+function parseV2(value: unknown): QraftProjectDocumentV2 {
+  const root = expectRecord(value, "Qraft project");
+  assertOnlyKeys(
+    root,
+    ["kind", "schemaVersion", "content", "code", "export", "assets"],
+    "Qraft project",
+  );
+  if (root.kind !== QRAFT_PROJECT_KIND) {
+    throw new QraftProjectValidationError("This file is not a Qraft project.");
+  }
+  if (root.schemaVersion !== QRAFT_PROJECT_SCHEMA_VERSION) {
+    throw new QraftProjectValidationError(
+      "Qraft project schema version is invalid after migration.",
+    );
+  }
+
+  const content = expectRecord(root.content, "Project content");
+  const code = expectRecord(root.code, "Project code settings");
+  const assets = parseAssets(root.assets);
+  const exportSettings = parseExport(root.export);
+
+  if (content.kind === "payload") {
+    assertOnlyKeys(content, ["kind", "payloadId", "input"], "Project QR content");
+    assertOnlyKeys(
+      code,
+      ["symbology", "errorCorrectionLevel", "design"],
+      "Project QR code settings",
+    );
+    if (code.symbology !== "qr") {
+      throw new QraftProjectValidationError(
+        "Payload projects must use the QR symbology in schema v2.",
+      );
+    }
+    const design = parseQrDesign(code.design);
+    if (Boolean(design.logo) !== Boolean(assets.logo)) {
+      throw new QraftProjectValidationError(
+        "Project logo geometry and embedded logo asset must either both be present or both be absent.",
+      );
+    }
+    return {
+      kind: QRAFT_PROJECT_KIND,
+      schemaVersion: QRAFT_PROJECT_SCHEMA_VERSION,
+      content: {
+        kind: "payload",
+        payloadId: parsePayloadId(content.payloadId),
+        input: validateJsonValue(content.input),
+      },
+      code: {
+        symbology: "qr",
+        errorCorrectionLevel: parseEcc(code.errorCorrectionLevel),
+        design,
+      },
+      export: exportSettings,
+      assets,
+    };
+  }
+
+  if (content.kind === "barcode") {
+    assertOnlyKeys(content, ["kind", "value"], "Project barcode content");
+    assertOnlyKeys(code, ["symbology", "humanReadableText"], "Project barcode code settings");
+    if (assets.logo) {
+      throw new QraftProjectValidationError("Barcode projects cannot contain QR logo assets.");
+    }
+    if (typeof content.value !== "string") {
+      throw new QraftProjectValidationError("Project barcode content must be text.");
+    }
+    const symbology = parseBarcodeSymbology(code.symbology);
+    if (typeof code.humanReadableText !== "boolean") {
+      throw new QraftProjectValidationError("Project human-readable-text setting is invalid.");
+    }
+    if (symbology === "datamatrix" && code.humanReadableText) {
+      throw new QraftProjectValidationError(
+        "Data Matrix does not expose human-readable text in Qraft.",
+      );
+    }
+    try {
+      validateBarcodePayload(symbology, content.value);
+    } catch (error) {
+      throw new QraftProjectValidationError(
+        error instanceof Error ? error.message : "Project barcode content is invalid.",
+      );
+    }
+
+    return {
+      kind: QRAFT_PROJECT_KIND,
+      schemaVersion: QRAFT_PROJECT_SCHEMA_VERSION,
+      content: { kind: "barcode", value: content.value },
+      code: { symbology, humanReadableText: code.humanReadableText },
+      export: exportSettings,
+      assets: {},
+    };
+  }
+
+  throw new QraftProjectValidationError(
+    "Project content kind is not supported by this Qraft version.",
+  );
+}
+
 type ProjectMigration = (value: Record<string, unknown>) => Record<string, unknown>;
-const PROJECT_MIGRATIONS: Readonly<Record<number, ProjectMigration>> = Object.freeze({});
+const PROJECT_MIGRATIONS: Readonly<Record<number, ProjectMigration>> = Object.freeze({
+  1: migrateV1ToV2,
+});
 
 function readSchemaVersion(value: Record<string, unknown>): number {
   const version = value.schemaVersion;
@@ -313,15 +456,13 @@ function readSchemaVersion(value: Record<string, unknown>): number {
   return version;
 }
 
-export function migrateQraftProject(value: unknown): QraftProjectDocumentV1 {
+export function migrateQraftProject(value: unknown): QraftProjectDocumentV2 {
   let current = expectRecord(value, "Qraft project");
-
   if (current.kind !== QRAFT_PROJECT_KIND) {
     throw new QraftProjectValidationError("This file is not a Qraft project.");
   }
 
   let schemaVersion = readSchemaVersion(current);
-
   if (schemaVersion > QRAFT_PROJECT_SCHEMA_VERSION) {
     throw new QraftProjectValidationError(
       `This project uses schema v${schemaVersion}, which is newer than this Qraft version supports.`,
@@ -339,18 +480,16 @@ export function migrateQraftProject(value: unknown): QraftProjectDocumentV1 {
     schemaVersion = readSchemaVersion(current);
   }
 
-  return parseV1(current);
+  return parseV2(current);
 }
 
 export function parseQraftProjectJson(text: string): QraftProjectDocument {
   let raw: unknown;
-
   try {
     raw = JSON.parse(text) as unknown;
   } catch {
     throw new QraftProjectValidationError("The selected project file is not valid JSON.");
   }
-
   return migrateQraftProject(raw);
 }
 

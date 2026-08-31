@@ -60,9 +60,9 @@ describe("render barcode use case", () => {
     const renderer = new FakeBarcodeRenderer();
     const renderBarcode = createRenderBarcode({ symbologies: symbologyRegistry, renderer });
 
-    await expect(renderBarcode({ symbology: "code128", payload: "Café" })).rejects.toMatchObject<
-      Partial<CodeRenderError>
-    >({ code: "invalid-request" });
+    await expect(renderBarcode({ symbology: "code128", payload: "Café" })).rejects.toMatchObject({
+      code: "invalid-request",
+    });
     expect(renderer.requests).toHaveLength(0);
   });
 
@@ -72,7 +72,7 @@ describe("render barcode use case", () => {
 
     await expect(
       renderBarcode({ symbology: "datamatrix", payload: "ABC", humanReadableText: true }),
-    ).rejects.toMatchObject<Partial<CodeRenderError>>({ code: "invalid-request" });
+    ).rejects.toMatchObject({ code: "invalid-request" });
     expect(renderer.requests).toHaveLength(0);
   });
 });

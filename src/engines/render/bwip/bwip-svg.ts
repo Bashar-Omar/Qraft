@@ -43,7 +43,10 @@ export function validateBwipSvg(svg: unknown): SafeBwipSvg {
   for (const match of trimmed.matchAll(TAG_PATTERN)) {
     const tag = match[1]?.toLowerCase();
     if (!tag || !ALLOWED_TAGS.has(tag)) {
-      throw new CodeRenderError("engine", `The barcode engine returned an unsupported SVG <${tag}> tag.`);
+      throw new CodeRenderError(
+        "engine",
+        `The barcode engine returned an unsupported SVG <${tag}> tag.`,
+      );
     }
   }
 

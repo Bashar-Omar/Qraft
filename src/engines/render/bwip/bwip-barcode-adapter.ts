@@ -85,7 +85,10 @@ function mapEngineError(error: unknown, symbology: BarcodeSymbologyId): CodeRend
     normalized.includes("too much data") ||
     normalized.includes("cannot fit")
   ) {
-    return new CodeRenderError("capacity", `${symbology} content does not fit the selected symbol.`);
+    return new CodeRenderError(
+      "capacity",
+      `${symbology} content does not fit the selected symbol.`,
+    );
   }
 
   return new CodeRenderError("engine", `The ${symbology} engine could not render this content.`);
@@ -119,8 +122,7 @@ export class BwipBarcodeAdapter implements CodeRenderer<RenderedBarcodeCode> {
       );
     }
 
-    const humanReadableText =
-      requestedHumanReadableText ?? profile.humanReadableText.defaultValue;
+    const humanReadableText = requestedHumanReadableText ?? profile.humanReadableText.defaultValue;
 
     try {
       const rawSvg = this.runtime.render(

@@ -1,6 +1,10 @@
 import type { ChangeEvent } from "react";
 
-import { RASTER_PIXEL_SIZES, type RasterPixelSize } from "@/core/export/raster";
+import {
+  RASTER_PIXEL_SIZES,
+  type RasterDimensions,
+  type RasterPixelSize,
+} from "@/core/export/raster";
 
 export type ExportBusyState = "svg" | "png" | "jpeg" | "webp" | "project" | "import" | null;
 
@@ -8,7 +12,7 @@ type ExportProjectPanelProps = Readonly<{
   busy: ExportBusyState;
   canExport: boolean;
   rasterPixelSize: RasterPixelSize;
-  actualRasterPixelSize?: number;
+  actualRasterDimensions?: RasterDimensions;
   exportIssue: string | null;
   projectNotice: string | null;
   onChangeRasterPixelSize(value: RasterPixelSize): void;
@@ -21,7 +25,7 @@ export function ExportProjectPanel({
   busy,
   canExport,
   rasterPixelSize,
-  actualRasterPixelSize,
+  actualRasterDimensions,
   exportIssue,
   projectNotice,
   onChangeRasterPixelSize,
@@ -52,9 +56,9 @@ export function ExportProjectPanel({
         <span>
           <strong>Raster target</strong>
           <small>
-            {canExport && actualRasterPixelSize
-              ? `Current artifact: ${actualRasterPixelSize}px with integer module alignment.`
-              : "Integer module alignment is preserved automatically."}
+            {canExport && actualRasterDimensions
+              ? `Current artifact: ${actualRasterDimensions.width} × ${actualRasterDimensions.height}px.`
+              : "Aspect ratio and crisp code geometry are preserved automatically."}
           </small>
         </span>
         <select

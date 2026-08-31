@@ -61,16 +61,17 @@ export function resolveRasterDimensions(
     };
   }
 
-  const scale = requestedSize / longestSide;
+  // Never downscale a barcode below its canonical SVG pixel grid. Shrinking
+  // bars/modules introduces fractional sampling that can reduce scan reliability.
   return {
-    width: Math.max(1, Math.round(naturalWidth * scale)),
-    height: Math.max(1, Math.round(naturalHeight * scale)),
+    width: Math.max(1, Math.round(naturalWidth)),
+    height: Math.max(1, Math.round(naturalHeight)),
   };
 }
 
 /**
- * QR-only compatibility helper for the existing Visual Studio. Phase 4C will
- * move its UI to width/height-aware export presentation.
+ * QR-only compatibility helper retained for code paths that still need one
+ * square dimension. Barcode UI uses width/height-aware raster dimensions.
  */
 export function resolveRasterPixelSize(rendered: RenderedCode, requested?: number): number {
   const dimensions = resolveRasterDimensions(rendered, requested);

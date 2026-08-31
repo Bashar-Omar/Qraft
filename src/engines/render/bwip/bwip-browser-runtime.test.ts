@@ -37,6 +37,6 @@ describe("@bwip-js/browser runtime integration", () => {
 
     expect(artifact.width).toBeGreaterThan(0);
     expect(artifact.height).toBeGreaterThan(0);
-    expect(artifact.svg).toContain("fill-rule=\"evenodd\"");
+    expect(artifact.svg).toContain('fill-rule="evenodd"');
   });
 });

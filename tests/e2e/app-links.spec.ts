@@ -52,10 +52,11 @@ test("App Link helper keeps verified HTTPS and custom app schemes local and expl
 
   const projectBytes = await readDownloadBytes(project);
   const document = JSON.parse(projectBytes.toString("utf8")) as {
-    payload?: { id?: string; input?: Record<string, unknown> };
+    content?: { kind?: string; payloadId?: string; input?: Record<string, unknown> };
   };
-  expect(document.payload).toMatchObject({
-    id: "app",
+  expect(document.content).toMatchObject({
+    kind: "payload",
+    payloadId: "app",
     input: {
       strategy: "https",
       destination: "https://example.com/app/products/42?source=qraft",

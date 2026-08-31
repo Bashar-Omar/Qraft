@@ -2,6 +2,7 @@ import { createExportCode } from "@/application/export/export-code";
 import { createGenerateCode } from "@/application/generate/generate-code";
 import { createRenderBarcode } from "@/application/generate/render-barcode";
 import { createSelfTestQr } from "@/application/quality/self-test-qr";
+import { createSelfTestBarcode } from "@/application/quality/self-test-barcode";
 import { RendererRegistry } from "@/core/code/renderer-registry";
 import type { RenderedBarcodeCode, RenderedQrCode } from "@/core/code/render";
 import { symbologyRegistry } from "@/core/code/symbology-registry";
@@ -11,6 +12,7 @@ import { jpegExporter } from "@/engines/export/jpeg/jpeg-exporter";
 import { webpExporter } from "@/engines/export/webp/webp-exporter";
 import { svgExporter } from "@/engines/export/svg/svg-exporter";
 import { zxingQrArtifactDecoder } from "@/engines/decode/zxing/zxing-qr-artifact-decoder";
+import { zxingBarcodeArtifactDecoder } from "@/engines/decode/zxing/zxing-barcode-artifact-decoder";
 import { lazyBwipBarcodeRenderer } from "@/engines/render/bwip/lazy-bwip-barcode-renderer";
 import { qrRenderer } from "@/engines/render/qr/qr-renderer";
 
@@ -35,3 +37,4 @@ export const exportCode = createExportCode({
 });
 
 export const selfTestQr = createSelfTestQr(zxingQrArtifactDecoder);
+export const selfTestBarcode = createSelfTestBarcode(zxingBarcodeArtifactDecoder);

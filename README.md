@@ -4,8 +4,8 @@
 
 Qraft is a public-source, privacy-first QR and barcode studio being built as a portfolio-grade product: designer-friendly, standards-aware, responsive, testable and local-first.
 
-> **Current status:** Phase 4B (step 2/3) — isolated BWIP barcode engine proof.
-> Phase 3 remains complete. Phase 4A established symbology/rectangular-artifact contracts; Phase 4B now adds a lazy, vendor-isolated `@bwip-js/browser` adapter with validated Code 128 + Data Matrix application paths. They remain Planned until Phase 4C ships capability-driven UI, project persistence and browser E2E. Physical-device smoke from Phase 3 remains a release-QA gate.
+> **Current status:** Phase 4C (step 3/3) — first production barcode slice.
+> Phase 3 remains complete. Code 128 and Data Matrix are now Live inside a capability-driven Barcode Studio with local preview/export, independent ZXing artifact self-test and `.qraft.json` schema v2 persistence. Schema v1 QR projects migrate explicitly on import. Physical-device smoke remains a release-QA gate.
 
 ## Product principles
 
@@ -113,7 +113,7 @@ Vendor package types stay inside `engines/`. The architecture contract is docume
 ## Current routes
 
 - `/` — product landing and current capability status
-- `/generate` — live QR studio for URL, Wi-Fi, Email, Phone, SMS, Text, Contact, WhatsApp, Event, Location, App Link, Social Link and Raw payloads
+- `/generate` — live QR + Barcode Studio: curated QR payloads plus Code 128 and Data Matrix
 - `/scan` — planned scanner surface
 - `/batch` — planned batch surface
 - `/guides` — guide/documentation surface
@@ -187,7 +187,7 @@ Phase 2D adds:
 2. curated 512 / 1024 / 2048 / 4096 raster targets with integer module alignment,
 3. real JPEG export with a solid white backing surface,
 4. WebP export with exact MIME verification rather than silent PNG fallback,
-5. versioned `.qraft.json` schema v1,
+5. versioned `.qraft.json` project persistence (schema v2 current; v1 migration retained),
 6. bounded project/logo file sizes and strict fresh-object parsing,
 7. schema migration infrastructure and graceful future-version rejection,
 8. optional bounded embedded normalized PNG logo for true local project portability,
@@ -251,7 +251,7 @@ Phase 3C step 3/3 adds:
 5. copy-only treatment and visible notices for custom/non-web schemes,
 6. a clear boundary that valid syntax is not malware/safety verification.
 
-Phase 4 is now active. Step 1/3 established Qraft-owned symbology/capability and rectangular-artifact contracts. Step 2/3 adds a lazy `@bwip-js/browser` runtime, standards-honest curated input boundaries, SVG validation and engine-backed application paths for Code 128 + Data Matrix. They remain Planned in product UX. Next: Phase 4C — capability-driven barcode Studio integration, project schema v2 migration and browser artifact E2E.
+Phase 4 first batch is complete. Step 1/3 established Qraft-owned symbology/capability and rectangular-artifact contracts. Step 2/3 added the lazy `@bwip-js/browser` runtime and standards-honest Code 128/Data Matrix engine paths. Step 3/3 makes those two curated formats Live through a separate Barcode Studio, width/height-aware export UX, independent ZXing final-artifact self-tests and project schema v2 with explicit v1 migration. Next Phase 4 cycle expands curated linear/retail breadth before Expert Catalog.
 
 ## Privacy
 

@@ -6,10 +6,7 @@ import type {
   BwipSvgRuntime,
 } from "@/engines/render/bwip/bwip-contract";
 
-type BwipNamedEncoder = (
-  options: BwipSvgOptions,
-  drawing: ReturnType<typeof drawingSVG>,
-) => string;
+type BwipNamedEncoder = (options: BwipSvgOptions, drawing: ReturnType<typeof drawingSVG>) => string;
 
 /**
  * The only source file allowed to know @bwip-js/browser's concrete API.

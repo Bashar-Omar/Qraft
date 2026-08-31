@@ -53,6 +53,7 @@ export async function rasterizeRenderedSvg(
   }
 
   const image = await loadSvgImage(rendered.svg);
+  context.imageSmoothingEnabled = false;
   context.drawImage(image, 0, 0, pixelWidth, pixelHeight);
 
   return { canvas, pixelWidth, pixelHeight };

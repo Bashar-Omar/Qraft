@@ -68,7 +68,7 @@ export const SYMBOLOGY_DEFINITIONS: readonly SymbologyDefinition[] = Object.free
     aliases: ["code-128"],
     family: "linear",
     tier: "curated",
-    availability: "planned",
+    availability: "live",
     summary: "Dense general-purpose linear barcode for text and identifiers.",
     capabilities: {
       ...COMMON_CAPABILITIES,
@@ -85,7 +85,7 @@ export const SYMBOLOGY_DEFINITIONS: readonly SymbologyDefinition[] = Object.free
     aliases: ["data-matrix"],
     family: "matrix",
     tier: "curated",
-    availability: "planned",
+    availability: "live",
     summary: "Compact two-dimensional code used in product and industrial workflows.",
     capabilities: {
       ...COMMON_CAPABILITIES,

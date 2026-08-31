@@ -20,9 +20,7 @@ describe("barcode input validation", () => {
   });
 
   it("rejects Code 128 content outside the curated visible-ASCII contract", () => {
-    expect(() => validateBarcodePayload("code128", "QRAFT\n128")).toThrowError(
-      CodeRenderError,
-    );
+    expect(() => validateBarcodePayload("code128", "QRAFT\n128")).toThrowError(CodeRenderError);
     expect(() => validateBarcodePayload("code128", "Café")).toThrow(/visible ASCII/i);
   });
 

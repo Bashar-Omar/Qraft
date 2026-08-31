@@ -24,10 +24,12 @@ const duplicate: SymbologyDefinition = {
 };
 
 describe("symbology registry", () => {
-  it("keeps current live support separate from planned Phase 4 formats", () => {
-    expect(symbologyRegistry.listLive().map((definition) => definition.id)).toEqual(["qr"]);
-    expect(symbologyRegistry.get("code128").availability).toBe("planned");
-    expect(symbologyRegistry.get("datamatrix").availability).toBe("planned");
+  it("marks only the Phase 4C curated slice live", () => {
+    expect(symbologyRegistry.listLive().map((definition) => definition.id)).toEqual([
+      "qr",
+      "code128",
+      "datamatrix",
+    ]);
   });
 
   it("stores capability metadata in one Qraft-owned source", () => {
