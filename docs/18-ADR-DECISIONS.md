@@ -490,7 +490,7 @@ only the Code 128 and Data Matrix proof slice.
 Decision:
 
 - only `src/engines/render/bwip/bwip-browser-runtime.ts` may import `@bwip-js/browser`,
-- production uses the package's named `code128` and `datamatrix` encoders plus `drawingSVG()`,
+- production uses only explicit named encoders plus `drawingSVG()`; Phase 4B began with `code128`/`datamatrix` and Phase 4D expands that same boundary to the curated linear/retail set,
 - the concrete runtime is dynamically imported behind `LazyBwipBarcodeRenderer`,
 - Qraft-owned adapter contracts remain independently testable without loading the package,
 - the generic 100+ encoder catalog is not eagerly linked into the existing QR path,
@@ -545,3 +545,30 @@ Decision:
 Why:
 
 Payload meaning and code representation are different product concepts. Keeping them separate prevents future Data Matrix/GS1/Expert work from turning project persistence into a growing QR-shaped object with optional fields. An explicit migration also preserves the portability promise made by earlier releases.
+
+---
+
+## ADR-030 — Retail check digits are Qraft domain state, not renderer side effects
+
+**Status:** Accepted
+
+Phase 4D expands the curated barcode surface into retail identifiers where a renderer can accept a
+short input and calculate the final check digit implicitly.
+
+Decision:
+
+- Qraft calculates and verifies GTIN Mod-10 check digits before the BWIP boundary,
+- validated barcode state distinguishes user input from the canonical encoded payload,
+- EAN-13, EAN-8, UPC-A and ITF-14 accept the standard short/full lengths and reject bad full check digits,
+- curated UPC-E supports standards-defined UPC-E0 compressed input only,
+- Interleaved 2 of 5 rejects odd digit counts rather than allowing BWIP to silently prefix `0`,
+- independent self-test compares against Qraft's canonical encoded payload,
+- successful retail project saves persist the canonical value,
+- add-ons, UPC-E1 and GS1/FNC transformations remain closed until dedicated product contracts exist.
+
+Why:
+
+A renderer-side transformation can produce a technically valid symbol while making Qraft's preview,
+portable project and independent decoder disagree about what was encoded. Check digits and other
+meaningful transformations therefore belong in Qraft's domain validation layer. The vendor adapter
+receives a complete value and is not allowed to become the source of product semantics.

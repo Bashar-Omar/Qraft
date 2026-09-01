@@ -1,3 +1,4 @@
+import { validateBarcodePayload } from "@/core/code/barcode-input";
 import type { QrErrorCorrectionLevel } from "@/core/code/render";
 import type { BarcodeSymbologyId } from "@/core/code/symbology";
 import type { QraftQrDesign } from "@/core/design/qr-design";
@@ -112,10 +113,11 @@ export async function exportQraftProject(
     };
     filenameToken = request.payloadId;
   } else {
+    const validated = validateBarcodePayload(request.symbology, request.payload);
     document = {
       kind: QRAFT_PROJECT_KIND,
       schemaVersion: QRAFT_PROJECT_SCHEMA_VERSION,
-      content: { kind: "barcode", value: request.payload },
+      content: { kind: "barcode", value: validated.encodedPayload },
       code: {
         symbology: request.symbology,
         humanReadableText: request.humanReadableText,

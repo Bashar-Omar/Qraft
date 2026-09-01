@@ -1,4 +1,16 @@
-import { code128, datamatrix, drawingSVG } from "@bwip-js/browser";
+import {
+  code128,
+  code39,
+  code93,
+  datamatrix,
+  drawingSVG,
+  ean13,
+  ean8,
+  interleaved2of5,
+  itf14,
+  upca,
+  upce,
+} from "@bwip-js/browser";
 
 import type {
   BwipEncoderId,
@@ -10,11 +22,19 @@ type BwipNamedEncoder = (options: BwipSvgOptions, drawing: ReturnType<typeof dra
 
 /**
  * The only source file allowed to know @bwip-js/browser's concrete API.
- * Named encoders keep Code 128/Data Matrix explicit and let the bundler avoid
- * treating Qraft's initial barcode slice as a request for the full 100+ catalog.
+ * Named encoders preserve tree-shaking and keep the generic 100+ catalog out
+ * of Qraft core/application/UI code.
  */
 const BWIP_ENCODERS: Readonly<Record<BwipEncoderId, BwipNamedEncoder>> = Object.freeze({
   code128,
+  code39,
+  code93,
+  itf: interleaved2of5,
+  itf14,
+  ean13,
+  ean8,
+  upca,
+  upce,
   datamatrix,
 });
 

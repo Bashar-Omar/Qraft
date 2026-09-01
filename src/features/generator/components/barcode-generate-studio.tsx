@@ -9,6 +9,10 @@ import {
   type ImportedQrProject,
 } from "@/application/project/import-qraft-project";
 import { exportCode, renderBarcode, selfTestBarcode } from "@/composition/core-qr";
+import {
+  getBarcodeInputPolicy,
+  type ValidatedBarcodePayload,
+} from "@/core/code/barcode-input";
 import { CodeRenderError, type RenderedBarcodeCode } from "@/core/code/render";
 import { symbologyRegistry } from "@/core/code/symbology-registry";
 import type { BarcodeSymbologyId, SymbologyDefinition } from "@/core/code/symbology";
@@ -31,6 +35,14 @@ import { downloadArtifact } from "@/features/generator/lib/download";
 
 const INITIAL_BARCODE_DRAFTS: Readonly<Record<BarcodeSymbologyId, string>> = Object.freeze({
   code128: "QRAFT-128-001",
+  code39: "QRAFT-39",
+  code93: "QRAFT-93",
+  itf: "0123456789",
+  itf14: "0952876543210",
+  ean13: "952012345678",
+  ean8: "0133558",
+  upca: "78858101497",
+  upce: "0123455",
   datamatrix: "Qraft Data Matrix",
 });
 
@@ -40,6 +52,7 @@ type BarcodeGenerationState =
       requestKey: string;
       definition: SymbologyDefinition;
       payload: string;
+      validation: ValidatedBarcodePayload;
       rendered: RenderedBarcodeCode;
     }>
   | Readonly<{ status: "error"; requestKey: string; message: string }>
@@ -105,6 +118,7 @@ export function BarcodeGenerateStudio({
   const selfTestAttempt = useRef(0);
 
   const definition = symbologyRegistry.get(symbology);
+  const inputPolicy = getBarcodeInputPolicy(symbology);
   const payload = drafts[symbology];
   const effectiveHumanReadableText = definition.capabilities.humanReadableText
     ? humanReadableText
@@ -128,6 +142,7 @@ export function BarcodeGenerateStudio({
             requestKey,
             definition: result.symbology,
             payload: result.payload,
+            validation: result.validation,
             rendered: result.rendered,
           });
         }
@@ -207,7 +222,7 @@ export function BarcodeGenerateStudio({
       const artifact = await exportQraftProject({
         mode: "barcode",
         symbology,
-        payload,
+        payload: currentGeneration.payload,
         humanReadableText: effectiveHumanReadableText,
         rasterPixelSize,
       });
@@ -306,18 +321,23 @@ export function BarcodeGenerateStudio({
             <textarea
               aria-invalid={currentGeneration.status === "error"}
               id="barcode-content"
+              inputMode={inputPolicy.inputMode}
               onChange={(event) =>
                 setDrafts((current) => ({ ...current, [symbology]: event.target.value }))
               }
-              rows={symbology === "datamatrix" ? 5 : 3}
+              placeholder={inputPolicy.placeholder}
+              rows={inputPolicy.rows}
               spellCheck={false}
               value={payload}
             />
-            <p className="studio-field__hint">
-              {symbology === "code128"
-                ? "Curated Code 128 accepts exact visible ASCII. GS1/FNC/control-byte workflows remain Expert-only."
-                : "Curated Data Matrix currently accepts ISO-8859-1 / Latin-1 bytes. Unicode ECI is intentionally deferred."}
-            </p>
+            <p className="studio-field__hint">{inputPolicy.hint}</p>
+            {currentGeneration.status === "ready" && currentGeneration.validation.checkDigit ? (
+              <p className="studio-field__success" role="status">
+                CHECK DIGIT · {currentGeneration.validation.checkDigit.digit} ·{" "}
+                {currentGeneration.validation.checkDigit.status.toUpperCase()} · ENCODED{" "}
+                {currentGeneration.validation.encodedPayload}
+              </p>
+            ) : null}
             {currentGeneration.status === "error" ? (
               <p className="studio-field__issue" role="status">
                 {currentGeneration.message}

@@ -138,3 +138,56 @@ test("Data Matrix exposes only applicable capabilities and rejects unsupported U
   ).toBeVisible();
   await expect(studio.getByRole("button", { name: "Download SVG" })).toBeDisabled();
 });
+
+test("curated linear and retail formats validate before rendering and self-test canonical GTIN data", async ({
+  page,
+}) => {
+  await page.goto("/generate");
+  await openBarcodeStudio(page);
+
+  const studio = page.getByTestId("barcode-studio-shell");
+  const content = studio.getByLabel("Barcode content");
+
+  await chooseBarcode(page, /Code 39/);
+  await content.fill("QRAFT-39");
+  await expect(page.getByRole("img", { name: "Generated Code 39 barcode preview" })).toBeVisible();
+
+  await chooseBarcode(page, /Interleaved 2 of 5/);
+  await content.fill("12345");
+  await expect(studio.getByRole("status").filter({ hasText: /even number of digits/i })).toBeVisible();
+  await expect(studio.getByRole("button", { name: "Download SVG" })).toBeDisabled();
+  await content.fill("0123456789");
+  await expect(
+    page.getByRole("img", { name: "Generated Interleaved 2 of 5 barcode preview" }),
+  ).toBeVisible();
+
+  await chooseBarcode(page, /EAN-13/);
+  await content.fill("952012345678");
+  await expect(
+    studio.getByRole("status").filter({ hasText: /CHECK DIGIT · 8 · COMPUTED.*9520123456788/i }),
+  ).toBeVisible();
+  await expect(page.getByRole("img", { name: "Generated EAN-13 barcode preview" })).toBeVisible();
+
+  const quality = studio.locator(".quality-assistant");
+  await quality.getByRole("button", { name: "Run self-test" }).click();
+  await expect(quality.getByText("Passed independent local decode", { exact: true })).toBeVisible({
+    timeout: 15_000,
+  });
+
+  const projectPromise = page.waitForEvent("download");
+  await studio.getByRole("button", { name: "Save .qraft.json" }).click();
+  const project = await projectPromise;
+  expect(project.suggestedFilename()).toBe("qraft-ean13.qraft.json");
+  const projectDocument = JSON.parse((await readDownloadBytes(project)).toString("utf8")) as {
+    content?: { value?: string };
+    code?: { symbology?: string };
+  };
+  expect(projectDocument).toMatchObject({
+    content: { value: "9520123456788" },
+    code: { symbology: "ean13" },
+  });
+
+  await content.fill("9520123456780");
+  await expect(studio.getByRole("status").filter({ hasText: /Expected 8/i })).toBeVisible();
+  await expect(studio.getByRole("button", { name: "Download SVG" })).toBeDisabled();
+});

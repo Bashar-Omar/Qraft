@@ -4,8 +4,8 @@
 
 Qraft is a public-source, privacy-first QR and barcode studio being built as a portfolio-grade product: designer-friendly, standards-aware, responsive, testable and local-first.
 
-> **Current status:** Phase 4C (step 3/3) — first production barcode slice.
-> Phase 3 remains complete. Code 128 and Data Matrix are now Live inside a capability-driven Barcode Studio with local preview/export, independent ZXing artifact self-test and `.qraft.json` schema v2 persistence. Schema v1 QR projects migrate explicitly on import. Physical-device smoke remains a release-QA gate.
+> **Current status:** Phase 4D (new cycle, step 1/3) — curated linear + retail foundation.
+> Code 128 and Data Matrix remain Live. Code 39, Code 93, ITF, ITF-14, EAN-13, EAN-8, UPC-A and UPC-E0 now join the local Barcode Studio behind Qraft-owned character/length/check-digit validation, canonical self-test semantics and schema-v2 project persistence. Physical-device smoke remains a release-QA gate.
 
 ## Product principles
 
@@ -39,7 +39,7 @@ Node.js `24 LTS` is the project/CI standard.
 
 `qr@0.6.0` remains the standards-first structural baseline and golden-vector oracle. Phase 2A adds `qr-code-styling@1.9.2` only behind `src/engines/render/designer-qr/`, loaded dynamically in the browser. Phase 2B adds `@zxing/library@0.23.0` only behind `src/engines/decode/zxing/` for explicit artifact self-tests. Phase 4B adds `@bwip-js/browser@4.11.4` only behind `src/engines/render/bwip/`; the concrete package binding is dynamically loaded for supported barcode requests and does not enter the normal QR render path. Qraft design, quality and symbology contracts remain vendor-neutral.
 
-See `docs/18-ADR-DECISIONS.md`, `docs/22-PHASE-1-CORE-QR.md`, `docs/23-PHASE-2-VISUAL-STUDIO.md`, `docs/24-PHASE-2B-QUALITY-ASSISTANT.md`, `docs/25-PHASE-2C-LOGO-SAFETY.md`, `docs/26-PHASE-2D-EXPORT-PROJECT.md`, `docs/27-PHASE-3A-STRUCTURED-PAYLOADS.md`, `docs/28-PHASE-3B-EVENT.md`, `docs/29-PHASE-3B-RAW.md`, `docs/30-PHASE-3B-INTEGRATION-INSPECTOR.md`, `docs/31-PHASE-3C-APP-LINKS.md`, `docs/32-PHASE-3C-SOCIAL-LINKS.md`, `docs/33-PHASE-3C-INSPECTOR-HARDENING.md`, `docs/34-PHASE-4A-SYMBOLOGY-CORE.md` and `docs/35-PHASE-4B-BWIP-ADAPTER.md`.
+See `docs/18-ADR-DECISIONS.md`, `docs/22-PHASE-1-CORE-QR.md`, `docs/23-PHASE-2-VISUAL-STUDIO.md`, `docs/24-PHASE-2B-QUALITY-ASSISTANT.md`, `docs/25-PHASE-2C-LOGO-SAFETY.md`, `docs/26-PHASE-2D-EXPORT-PROJECT.md`, `docs/27-PHASE-3A-STRUCTURED-PAYLOADS.md`, `docs/28-PHASE-3B-EVENT.md`, `docs/29-PHASE-3B-RAW.md`, `docs/30-PHASE-3B-INTEGRATION-INSPECTOR.md`, `docs/31-PHASE-3C-APP-LINKS.md`, `docs/32-PHASE-3C-SOCIAL-LINKS.md`, `docs/33-PHASE-3C-INSPECTOR-HARDENING.md`, `docs/34-PHASE-4A-SYMBOLOGY-CORE.md`, `docs/35-PHASE-4B-BWIP-ADAPTER.md`, `docs/36-PHASE-4C-BARCODE-STUDIO.md` and `docs/37-PHASE-4D-LINEAR-RETAIL.md`.
 
 ## Why TypeScript 5.9?
 
@@ -251,7 +251,7 @@ Phase 3C step 3/3 adds:
 5. copy-only treatment and visible notices for custom/non-web schemes,
 6. a clear boundary that valid syntax is not malware/safety verification.
 
-Phase 4 first batch is complete. Step 1/3 established Qraft-owned symbology/capability and rectangular-artifact contracts. Step 2/3 added the lazy `@bwip-js/browser` runtime and standards-honest Code 128/Data Matrix engine paths. Step 3/3 makes those two curated formats Live through a separate Barcode Studio, width/height-aware export UX, independent ZXing final-artifact self-tests and project schema v2 with explicit v1 migration. Next Phase 4 cycle expands curated linear/retail breadth before Expert Catalog.
+Phase 4 first batch is complete. The second Phase 4 cycle starts with Phase 4D: curated linear/retail breadth. Qraft now owns strict base-character contracts for Code 39/93, exact even-length ITF semantics, GS1 Mod-10 computation/verification for EAN-13/EAN-8/UPC-A/ITF-14 and standards-defined UPC-E0 handling. Retail self-tests compare against the canonical encoded value instead of relying on BWIP side effects. Next: curated 2D breadth plus the catalog metadata/search foundation before Expert Catalog.
 
 ## Privacy
 

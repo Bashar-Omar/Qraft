@@ -1,4 +1,7 @@
-import { validateBarcodePayload } from "@/core/code/barcode-input";
+import {
+  validateBarcodePayload,
+  type ValidatedBarcodePayload,
+} from "@/core/code/barcode-input";
 import { CodeRenderError, type CodeRenderer, type RenderedBarcodeCode } from "@/core/code/render";
 import type { SymbologyRegistry } from "@/core/code/symbology-registry";
 import type { BarcodeSymbologyId, SymbologyDefinition } from "@/core/code/symbology";
@@ -11,7 +14,9 @@ export type RenderBarcodeInput = Readonly<{
 
 export type RenderBarcodeResult = Readonly<{
   symbology: SymbologyDefinition;
+  /** Canonical value actually encoded and expected from independent decode. */
   payload: string;
+  validation: ValidatedBarcodePayload;
   rendered: RenderedBarcodeCode;
 }>;
 
@@ -38,7 +43,7 @@ export function createRenderBarcode({ symbologies, renderer }: RenderBarcodeDepe
 
     const rendered = await renderer.render({
       symbology: input.symbology,
-      payload: validated.payload,
+      payload: validated.encodedPayload,
       options: {
         humanReadableText: input.humanReadableText ?? definition.capabilities.humanReadableText,
       },
@@ -46,7 +51,8 @@ export function createRenderBarcode({ symbologies, renderer }: RenderBarcodeDepe
 
     return {
       symbology: definition,
-      payload: validated.payload,
+      payload: validated.encodedPayload,
+      validation: validated,
       rendered,
     };
   };

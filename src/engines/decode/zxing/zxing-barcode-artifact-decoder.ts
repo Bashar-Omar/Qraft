@@ -8,6 +8,14 @@ import { rasterizeSvgForZxing } from "@/engines/decode/zxing/zxing-artifact-rast
 
 const FORMAT_BY_SYMBOLOGY = Object.freeze({
   code128: "CODE_128",
+  code39: "CODE_39",
+  code93: "CODE_93",
+  itf: "ITF",
+  itf14: "ITF",
+  ean13: "EAN_13",
+  ean8: "EAN_8",
+  upca: "UPC_A",
+  upce: "UPC_E",
   datamatrix: "DATA_MATRIX",
 } as const);
 

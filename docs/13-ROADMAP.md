@@ -73,7 +73,7 @@ Gate:
 
 ## Phase 4 — Barcode breadth
 
-**Status:** Active — first Phase 4 batch complete through Phase 4C. Code 128 and Data Matrix are Live with capability-driven UI, rectangular export, independent artifact decode and schema-v2 portable projects. Next cycle expands linear/retail breadth and then 2D/Expert Catalog coverage.
+**Status:** Active — second Phase 4 cycle, step 1/3 (Phase 4D) implemented locally. The curated live set now includes Code 128, Code 39, Code 93, ITF, ITF-14, EAN-13, EAN-8, UPC-A, UPC-E0 and Data Matrix with Qraft-owned validation/check digits, canonical artifact self-test and schema-v2 projects. Next: curated 2D breadth and searchable catalog metadata before Expert Catalog.
 
 Deliver:
 

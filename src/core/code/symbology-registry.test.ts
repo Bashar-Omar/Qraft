@@ -24,10 +24,18 @@ const duplicate: SymbologyDefinition = {
 };
 
 describe("symbology registry", () => {
-  it("marks only the Phase 4C curated slice live", () => {
+  it("marks the Phase 4D curated linear and retail slice live", () => {
     expect(symbologyRegistry.listLive().map((definition) => definition.id)).toEqual([
       "qr",
       "code128",
+      "code39",
+      "code93",
+      "itf",
+      "itf14",
+      "ean13",
+      "ean8",
+      "upca",
+      "upce",
       "datamatrix",
     ]);
   });
@@ -37,6 +45,8 @@ describe("symbology registry", () => {
     expect(symbologyRegistry.get("code128").capabilities.humanReadableText).toBe(true);
     expect(symbologyRegistry.get("code128").capabilities.gradient).toBe(false);
     expect(symbologyRegistry.get("datamatrix").family).toBe("matrix");
+    expect(symbologyRegistry.get("ean13").family).toBe("linear");
+    expect(symbologyRegistry.get("upce").capabilities.humanReadableText).toBe(true);
   });
 
   it("rejects duplicate registrations", () => {

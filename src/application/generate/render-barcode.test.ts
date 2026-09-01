@@ -24,18 +24,18 @@ class FakeBarcodeRenderer implements CodeRenderer<RenderedBarcodeCode> {
     }
 
     return {
-      width: request.symbology === "code128" ? 120 : 18,
-      height: request.symbology === "code128" ? 50 : 18,
-      svg: `<svg viewBox="0 0 ${request.symbology === "code128" ? "120 50" : "18 18"}"/>`,
+      width: request.symbology === "datamatrix" ? 18 : 120,
+      height: request.symbology === "datamatrix" ? 18 : 50,
+      svg: `<svg viewBox="0 0 ${request.symbology === "datamatrix" ? "18 18" : "120 50"}"/>`,
       metadata: {
         rendererId: this.id,
         symbology: request.symbology,
         payloadBytes: request.payload.length,
         humanReadableText: request.options?.humanReadableText ?? false,
         quietZoneModules:
-          request.symbology === "code128"
-            ? { top: 0, right: 10, bottom: 0, left: 10 }
-            : { top: 1, right: 1, bottom: 1, left: 1 },
+          request.symbology === "datamatrix"
+            ? { top: 1, right: 1, bottom: 1, left: 1 }
+            : { top: 0, right: 10, bottom: 0, left: 10 },
       },
     };
   }
@@ -54,6 +54,25 @@ describe("render barcode use case", () => {
     expect(datamatrix.rendered.metadata.humanReadableText).toBe(false);
     expect(renderer.requests[0]).toMatchObject({ options: { humanReadableText: true } });
     expect(renderer.requests[1]).toMatchObject({ options: { humanReadableText: false } });
+  });
+
+  it("canonicalizes retail check digits before the renderer and self-test boundary", async () => {
+    const renderer = new FakeBarcodeRenderer();
+    const renderBarcode = createRenderBarcode({ symbologies: symbologyRegistry, renderer });
+
+    const result = await renderBarcode({ symbology: "ean13", payload: "952012345678" });
+
+    expect(result.payload).toBe("9520123456788");
+    expect(result.validation).toMatchObject({
+      payload: "952012345678",
+      encodedPayload: "9520123456788",
+      checkDigit: { digit: "8", status: "computed" },
+    });
+    expect(renderer.requests[0]).toMatchObject({
+      symbology: "ean13",
+      payload: "9520123456788",
+      options: { humanReadableText: true },
+    });
   });
 
   it("validates content before the renderer boundary", async () => {

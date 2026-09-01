@@ -1,5 +1,9 @@
-import { validateBarcodePayload } from "@/core/code/barcode-input";
+import {
+  validateBarcodePayload,
+  type ValidatedBarcodePayload,
+} from "@/core/code/barcode-input";
 import type { QrErrorCorrectionLevel } from "@/core/code/render";
+import { symbologyRegistry } from "@/core/code/symbology-registry";
 import type { BarcodeSymbologyId } from "@/core/code/symbology";
 import { parseQrDesign, type QraftQrDesign } from "@/core/design/qr-design";
 import { QR_LOGO_LIMITS } from "@/core/design/qr-logo";
@@ -29,7 +33,18 @@ const PAYLOAD_IDS = new Set<PayloadId>([
   "social",
   "raw",
 ]);
-const BARCODE_SYMBOLOGIES = new Set<BarcodeSymbologyId>(["code128", "datamatrix"]);
+const BARCODE_SYMBOLOGIES = new Set<BarcodeSymbologyId>([
+  "code128",
+  "code39",
+  "code93",
+  "itf",
+  "itf14",
+  "ean13",
+  "ean8",
+  "upca",
+  "upce",
+  "datamatrix",
+]);
 const ECC_LEVELS = new Set<QrErrorCorrectionLevel>(["L", "M", "Q", "H"]);
 const DANGEROUS_KEYS = new Set(["__proto__", "prototype", "constructor"]);
 const BASE64_PATTERN = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
@@ -415,13 +430,15 @@ function parseV2(value: unknown): QraftProjectDocumentV2 {
     if (typeof code.humanReadableText !== "boolean") {
       throw new QraftProjectValidationError("Project human-readable-text setting is invalid.");
     }
-    if (symbology === "datamatrix" && code.humanReadableText) {
+    const definition = symbologyRegistry.get(symbology);
+    if (code.humanReadableText && !definition.capabilities.humanReadableText) {
       throw new QraftProjectValidationError(
-        "Data Matrix does not expose human-readable text in Qraft.",
+        `${definition.label} does not expose human-readable text in Qraft.`,
       );
     }
+    let validated: ValidatedBarcodePayload;
     try {
-      validateBarcodePayload(symbology, content.value);
+      validated = validateBarcodePayload(symbology, content.value);
     } catch (error) {
       throw new QraftProjectValidationError(
         error instanceof Error ? error.message : "Project barcode content is invalid.",
@@ -431,7 +448,7 @@ function parseV2(value: unknown): QraftProjectDocumentV2 {
     return {
       kind: QRAFT_PROJECT_KIND,
       schemaVersion: QRAFT_PROJECT_SCHEMA_VERSION,
-      content: { kind: "barcode", value: content.value },
+      content: { kind: "barcode", value: validated.encodedPayload },
       code: { symbology, humanReadableText: code.humanReadableText },
       export: exportSettings,
       assets: {},

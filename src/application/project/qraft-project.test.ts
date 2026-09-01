@@ -151,7 +151,7 @@ describe("portable Qraft projects", () => {
     expect(imported.logo?.renderUri).toMatch(/^data:image\/png;base64,/);
   });
 
-  it("round-trips Code 128 and Data Matrix barcode projects", async () => {
+  it("round-trips curated barcode projects", async () => {
     const code128 = await exportQraftProject({
       mode: "barcode",
       symbology: "code128",
@@ -180,6 +180,21 @@ describe("portable Qraft projects", () => {
       symbology: "datamatrix",
       payload: "Lot-Ä-42",
       humanReadableText: false,
+    });
+
+    const retail = await exportQraftProject({
+      mode: "barcode",
+      symbology: "ean13",
+      payload: "952012345678",
+      humanReadableText: true,
+      rasterPixelSize: 1024,
+    });
+    await expect(importQraftProject(retail.blob)).resolves.toEqual({
+      mode: "barcode",
+      symbology: "ean13",
+      payload: "9520123456788",
+      humanReadableText: true,
+      rasterPixelSize: 1024,
     });
   });
 
