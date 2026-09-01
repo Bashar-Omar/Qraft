@@ -21,6 +21,9 @@ const RETAIL_QUIET_ZONE_MODULES = Object.freeze({ top: 0, right: 12, bottom: 0, 
 const DATAMATRIX_QUIET_ZONE_MODULES = Object.freeze({ top: 1, right: 1, bottom: 1, left: 1 });
 const PDF417_QUIET_ZONE_MODULES = Object.freeze({ top: 2, right: 2, bottom: 2, left: 2 });
 const AZTEC_QUIET_ZONE_MODULES = Object.freeze({ top: 0, right: 0, bottom: 0, left: 0 });
+const MICROQR_QUIET_ZONE_MODULES = Object.freeze({ top: 2, right: 2, bottom: 2, left: 2 });
+const MAXICODE_QUIET_ZONE_MODULES = Object.freeze({ top: 0, right: 0, bottom: 0, left: 0 });
+const RMQR_QUIET_ZONE_MODULES = Object.freeze({ top: 2, right: 2, bottom: 2, left: 2 });
 
 type BwipSymbologyProfile = Readonly<{
   encoder: BwipEncoderId;
@@ -133,6 +136,62 @@ const BWIP_SYMBOLOGY_PROFILES: Readonly<Record<BwipEncoderId, BwipSymbologyProfi
           text: validated.binaryText,
           binarytext: true,
           scale: 1,
+          backgroundcolor: "ffffff",
+        };
+      },
+    },
+    codabar: createLinearProfile("codabar", "rationalizedCodabar"),
+    code11: createLinearProfile("code11", "code11"),
+    msi: createLinearProfile("msi", "msi"),
+    plessey: createLinearProfile("plessey", "plessey"),
+    microqr: {
+      encoder: "microqr",
+      bcid: "microqrcode",
+      humanReadableText: { supported: false, defaultValue: false },
+      quietZoneModules: MICROQR_QUIET_ZONE_MODULES,
+      createOptions(validated) {
+        return {
+          bcid: "microqrcode",
+          text: validated.binaryText,
+          binarytext: true,
+          scale: 1,
+          eclevel: "L",
+          fixedeclevel: true,
+          padding: MICROQR_QUIET_ZONE_MODULES.left,
+          backgroundcolor: "ffffff",
+        };
+      },
+    },
+    maxicode: {
+      encoder: "maxicode",
+      bcid: "maxicode",
+      humanReadableText: { supported: false, defaultValue: false },
+      quietZoneModules: MAXICODE_QUIET_ZONE_MODULES,
+      createOptions(validated) {
+        return {
+          bcid: "maxicode",
+          text: validated.binaryText,
+          binarytext: true,
+          scale: 1,
+          backgroundcolor: "ffffff",
+        };
+      },
+    },
+    rmqr: {
+      encoder: "rmqr",
+      bcid: "rectangularmicroqrcode",
+      humanReadableText: { supported: false, defaultValue: false },
+      quietZoneModules: RMQR_QUIET_ZONE_MODULES,
+      createOptions(validated) {
+        return {
+          bcid: "rectangularmicroqrcode",
+          text: validated.binaryText,
+          binarytext: true,
+          scale: 1,
+          version: "R17x139",
+          eclevel: "M",
+          fixedeclevel: true,
+          padding: RMQR_QUIET_ZONE_MODULES.left,
           backgroundcolor: "ffffff",
         };
       },

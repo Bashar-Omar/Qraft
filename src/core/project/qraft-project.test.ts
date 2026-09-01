@@ -91,7 +91,6 @@ describe("Qraft project schema", () => {
       }),
     ).toThrow(/human-readable text/i);
 
-
     expect(
       migrateQraftProject({
         kind: QRAFT_PROJECT_KIND,
@@ -155,6 +154,28 @@ describe("Qraft project schema", () => {
         assets: {},
       }),
     ).toThrow(/Latin-1|ECI/i);
+
+    expect(
+      migrateQraftProject({
+        kind: QRAFT_PROJECT_KIND,
+        schemaVersion: 2,
+        content: { kind: "barcode", value: "A0123456789B" },
+        code: { symbology: "codabar", humanReadableText: true },
+        export: { rasterPixelSize: 1024 },
+        assets: {},
+      }),
+    ).toMatchObject({ code: { symbology: "codabar", humanReadableText: true } });
+
+    expect(
+      migrateQraftProject({
+        kind: QRAFT_PROJECT_KIND,
+        schemaVersion: 2,
+        content: { kind: "barcode", value: "Qraft narrow label" },
+        code: { symbology: "rmqr", humanReadableText: false },
+        export: { rasterPixelSize: 1024 },
+        assets: {},
+      }),
+    ).toMatchObject({ code: { symbology: "rmqr", humanReadableText: false } });
   });
 
   it("rejects newer or unsupported older project versions", () => {

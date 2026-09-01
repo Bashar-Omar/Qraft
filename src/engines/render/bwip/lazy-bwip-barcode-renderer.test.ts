@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { LazyBwipBarcodeRenderer } from "@/engines/render/bwip/lazy-bwip-barcode-renderer";
 
 describe("lazy BWIP barcode renderer", () => {
-  it("advertises every curated engine-backed Phase 4D symbology", () => {
+  it("advertises every allow-listed engine-backed Phase 4F symbology", () => {
     const renderer = new LazyBwipBarcodeRenderer();
     const supported = [
       "code128",
@@ -15,9 +15,16 @@ describe("lazy BWIP barcode renderer", () => {
       "ean8",
       "upca",
       "upce",
+      "codabar",
+      "code11",
+      "msi",
+      "plessey",
       "datamatrix",
       "pdf417",
       "aztec",
+      "microqr",
+      "maxicode",
+      "rmqr",
     ] as const;
 
     for (const symbology of supported) {

@@ -4,8 +4,8 @@
 
 Qraft is a public-source, privacy-first QR and barcode studio being built as a portfolio-grade product: designer-friendly, standards-aware, responsive, testable and local-first.
 
-> **Current status:** Phase 4E (new cycle, step 2/3) — curated 2D + searchable catalog foundation.
-> The Phase 4D linear/retail set remains Live. PDF417 and Aztec Code now join the curated Barcode Studio with explicit Latin-1 byte semantics, named BWIP adapters, independent ZXing artifact self-tests and schema-v2 projects. Qraft-owned catalog metadata/search now drives name, alias, family and use-case discovery ahead of Expert Catalog. Physical-device smoke remains a release-QA gate.
+> **Current status:** Phase 4F (new cycle, step 3/3) — first honest Expert Catalog slice implemented locally.
+> Curated linear/retail/PDF417/Aztec coverage is joined by allow-listed Expert Codabar, Code 11, MSI/Plessey, Micro QR and MaxiCode plus deliberate opt-in Experimental rMQR. Catalog discovery is Qraft-owned and support tier is now separate from independent ZXing verification, so renderer-only formats are labeled honestly. Full Node 24 verification/Playwright and the GitHub/Vercel closing gates remain before this batch is merged.
 
 ## Product principles
 
@@ -39,7 +39,7 @@ Node.js `24 LTS` is the project/CI standard.
 
 `qr@0.6.0` remains the standards-first structural baseline and golden-vector oracle. Phase 2A adds `qr-code-styling@1.9.2` only behind `src/engines/render/designer-qr/`, loaded dynamically in the browser. Phase 2B adds `@zxing/library@0.23.0` only behind `src/engines/decode/zxing/` for explicit artifact self-tests. Phase 4B adds `@bwip-js/browser@4.11.4` only behind `src/engines/render/bwip/`; the concrete package binding is dynamically loaded for supported barcode requests and does not enter the normal QR render path. Qraft design, quality and symbology contracts remain vendor-neutral.
 
-See `docs/18-ADR-DECISIONS.md`, `docs/22-PHASE-1-CORE-QR.md`, `docs/23-PHASE-2-VISUAL-STUDIO.md`, `docs/24-PHASE-2B-QUALITY-ASSISTANT.md`, `docs/25-PHASE-2C-LOGO-SAFETY.md`, `docs/26-PHASE-2D-EXPORT-PROJECT.md`, `docs/27-PHASE-3A-STRUCTURED-PAYLOADS.md`, `docs/28-PHASE-3B-EVENT.md`, `docs/29-PHASE-3B-RAW.md`, `docs/30-PHASE-3B-INTEGRATION-INSPECTOR.md`, `docs/31-PHASE-3C-APP-LINKS.md`, `docs/32-PHASE-3C-SOCIAL-LINKS.md`, `docs/33-PHASE-3C-INSPECTOR-HARDENING.md`, `docs/34-PHASE-4A-SYMBOLOGY-CORE.md`, `docs/35-PHASE-4B-BWIP-ADAPTER.md`, `docs/36-PHASE-4C-BARCODE-STUDIO.md` and `docs/37-PHASE-4D-LINEAR-RETAIL.md`.
+See `docs/18-ADR-DECISIONS.md`, `docs/22-PHASE-1-CORE-QR.md`, `docs/23-PHASE-2-VISUAL-STUDIO.md`, `docs/24-PHASE-2B-QUALITY-ASSISTANT.md`, `docs/25-PHASE-2C-LOGO-SAFETY.md`, `docs/26-PHASE-2D-EXPORT-PROJECT.md`, `docs/27-PHASE-3A-STRUCTURED-PAYLOADS.md`, `docs/28-PHASE-3B-EVENT.md`, `docs/29-PHASE-3B-RAW.md`, `docs/30-PHASE-3B-INTEGRATION-INSPECTOR.md`, `docs/31-PHASE-3C-APP-LINKS.md`, `docs/32-PHASE-3C-SOCIAL-LINKS.md`, `docs/33-PHASE-3C-INSPECTOR-HARDENING.md`, `docs/34-PHASE-4A-SYMBOLOGY-CORE.md`, `docs/35-PHASE-4B-BWIP-ADAPTER.md`, `docs/36-PHASE-4C-BARCODE-STUDIO.md`, `docs/37-PHASE-4D-LINEAR-RETAIL.md`, `docs/38-PHASE-4E-2D-CATALOG.md` and `docs/39-PHASE-4F-EXPERT-CATALOG.md`.
 
 ## Why TypeScript 5.9?
 
@@ -251,7 +251,7 @@ Phase 3C step 3/3 adds:
 5. copy-only treatment and visible notices for custom/non-web schemes,
 6. a clear boundary that valid syntax is not malware/safety verification.
 
-Phase 4 first batch is complete. The second Phase 4 cycle now includes Phase 4D linear/retail breadth plus Phase 4E curated PDF417/Aztec and Qraft-owned catalog search metadata. Retail identifiers retain domain-owned check-digit/canonicalization rules; the 2D slice keeps ISO-8859-1 byte interpretation explicit while ECI and advanced symbol-shaping controls remain Expert-only. Next: expose the renderer-backed Expert Catalog through the same registry/search contracts without turning vendor support into an unsupported product promise.
+Phase 4 first batch is complete. The second Phase 4 cycle is now implementation-complete through Phase 4F: Phase 4D linear/retail breadth, Phase 4E curated PDF417/Aztec plus catalog search, and the first allow-listed Expert Catalog slice. Curated, Expert and Experimental tiers are Qraft-owned metadata, while independent artifact verification is tracked separately so renderer-only support cannot be mistaken for scanner certification. The next product phase after closing full QA/CI is Scanner / Inspector rather than opening the vendor's entire barcode list blindly.
 
 ## Privacy
 

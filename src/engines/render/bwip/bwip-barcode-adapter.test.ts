@@ -12,7 +12,7 @@ function runtimeFixture() {
   const runtime: BwipSvgRuntime = {
     render(symbology, options) {
       calls.push({ symbology, options });
-      return symbology === "datamatrix" || symbology === "aztec"
+      return ["datamatrix", "aztec", "microqr", "maxicode", "rmqr"].includes(symbology)
         ? '<svg viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">\n<rect width="100%" height="100%" fill="#ffffff" />\n<path d="M1 1L17 1L17 17Z" fill-rule="evenodd" />\n</svg>\n'
         : '<svg viewBox="0 0 132 50" xmlns="http://www.w3.org/2000/svg">\n<rect width="100%" height="100%" fill="#ffffff" />\n<path stroke="#000000" stroke-width="1" d="M10 1L10 40" />\n</svg>\n';
     },
@@ -208,6 +208,54 @@ describe("BWIP barcode adapter", () => {
       humanReadableText: false,
       quietZoneModules: { top: 0, right: 0, bottom: 0, left: 0 },
     });
+  });
+
+  it("maps Expert and Experimental formats through explicit allow-listed profiles", async () => {
+    const linearCases = [
+      ["codabar", "A0123456789B", "rationalizedCodabar"],
+      ["code11", "01234-56789", "code11"],
+      ["msi", "0123456789", "msi"],
+      ["plessey", "1A2B3C4D", "plessey"],
+    ] as const;
+
+    for (const [symbology, payload, bcid] of linearCases) {
+      const { runtime, calls } = runtimeFixture();
+      const renderer = new BwipBarcodeAdapter(runtime);
+      const rendered = await renderer.render({ symbology, payload });
+      expect(calls[0]).toMatchObject({
+        symbology,
+        options: { bcid, text: payload, includetext: true, paddingwidth: 10 },
+      });
+      expect(rendered.metadata.humanReadableText).toBe(true);
+    }
+
+    const { runtime, calls } = runtimeFixture();
+    const renderer = new BwipBarcodeAdapter(runtime);
+    const micro = await renderer.render({ symbology: "microqr", payload: "MICRO-QRAFT" });
+    expect(calls[0]).toMatchObject({
+      symbology: "microqr",
+      options: { bcid: "microqrcode", eclevel: "L", fixedeclevel: true, padding: 2 },
+    });
+    expect(micro.metadata.quietZoneModules).toEqual({ top: 2, right: 2, bottom: 2, left: 2 });
+
+    calls.length = 0;
+    const maxi = await renderer.render({ symbology: "maxicode", payload: "Qraft parcel 2026" });
+    expect(calls[0]).toMatchObject({ symbology: "maxicode", options: { bcid: "maxicode" } });
+    expect(maxi.metadata.quietZoneModules).toEqual({ top: 0, right: 0, bottom: 0, left: 0 });
+
+    calls.length = 0;
+    const rmqr = await renderer.render({ symbology: "rmqr", payload: "Qraft narrow label" });
+    expect(calls[0]).toMatchObject({
+      symbology: "rmqr",
+      options: {
+        bcid: "rectangularmicroqrcode",
+        version: "R17x139",
+        eclevel: "M",
+        fixedeclevel: true,
+        padding: 2,
+      },
+    });
+    expect(rmqr.metadata.humanReadableText).toBe(false);
   });
 
   it("rejects unsupported presentation options before the vendor runtime", async () => {

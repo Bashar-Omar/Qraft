@@ -1,7 +1,4 @@
-import {
-  validateBarcodePayload,
-  type ValidatedBarcodePayload,
-} from "@/core/code/barcode-input";
+import { validateBarcodePayload, type ValidatedBarcodePayload } from "@/core/code/barcode-input";
 import { CodeRenderError, type CodeRenderer, type RenderedBarcodeCode } from "@/core/code/render";
 import type { SymbologyRegistry } from "@/core/code/symbology-registry";
 import type { BarcodeSymbologyId, SymbologyDefinition } from "@/core/code/symbology";

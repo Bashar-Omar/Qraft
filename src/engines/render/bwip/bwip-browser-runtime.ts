@@ -1,5 +1,6 @@
 import {
   azteccode,
+  code11,
   code128,
   code39,
   code93,
@@ -8,8 +9,14 @@ import {
   ean13,
   ean8,
   interleaved2of5,
+  maxicode,
+  microqrcode,
+  msi,
+  plessey,
   itf14,
   pdf417,
+  rationalizedCodabar,
+  rectangularmicroqrcode,
   upca,
   upce,
 } from "@bwip-js/browser";
@@ -40,6 +47,13 @@ const BWIP_ENCODERS: Readonly<Record<BwipEncoderId, BwipNamedEncoder>> = Object.
   datamatrix,
   pdf417,
   aztec: azteccode,
+  codabar: rationalizedCodabar,
+  code11,
+  msi,
+  plessey,
+  microqr: microqrcode,
+  maxicode,
+  rmqr: rectangularmicroqrcode,
 });
 
 export const bwipBrowserRuntime: BwipSvgRuntime = {

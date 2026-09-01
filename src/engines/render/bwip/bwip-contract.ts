@@ -14,6 +14,13 @@ export type BwipEncoderId = Extract<
   | "datamatrix"
   | "pdf417"
   | "aztec"
+  | "codabar"
+  | "code11"
+  | "msi"
+  | "plessey"
+  | "microqr"
+  | "maxicode"
+  | "rmqr"
 >;
 
 export const BWIP_ENCODER_IDS = Object.freeze([
@@ -29,6 +36,13 @@ export const BWIP_ENCODER_IDS = Object.freeze([
   "datamatrix",
   "pdf417",
   "aztec",
+  "codabar",
+  "code11",
+  "msi",
+  "plessey",
+  "microqr",
+  "maxicode",
+  "rmqr",
 ] as const satisfies readonly BwipEncoderId[]);
 
 export function isBwipEncoderId(symbology: SymbologyId): symbology is BwipEncoderId {
@@ -52,6 +66,9 @@ export type BwipSvgOptions = Readonly<{
   paddingwidth?: number;
   paddingheight?: number;
   guardwhitespace?: boolean;
+  eclevel?: "L" | "M";
+  fixedeclevel?: true;
+  version?: "R17x139";
 }>;
 
 export interface BwipSvgRuntime {

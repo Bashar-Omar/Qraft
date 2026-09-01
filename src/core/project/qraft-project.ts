@@ -1,13 +1,7 @@
-import {
-  validateBarcodePayload,
-  type ValidatedBarcodePayload,
-} from "@/core/code/barcode-input";
+import { validateBarcodePayload, type ValidatedBarcodePayload } from "@/core/code/barcode-input";
 import type { QrErrorCorrectionLevel } from "@/core/code/render";
 import { symbologyRegistry } from "@/core/code/symbology-registry";
-import {
-  BARCODE_SYMBOLOGY_IDS,
-  type BarcodeSymbologyId,
-} from "@/core/code/symbology";
+import { BARCODE_SYMBOLOGY_IDS, type BarcodeSymbologyId } from "@/core/code/symbology";
 import { parseQrDesign, type QraftQrDesign } from "@/core/design/qr-design";
 import { QR_LOGO_LIMITS } from "@/core/design/qr-logo";
 import { parseRasterPixelSize, type RasterPixelSize } from "@/core/export/raster";

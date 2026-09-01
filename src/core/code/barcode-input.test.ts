@@ -4,7 +4,10 @@ import {
   AZTEC_LATIN1_MAX_BYTES,
   CODE128_CURATED_MAX_CHARACTERS,
   DATAMATRIX_LATIN1_MAX_BYTES,
+  MAXICODE_EXPERT_MAX_BYTES,
+  MICROQR_LATIN1_MAX_BYTES,
   PDF417_LATIN1_MAX_BYTES,
+  RMQR_EXPERIMENTAL_MAX_BYTES,
   computeGtinCheckDigit,
   getBarcodeInputPolicy,
   validateBarcodePayload,
@@ -69,9 +72,7 @@ describe("barcode input validation", () => {
     expect(validateBarcodePayload("ean13", "9520123456788").checkDigit?.status).toBe("verified");
     expect(validateBarcodePayload("ean8", "0133558").encodedPayload).toBe("01335583");
     expect(validateBarcodePayload("upca", "78858101497").encodedPayload).toBe("788581014974");
-    expect(validateBarcodePayload("itf14", "0952876543210").encodedPayload).toBe(
-      "09528765432108",
-    );
+    expect(validateBarcodePayload("itf14", "0952876543210").encodedPayload).toBe("09528765432108");
   });
 
   it("rejects incorrect retail check digits and unsupported lengths before BWIP", () => {
@@ -140,16 +141,66 @@ describe("barcode input validation", () => {
   });
 
   it("enforces conservative byte ceilings for curated PDF417 and Aztec", () => {
-    expect(() => validateBarcodePayload("pdf417", "A".repeat(PDF417_LATIN1_MAX_BYTES))).not.toThrow();
-    expect(() => validateBarcodePayload("pdf417", "A".repeat(PDF417_LATIN1_MAX_BYTES + 1))).toThrow(/1108 Latin-1 bytes/i);
+    expect(() =>
+      validateBarcodePayload("pdf417", "A".repeat(PDF417_LATIN1_MAX_BYTES)),
+    ).not.toThrow();
+    expect(() => validateBarcodePayload("pdf417", "A".repeat(PDF417_LATIN1_MAX_BYTES + 1))).toThrow(
+      /1108 Latin-1 bytes/i,
+    );
     expect(() => validateBarcodePayload("aztec", "A".repeat(AZTEC_LATIN1_MAX_BYTES))).not.toThrow();
-    expect(() => validateBarcodePayload("aztec", "A".repeat(AZTEC_LATIN1_MAX_BYTES + 1))).toThrow(/1914 Latin-1 bytes/i);
+    expect(() => validateBarcodePayload("aztec", "A".repeat(AZTEC_LATIN1_MAX_BYTES + 1))).toThrow(
+      /1914 Latin-1 bytes/i,
+    );
   });
 
   it("exposes curated 2D input guidance without leaking BWIP options", () => {
     expect(getBarcodeInputPolicy("pdf417")).toMatchObject({ inputMode: "text", rows: 5 });
     expect(getBarcodeInputPolicy("pdf417").hint).toMatch(/Macro PDF417.*Expert-only/i);
     expect(getBarcodeInputPolicy("aztec").hint).toMatch(/fixed-layer controls.*Expert-only/i);
+  });
+
+  it("validates the first allow-listed Expert linear slice without silent normalization", () => {
+    expect(validateBarcodePayload("codabar", "A0123456789B").encodedPayload).toBe("A0123456789B");
+    expect(() => validateBarcodePayload("codabar", "0123456789")).toThrow(/start and stop/i);
+    expect(() => validateBarcodePayload("codabar", "A12*34B")).toThrow(/body accepts/i);
+
+    expect(validateBarcodePayload("code11", "01234-56789").encodedPayload).toBe("01234-56789");
+    expect(() => validateBarcodePayload("code11", "CODE11")).toThrow(/digits and hyphen/i);
+
+    expect(validateBarcodePayload("msi", "0123456789").encodedPayload).toBe("0123456789");
+    expect(() => validateBarcodePayload("msi", "123A")).toThrow(/digits only/i);
+
+    expect(validateBarcodePayload("plessey", "1A2B3C4D").encodedPayload).toBe("1A2B3C4D");
+    expect(() => validateBarcodePayload("plessey", "1a2b")).toThrow(/uppercase hexadecimal/i);
+  });
+
+  it("enforces conservative Latin-1 boundaries for Expert Micro QR, MaxiCode and Experimental rMQR", () => {
+    expect(() =>
+      validateBarcodePayload("microqr", "A".repeat(MICROQR_LATIN1_MAX_BYTES)),
+    ).not.toThrow();
+    expect(() =>
+      validateBarcodePayload("microqr", "A".repeat(MICROQR_LATIN1_MAX_BYTES + 1)),
+    ).toThrow(/15 Latin-1 bytes/i);
+    expect(() =>
+      validateBarcodePayload("maxicode", "A".repeat(MAXICODE_EXPERT_MAX_BYTES)),
+    ).not.toThrow();
+    expect(() =>
+      validateBarcodePayload("maxicode", "A".repeat(MAXICODE_EXPERT_MAX_BYTES + 1)),
+    ).toThrow(/84 Latin-1 bytes/i);
+    expect(() =>
+      validateBarcodePayload("rmqr", "A".repeat(RMQR_EXPERIMENTAL_MAX_BYTES)),
+    ).not.toThrow();
+    expect(() =>
+      validateBarcodePayload("rmqr", "A".repeat(RMQR_EXPERIMENTAL_MAX_BYTES + 1)),
+    ).toThrow(/100 Latin-1 bytes/i);
+    expect(() => validateBarcodePayload("microqr", "€")).toThrow(/ECI/i);
+  });
+
+  it("publishes Expert and Experimental editor guidance through Qraft-owned policies", () => {
+    expect(getBarcodeInputPolicy("codabar").hint).toMatch(/Expert Codabar/i);
+    expect(getBarcodeInputPolicy("microqr")).toMatchObject({ rows: 4, inputMode: "text" });
+    expect(getBarcodeInputPolicy("maxicode").hint).toMatch(/mode 4\/5/i);
+    expect(getBarcodeInputPolicy("rmqr").hint).toMatch(/Experimental rMQR.*R17x139.*ECC M/i);
   });
 
   it("rejects empty and non-string content before an engine is called", () => {

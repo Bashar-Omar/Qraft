@@ -154,7 +154,9 @@ test("curated linear and retail formats validate before rendering and self-test 
 
   await chooseBarcode(page, /Interleaved 2 of 5/);
   await content.fill("12345");
-  await expect(studio.getByRole("status").filter({ hasText: /even number of digits/i })).toBeVisible();
+  await expect(
+    studio.getByRole("status").filter({ hasText: /even number of digits/i }),
+  ).toBeVisible();
   await expect(studio.getByRole("button", { name: "Download SVG" })).toBeDisabled();
   await content.fill("0123456789");
   await expect(
@@ -208,7 +210,9 @@ test("catalog search discovers Aztec/PDF417 and both 2D formats self-test throug
 
   const content = studio.getByLabel("Barcode content");
   await content.fill("Ticket-Café-2026");
-  await expect(page.getByRole("img", { name: "Generated Aztec Code barcode preview" })).toBeVisible();
+  await expect(
+    page.getByRole("img", { name: "Generated Aztec Code barcode preview" }),
+  ).toBeVisible();
   await expect(studio.getByLabel("Human-readable text")).toHaveCount(0);
   await expect(studio.locator(".preview-meta")).toContainText("AZTEC CODE / BWIP");
 
@@ -242,4 +246,69 @@ test("catalog search discovers Aztec/PDF417 and both 2D formats self-test throug
     content: { value: "Document-Ä-42" },
     code: { symbology: "pdf417", humanReadableText: false },
   });
+});
+
+test("Expert Catalog exposes verification tiers and gates Experimental formats deliberately", async ({
+  page,
+}) => {
+  await page.goto("/generate");
+  await openBarcodeStudio(page);
+
+  const studio = page.getByTestId("barcode-studio-shell");
+  const catalog = studio.locator(".barcode-catalog-controls:visible");
+  const search = catalog.getByLabel("Search barcode types");
+  const content = studio.getByLabel("Barcode content");
+
+  await catalog.getByRole("button", { name: "Expert", exact: true }).click();
+  await search.fill("blood bank");
+  await expect(catalog).toContainText("1 MATCH");
+  await chooseBarcode(page, /Codabar/);
+  await content.fill("A0123456789B");
+  await expect(page.getByRole("img", { name: "Generated Codabar barcode preview" })).toBeVisible();
+  await expect(studio.locator(".preview-meta")).toContainText("EXPERT");
+
+  let quality = studio.locator(".quality-assistant");
+  await expect(quality).toContainText("RENDER ONLY");
+  await expect(quality.getByRole("button", { name: "Run self-test" })).toHaveCount(0);
+
+  await search.fill("telecom");
+  await chooseBarcode(page, /Code 11/);
+  await content.fill("01234-56789");
+  await expect(page.getByRole("img", { name: "Generated Code 11 barcode preview" })).toBeVisible();
+  quality = studio.locator(".quality-assistant");
+  await expect(quality).toContainText("RENDER ONLY");
+  await expect(quality.getByRole("button", { name: "Run self-test" })).toHaveCount(0);
+
+  await search.fill("small label");
+  await chooseBarcode(page, /Micro QR/);
+  await content.fill("MICRO-QRAFT");
+  await expect(page.getByRole("img", { name: "Generated Micro QR barcode preview" })).toBeVisible();
+  quality = studio.locator(".quality-assistant");
+  await expect(quality).toContainText("RENDER ONLY");
+  await expect(quality.getByRole("button", { name: "Run self-test" })).toHaveCount(0);
+
+  await search.fill("parcel");
+  await chooseBarcode(page, /MaxiCode/);
+  await content.fill("Qraft parcel 2026");
+  await expect(page.getByRole("img", { name: "Generated MaxiCode barcode preview" })).toBeVisible();
+  quality = studio.locator(".quality-assistant");
+  await expect(quality).toContainText("RENDER ONLY");
+  await expect(quality.getByRole("button", { name: "Run self-test" })).toHaveCount(0);
+
+  await catalog.getByRole("button", { name: "All support", exact: true }).click();
+  await search.fill("rectangular");
+  await expect(catalog).toContainText("0 MATCHES");
+  await catalog.getByLabel("Include experimental").check();
+  await expect(catalog).toContainText("1 MATCH");
+  await chooseBarcode(page, /rMQR/);
+  await expect(page.getByRole("img", { name: "Generated rMQR barcode preview" })).toBeVisible();
+  await expect(studio.locator(".preview-meta")).toContainText("EXPERIMENTAL");
+  quality = studio.locator(".quality-assistant");
+  await expect(quality).toContainText("RENDER ONLY");
+  await expect(quality.getByRole("button", { name: "Run self-test" })).toHaveCount(0);
+
+  const projectPromise = page.waitForEvent("download");
+  await studio.getByRole("button", { name: "Save .qraft.json" }).click();
+  const project = await projectPromise;
+  expect(project.suggestedFilename()).toBe("qraft-rmqr.qraft.json");
 });

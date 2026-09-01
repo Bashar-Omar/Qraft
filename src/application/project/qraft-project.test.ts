@@ -225,6 +225,48 @@ describe("portable Qraft projects", () => {
       payload: "Ticket Café",
       humanReadableText: false,
     });
+
+    const codabar = await exportQraftProject({
+      mode: "barcode",
+      symbology: "codabar",
+      payload: "A0123456789B",
+      humanReadableText: true,
+      rasterPixelSize: 1024,
+    });
+    await expect(importQraftProject(codabar.blob)).resolves.toMatchObject({
+      mode: "barcode",
+      symbology: "codabar",
+      payload: "A0123456789B",
+      humanReadableText: true,
+    });
+
+    const microqr = await exportQraftProject({
+      mode: "barcode",
+      symbology: "microqr",
+      payload: "MICRO-QRAFT",
+      humanReadableText: false,
+      rasterPixelSize: 1024,
+    });
+    await expect(importQraftProject(microqr.blob)).resolves.toMatchObject({
+      mode: "barcode",
+      symbology: "microqr",
+      payload: "MICRO-QRAFT",
+      humanReadableText: false,
+    });
+
+    const rmqr = await exportQraftProject({
+      mode: "barcode",
+      symbology: "rmqr",
+      payload: "Qraft narrow label",
+      humanReadableText: false,
+      rasterPixelSize: 1024,
+    });
+    await expect(importQraftProject(rmqr.blob)).resolves.toMatchObject({
+      mode: "barcode",
+      symbology: "rmqr",
+      payload: "Qraft narrow label",
+      humanReadableText: false,
+    });
   });
 
   it("rejects invalid current payload and invalid barcode project state", async () => {

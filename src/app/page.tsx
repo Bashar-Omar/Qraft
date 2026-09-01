@@ -4,7 +4,7 @@ import { PhaseCard } from "@/components/foundation/phase-card";
 import { QrMotif } from "@/components/foundation/qr-motif";
 
 const systemNotes = [
-  ["PHASE", "04E / 2D + CATALOG"],
+  ["PHASE", "04F / EXPERT CATALOG"],
   ["RUNTIME", "BROWSER-FIRST"],
   ["PERSISTENCE", "NO ACCOUNT"],
   ["DEPLOYMENT", "STATIC-EXPORT READY"],
@@ -15,7 +15,7 @@ export default function HomePage() {
     <>
       <section className="hero shell">
         <div className="hero__copy">
-          <span className="mono-label accent-marker">QRAFT / SYSTEM / 04E</span>
+          <span className="mono-label accent-marker">QRAFT / SYSTEM / 04F</span>
           <h1>Craft codes that work.</h1>
           <p className="hero__lede">
             A privacy-first QR and barcode studio designed as a serious creative tool — precise,
@@ -30,9 +30,9 @@ export default function HomePage() {
             </Link>
           </div>
           <p className="hero__honesty">
-            Phase 4E adds curated PDF417 and Aztec Code plus Qraft-owned catalog search across names,
-            aliases, families and real-world use cases — still local, independently self-tested and
-            still without leaking vendor APIs into the UI.
+            Phase 4F opens an allow-listed Expert Catalog with explicit Curated, Expert and
+            Experimental support labels — keeping independent artifact verification separate from
+            renderer availability and vendor APIs out of the UI.
           </p>
         </div>
 
@@ -47,7 +47,7 @@ export default function HomePage() {
             </div>
             <div className="hero-visual__annotation">
               <span>CLIENT FIRST</span>
-              <strong>04E</strong>
+              <strong>04F</strong>
               <span>NO CLOUD DATA</span>
             </div>
           </div>

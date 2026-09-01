@@ -5,9 +5,16 @@ export const CODE128_CURATED_MAX_CHARACTERS = 128;
 export const CODE39_CURATED_MAX_CHARACTERS = 64;
 export const CODE93_CURATED_MAX_CHARACTERS = 80;
 export const ITF_CURATED_MAX_DIGITS = 80;
+export const CODABAR_EXPERT_MAX_CHARACTERS = 80;
+export const CODE11_EXPERT_MAX_CHARACTERS = 80;
+export const MSI_EXPERT_MAX_DIGITS = 80;
+export const PLESSEY_EXPERT_MAX_CHARACTERS = 64;
 export const DATAMATRIX_LATIN1_MAX_BYTES = 1555;
 export const PDF417_LATIN1_MAX_BYTES = 1108;
 export const AZTEC_LATIN1_MAX_BYTES = 1914;
+export const MICROQR_LATIN1_MAX_BYTES = 15;
+export const MAXICODE_EXPERT_MAX_BYTES = 84;
+export const RMQR_EXPERIMENTAL_MAX_BYTES = 100;
 
 export type BarcodeCheckDigit = Readonly<{
   digit: string;
@@ -40,6 +47,9 @@ type BarcodePayloadValidator = (payload: string) => ValidatedBarcodePayload;
 
 const BASIC_CODE39_PATTERN = /^[0-9A-Z .\-$\/+%]+$/;
 const DIGITS_PATTERN = /^\d+$/;
+const CODABAR_BODY_PATTERN = /^[0-9\-$:\/.+]+$/;
+const CODE11_PATTERN = /^[0-9-]+$/;
+const PLESSEY_PATTERN = /^[0-9A-F]+$/;
 
 export const BARCODE_INPUT_POLICIES: Readonly<Record<BarcodeSymbologyId, BarcodeInputPolicy>> =
   Object.freeze({
@@ -97,6 +107,30 @@ export const BARCODE_INPUT_POLICIES: Readonly<Record<BarcodeSymbologyId, Barcode
       placeholder: "0123455",
       hint: "Curated UPC-E accepts standard UPC-E0 only: 7 digits without, or 8 digits with, its verified check digit.",
     },
+    codabar: {
+      inputMode: "text",
+      rows: 3,
+      placeholder: "A0123456789B",
+      hint: "Expert Codabar requires A/B/C/D start and stop characters; the body accepts digits and - $ : / . + only.",
+    },
+    code11: {
+      inputMode: "text",
+      rows: 3,
+      placeholder: "01234-56789",
+      hint: "Expert Code 11 accepts digits and hyphen only. Qraft renders this allow-listed legacy workflow without independent decoder certification.",
+    },
+    msi: {
+      inputMode: "numeric",
+      rows: 3,
+      placeholder: "0123456789",
+      hint: "Expert MSI Plessey accepts digits only. Checksum variants remain outside this first generic Expert slice.",
+    },
+    plessey: {
+      inputMode: "text",
+      rows: 3,
+      placeholder: "1A2B3C4D",
+      hint: "Expert Plessey accepts hexadecimal 0-9/A-F only. Lowercase is rejected rather than silently normalized.",
+    },
     datamatrix: {
       inputMode: "text",
       rows: 5,
@@ -114,6 +148,24 @@ export const BARCODE_INPUT_POLICIES: Readonly<Record<BarcodeSymbologyId, Barcode
       rows: 5,
       placeholder: "Qraft Aztec ticket payload",
       hint: "Latin-1 byte workflow with automatic Aztec layers/error correction. ECI, reader-init and fixed-layer controls stay Expert-only.",
+    },
+    microqr: {
+      inputMode: "text",
+      rows: 4,
+      placeholder: "MICRO-QRAFT",
+      hint: "Expert Micro QR uses a conservative 15-byte Latin-1 ceiling and a two-module clear margin. Larger or ECI payloads should use regular QR.",
+    },
+    maxicode: {
+      inputMode: "text",
+      rows: 5,
+      placeholder: "Qraft parcel payload",
+      hint: "Expert MaxiCode uses unstructured Latin-1 data with BWIP automatic mode 4/5 selection. Structured carrier modes 2/3 and ECI stay deferred.",
+    },
+    rmqr: {
+      inputMode: "text",
+      rows: 4,
+      placeholder: "Qraft narrow-label payload",
+      hint: "Experimental rMQR uses a fixed R17x139 / ECC M profile with a conservative Latin-1 subset. Rendering is available, but Qraft does not yet claim independent artifact decode coverage.",
     },
   });
 
@@ -154,7 +206,10 @@ function requireDigits(payload: string, label: string): void {
 /** GS1 Mod-10 check digit used by GTIN-8/12/13/14. */
 export function computeGtinCheckDigit(dataDigits: string): string {
   if (!DIGITS_PATTERN.test(dataDigits)) {
-    throw new CodeRenderError("invalid-request", "GTIN check-digit input must contain digits only.");
+    throw new CodeRenderError(
+      "invalid-request",
+      "GTIN check-digit input must contain digits only.",
+    );
   }
 
   let sum = 0;
@@ -303,11 +358,78 @@ function validateItf(payload: string): ValidatedBarcodePayload {
   return createValidated("itf", payload);
 }
 
+function validateCodabar(payload: string): ValidatedBarcodePayload {
+  if (payload.length > CODABAR_EXPERT_MAX_CHARACTERS) {
+    throw new CodeRenderError(
+      "capacity",
+      `Qraft's Expert Codabar workflow is limited to ${CODABAR_EXPERT_MAX_CHARACTERS} characters.`,
+    );
+  }
+  if (payload.length < 3 || !/[ABCD]/.test(payload[0]) || !/[ABCD]/.test(payload.at(-1) ?? "")) {
+    throw new CodeRenderError(
+      "invalid-request",
+      "Expert Codabar requires start and stop characters A, B, C or D with at least one body character.",
+    );
+  }
+  const body = payload.slice(1, -1);
+  if (!CODABAR_BODY_PATTERN.test(body)) {
+    throw new CodeRenderError(
+      "invalid-request",
+      "Expert Codabar body accepts digits and the symbols - $ : / . + only.",
+    );
+  }
+  return createValidated("codabar", payload);
+}
+
+function validateCode11(payload: string): ValidatedBarcodePayload {
+  if (payload.length > CODE11_EXPERT_MAX_CHARACTERS) {
+    throw new CodeRenderError(
+      "capacity",
+      `Qraft's Expert Code 11 workflow is limited to ${CODE11_EXPERT_MAX_CHARACTERS} characters.`,
+    );
+  }
+  if (!CODE11_PATTERN.test(payload)) {
+    throw new CodeRenderError("invalid-request", "Expert Code 11 accepts digits and hyphen only.");
+  }
+  return createValidated("code11", payload);
+}
+
+function validateMsi(payload: string): ValidatedBarcodePayload {
+  requireDigits(payload, "MSI Plessey");
+  if (payload.length > MSI_EXPERT_MAX_DIGITS) {
+    throw new CodeRenderError(
+      "capacity",
+      `Qraft's Expert MSI Plessey workflow is limited to ${MSI_EXPERT_MAX_DIGITS} digits.`,
+    );
+  }
+  return createValidated("msi", payload);
+}
+
+function validatePlessey(payload: string): ValidatedBarcodePayload {
+  if (payload.length > PLESSEY_EXPERT_MAX_CHARACTERS) {
+    throw new CodeRenderError(
+      "capacity",
+      `Qraft's Expert Plessey workflow is limited to ${PLESSEY_EXPERT_MAX_CHARACTERS} hexadecimal characters.`,
+    );
+  }
+  if (!PLESSEY_PATTERN.test(payload)) {
+    throw new CodeRenderError(
+      "invalid-request",
+      "Expert Plessey accepts uppercase hexadecimal characters 0-9 and A-F only.",
+    );
+  }
+  return createValidated("plessey", payload);
+}
+
 function validateLatin1Payload(
-  symbology: Extract<BarcodeSymbologyId, "datamatrix" | "pdf417" | "aztec">,
+  symbology: Extract<
+    BarcodeSymbologyId,
+    "datamatrix" | "pdf417" | "aztec" | "microqr" | "maxicode" | "rmqr"
+  >,
   payload: string,
   label: string,
   maxBytes: number,
+  supportLabel: "Curated" | "Expert" | "Experimental" = "Curated",
 ): ValidatedBarcodePayload {
   let bytes = 0;
   let binaryText = "";
@@ -317,7 +439,7 @@ function validateLatin1Payload(
     if (codePoint === undefined || codePoint > 0xff) {
       throw new CodeRenderError(
         "invalid-request",
-        `Curated ${label} currently accepts ISO-8859-1 / Latin-1 bytes only. Unicode outside Latin-1 requires an explicit ECI workflow before Qraft can encode it honestly.`,
+        `${supportLabel} ${label} currently accepts ISO-8859-1 / Latin-1 bytes only. Unicode outside Latin-1 requires an explicit ECI workflow before Qraft can encode it honestly.`,
       );
     }
 
@@ -325,7 +447,7 @@ function validateLatin1Payload(
     if (bytes > maxBytes) {
       throw new CodeRenderError(
         "capacity",
-        `Curated ${label} is limited to ${maxBytes} Latin-1 bytes.`,
+        `${supportLabel} ${label} is limited to ${maxBytes} Latin-1 bytes in Qraft.`,
       );
     }
 
@@ -352,11 +474,22 @@ const BARCODE_PAYLOAD_VALIDATORS: Readonly<Record<BarcodeSymbologyId, BarcodePay
     ean8: (payload) => validateGtin("ean8", payload, "EAN-8", 7),
     upca: (payload) => validateGtin("upca", payload, "UPC-A", 11),
     upce: validateUpce,
+    codabar: validateCodabar,
+    code11: validateCode11,
+    msi: validateMsi,
+    plessey: validatePlessey,
     datamatrix: (payload) =>
       validateLatin1Payload("datamatrix", payload, "Data Matrix", DATAMATRIX_LATIN1_MAX_BYTES),
     pdf417: (payload) =>
       validateLatin1Payload("pdf417", payload, "PDF417", PDF417_LATIN1_MAX_BYTES),
-    aztec: (payload) => validateLatin1Payload("aztec", payload, "Aztec Code", AZTEC_LATIN1_MAX_BYTES),
+    aztec: (payload) =>
+      validateLatin1Payload("aztec", payload, "Aztec Code", AZTEC_LATIN1_MAX_BYTES),
+    microqr: (payload) =>
+      validateLatin1Payload("microqr", payload, "Micro QR", MICROQR_LATIN1_MAX_BYTES, "Expert"),
+    maxicode: (payload) =>
+      validateLatin1Payload("maxicode", payload, "MaxiCode", MAXICODE_EXPERT_MAX_BYTES, "Expert"),
+    rmqr: (payload) =>
+      validateLatin1Payload("rmqr", payload, "rMQR", RMQR_EXPERIMENTAL_MAX_BYTES, "Experimental"),
   });
 
 export function getBarcodeInputPolicy(symbology: BarcodeSymbologyId): BarcodeInputPolicy {
@@ -364,7 +497,7 @@ export function getBarcodeInputPolicy(symbology: BarcodeSymbologyId): BarcodeInp
 }
 
 /**
- * Validate Qraft's curated barcode boundary before any vendor encoder is called.
+ * Validate Qraft's allow-listed barcode boundary before any vendor encoder is called.
  */
 export function validateBarcodePayload(
   symbology: BarcodeSymbologyId,

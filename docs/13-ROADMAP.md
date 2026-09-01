@@ -73,7 +73,7 @@ Gate:
 
 ## Phase 4 — Barcode breadth
 
-**Status:** Active — second Phase 4 cycle, step 2/3 (Phase 4E) implemented locally. Phase 4D linear/retail coverage is joined by curated PDF417 and Aztec Code with Latin-1 byte contracts, named BWIP rendering, independent ZXing self-test and schema-v2 persistence. The symbology registry now owns searchable family/domain/use-case metadata that drives the live Studio and becomes the foundation for Expert Catalog in step 3/3.
+**Status:** Implementation-complete locally through Phase 4F (second Phase 4 cycle, step 3/3). Phase 4D linear/retail coverage and Phase 4E PDF417/Aztec/catalog search are now joined by the first honest Expert Catalog slice: Codabar, Code 11, MSI/Plessey, Micro QR and MaxiCode plus opt-in Experimental rMQR. Support tier and independent artifact verification are separate registry facts, so renderer-only formats never masquerade as scanner-verified. Full Node 24 verification, Playwright, GitHub CI and production deployment remain the closing batch gates.
 
 Deliver:
 

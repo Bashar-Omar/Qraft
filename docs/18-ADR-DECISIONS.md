@@ -614,3 +614,31 @@ Decision:
 Why:
 
 The renderer can accept escape syntax and many tuning options that alter interpretation and symbol shape. Exposing those controls before Qraft has typed domain contracts would recreate vendor option plumbing in the UI. The curated workflow instead prioritizes predictable payload interpretation and portable projects; Expert Mode can add advanced controls deliberately later.
+
+---
+
+## ADR-033 — Support tier and verification level are separate product facts
+
+**Status:** Accepted
+
+Phase 4F opens the first Expert Catalog slice. BWIP can render many formats that Qraft's bundled
+independent decoder cannot verify, so a single `supported: true` flag would be misleading.
+
+Decision:
+
+- `SymbologyDefinition.tier` describes product UX/support depth: Curated, Expert or Experimental,
+- `SymbologyDefinition.verification.artifactSelfTest` independently describes whether the final SVG
+  can be decoded by Qraft's bundled ZXing path,
+- renderer-only formats remain usable only when Qraft owns explicit validation and adapter mappings,
+- the Quality panel does not expose a self-test button for renderer-only definitions,
+- Experimental definitions are hidden by default and require deliberate user opt-in,
+- portable projects may persist Expert/Experimental IDs without changing schema v2, but import
+  always revalidates through current Qraft policy,
+- vendor catalog enumeration never promotes an entry or creates a Qraft definition automatically.
+
+Why:
+
+Renderer availability, product maturity and independent verification are different facts. Keeping
+those dimensions separate lets Qraft grow an honest long-tail catalog without claiming scanner
+coverage it does not have and without forcing every useful Expert format to wait for a matching
+ZXing reader.
