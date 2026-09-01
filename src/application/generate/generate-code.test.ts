@@ -1,11 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { createGenerateCode } from "@/application/generate/generate-code";
-import type { CodeRenderer, RenderedCode } from "@/core/code/render";
+import type { CodeRenderer, RenderedQrCode } from "@/core/code/render";
 import { DEFAULT_QR_DESIGN } from "@/core/design/qr-design";
 import { payloadRegistry } from "@/core/payload/payload-registry";
 
-const renderedFixture: RenderedCode = {
+const renderedFixture: RenderedQrCode = {
+  width: 29,
+  height: 29,
   verificationMatrix: [[false]],
   svg: '<svg viewBox="0 0 1 1"/>',
   metadata: {
@@ -23,7 +25,7 @@ const renderedFixture: RenderedCode = {
 describe("createGenerateCode", () => {
   it("keeps payload encoding and Qraft design separate from the renderer", async () => {
     const render = vi.fn(async () => renderedFixture);
-    const renderer: CodeRenderer = {
+    const renderer: CodeRenderer<RenderedQrCode> = {
       id: "test-renderer",
       supports: () => true,
       render,

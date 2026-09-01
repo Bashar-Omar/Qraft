@@ -4,7 +4,7 @@ import { PhaseCard } from "@/components/foundation/phase-card";
 import { QrMotif } from "@/components/foundation/qr-motif";
 
 const systemNotes = [
-  ["PHASE", "03C / LINK HELPERS"],
+  ["PHASE", "04C / BARCODE SLICE"],
   ["RUNTIME", "BROWSER-FIRST"],
   ["PERSISTENCE", "NO ACCOUNT"],
   ["DEPLOYMENT", "STATIC-EXPORT READY"],
@@ -15,7 +15,7 @@ export default function HomePage() {
     <>
       <section className="hero shell">
         <div className="hero__copy">
-          <span className="mono-label accent-marker">QRAFT / SYSTEM / 03C</span>
+          <span className="mono-label accent-marker">QRAFT / SYSTEM / 04C</span>
           <h1>Craft codes that work.</h1>
           <p className="hero__lede">
             A privacy-first QR and barcode studio designed as a serious creative tool — precise,
@@ -23,16 +23,16 @@ export default function HomePage() {
           </p>
           <div className="hero__actions">
             <Link className="button button--primary" href="/generate">
-              Open QR studio
+              Open code studio
             </Link>
             <Link className="button button--secondary" href="/guides">
               Architecture notes
             </Link>
           </div>
           <p className="hero__honesty">
-            Phase 3C completes payload breadth with curated App/Social links and explicit,
-            privacy-hardened inspector actions while preserving the same local quality/export
-            pipeline.
+            Phase 4C adds the first standards-oriented barcode workflow: Code 128 and Data Matrix
+            now share Qraft’s local preview/export/project pipeline without leaking vendor APIs into
+            the UI.
           </p>
         </div>
 
@@ -47,14 +47,14 @@ export default function HomePage() {
             </div>
             <div className="hero-visual__annotation">
               <span>CLIENT FIRST</span>
-              <strong>03C</strong>
+              <strong>04C</strong>
               <span>NO CLOUD DATA</span>
             </div>
           </div>
           <div className="hero-visual__footer">
             <span>STATIC EXPORT</span>
             <span>TYPE-SAFE</span>
-            <span>APP / SOCIAL / INSPECT</span>
+            <span>QR / CODE 128 / DATA MATRIX</span>
           </div>
         </div>
       </section>

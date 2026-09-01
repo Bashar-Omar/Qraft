@@ -1,5 +1,5 @@
 import type { RenderedCode } from "@/core/code/render";
-import { resolveRasterPixelSize } from "@/core/export/raster";
+import { resolveRasterDimensions } from "@/core/export/raster";
 
 function loadSvgImage(svg: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -23,7 +23,7 @@ export async function rasterizeRenderedSvg(
   rendered: RenderedCode,
   requestedSize?: number,
   solidBackground?: string,
-): Promise<Readonly<{ canvas: HTMLCanvasElement; pixelSize: number }>> {
+): Promise<Readonly<{ canvas: HTMLCanvasElement; pixelWidth: number; pixelHeight: number }>> {
   if (
     typeof document === "undefined" ||
     typeof Image === "undefined" ||
@@ -32,7 +32,10 @@ export async function rasterizeRenderedSvg(
     throw new Error("Raster export requires a browser canvas environment.");
   }
 
-  const pixelSize = resolveRasterPixelSize(rendered, requestedSize);
+  const { width: pixelWidth, height: pixelHeight } = resolveRasterDimensions(
+    rendered,
+    requestedSize,
+  );
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
 
@@ -40,19 +43,20 @@ export async function rasterizeRenderedSvg(
     throw new Error("Canvas 2D is not available in this browser.");
   }
 
-  canvas.width = pixelSize;
-  canvas.height = pixelSize;
-  context.clearRect(0, 0, pixelSize, pixelSize);
+  canvas.width = pixelWidth;
+  canvas.height = pixelHeight;
+  context.clearRect(0, 0, pixelWidth, pixelHeight);
 
   if (solidBackground) {
     context.fillStyle = solidBackground;
-    context.fillRect(0, 0, pixelSize, pixelSize);
+    context.fillRect(0, 0, pixelWidth, pixelHeight);
   }
 
   const image = await loadSvgImage(rendered.svg);
-  context.drawImage(image, 0, 0, pixelSize, pixelSize);
+  context.imageSmoothingEnabled = false;
+  context.drawImage(image, 0, 0, pixelWidth, pixelHeight);
 
-  return { canvas, pixelSize };
+  return { canvas, pixelWidth, pixelHeight };
 }
 
 export function canvasToExactBlob(

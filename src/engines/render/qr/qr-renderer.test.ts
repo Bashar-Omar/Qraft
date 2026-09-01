@@ -1,11 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 
-import type { CodeRenderer, RenderRequest, RenderedCode } from "@/core/code/render";
+import type { CodeRenderer, RenderRequest, RenderedQrCode } from "@/core/code/render";
 import { DEFAULT_QR_DESIGN } from "@/core/design/qr-design";
 import { QrRenderer } from "@/engines/render/qr/qr-renderer";
 
-function rendered(rendererId: string): RenderedCode {
+function rendered(rendererId: string): RenderedQrCode {
   return {
+    width: 29,
+    height: 29,
     verificationMatrix: [[false]],
     svg: '<svg viewBox="0 0 1 1"/>',
     metadata: {
@@ -36,8 +38,16 @@ describe("QrRenderer", () => {
     const standardRender = vi.fn(async () => rendered("standard-qr"));
     const designerRender = vi.fn(async () => rendered("designer-qr"));
     const renderer = new QrRenderer(
-      { id: "standard", supports: () => true, render: standardRender } satisfies CodeRenderer,
-      { id: "designer", supports: () => true, render: designerRender } satisfies CodeRenderer,
+      {
+        id: "standard",
+        supports: () => true,
+        render: standardRender,
+      } satisfies CodeRenderer<RenderedQrCode>,
+      {
+        id: "designer",
+        supports: () => true,
+        render: designerRender,
+      } satisfies CodeRenderer<RenderedQrCode>,
     );
 
     const result = await renderer.render(request);
@@ -51,8 +61,16 @@ describe("QrRenderer", () => {
     const standardRender = vi.fn(async () => rendered("standard-qr"));
     const designerRender = vi.fn(async () => rendered("designer-qr"));
     const renderer = new QrRenderer(
-      { id: "standard", supports: () => true, render: standardRender } satisfies CodeRenderer,
-      { id: "designer", supports: () => true, render: designerRender } satisfies CodeRenderer,
+      {
+        id: "standard",
+        supports: () => true,
+        render: standardRender,
+      } satisfies CodeRenderer<RenderedQrCode>,
+      {
+        id: "designer",
+        supports: () => true,
+        render: designerRender,
+      } satisfies CodeRenderer<RenderedQrCode>,
     );
 
     const result = await renderer.render({
@@ -75,8 +93,16 @@ describe("QrRenderer", () => {
     const standardRender = vi.fn(async () => rendered("standard-qr"));
     const designerRender = vi.fn(async () => rendered("designer-qr"));
     const renderer = new QrRenderer(
-      { id: "standard", supports: () => true, render: standardRender } satisfies CodeRenderer,
-      { id: "designer", supports: () => true, render: designerRender } satisfies CodeRenderer,
+      {
+        id: "standard",
+        supports: () => true,
+        render: standardRender,
+      } satisfies CodeRenderer<RenderedQrCode>,
+      {
+        id: "designer",
+        supports: () => true,
+        render: designerRender,
+      } satisfies CodeRenderer<RenderedQrCode>,
     );
 
     const result = await renderer.render({

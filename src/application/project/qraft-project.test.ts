@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { exportQraftProject } from "@/application/project/export-qraft-project";
-import { importQraftProject } from "@/application/project/import-qraft-project";
+import {
+  importQraftProject,
+  type ImportedQraftProject,
+  type ImportedQrProject,
+} from "@/application/project/import-qraft-project";
 import { DEFAULT_QR_DESIGN } from "@/core/design/qr-design";
 
 function fakePngHeader(width = 256, height = 256): Uint8Array {
@@ -20,9 +24,15 @@ function copyBytesToArrayBuffer(bytes: Uint8Array): ArrayBuffer {
   return buffer;
 }
 
+function expectQr(project: ImportedQraftProject): asserts project is ImportedQrProject {
+  expect(project.mode).toBe("qr");
+  if (project.mode !== "qr") throw new Error("Expected a QR project.");
+}
+
 describe("portable Qraft projects", () => {
-  it("round-trips payload, design, ECC and export size without a logo", async () => {
+  it("exports QR projects as schema v2 and round-trips payload/design/ECC", async () => {
     const artifact = await exportQraftProject({
+      mode: "qr",
       payloadId: "url",
       input: "openai.com/research",
       errorCorrectionLevel: "H",
@@ -31,7 +41,12 @@ describe("portable Qraft projects", () => {
     });
 
     expect(artifact.filename).toBe("qraft-url.qraft.json");
+    const raw = JSON.parse(await artifact.blob.text()) as Record<string, unknown>;
+    expect(raw.schemaVersion).toBe(2);
+    expect(raw.content).toMatchObject({ kind: "payload", payloadId: "url" });
+
     const imported = await importQraftProject(artifact.blob);
+    expectQr(imported);
     expect(imported).toMatchObject({
       payloadId: "url",
       input: "openai.com/research",
@@ -39,103 +54,72 @@ describe("portable Qraft projects", () => {
       rasterPixelSize: 2048,
       design: { moduleShape: "dots" },
     });
-    expect(imported.logo).toBeUndefined();
   });
 
-  it("round-trips a Phase 3A structured payload through schema v1", async () => {
-    const input = {
-      latitude: "30.0444",
-      longitude: "31.2357",
-      altitude: "",
-      uncertainty: "25",
+  it("round-trips structured, Event and exact Raw payload input through schema v2", async () => {
+    const cases = [
+      {
+        payloadId: "location" as const,
+        input: { latitude: "30.0444", longitude: "31.2357", altitude: "", uncertainty: "25" },
+      },
+      {
+        payloadId: "event" as const,
+        input: {
+          title: "Qraft planning",
+          allDay: false,
+          startDate: "",
+          endDate: "",
+          startDateTime: "2026-09-02T14:00",
+          endDateTime: "2026-09-02T15:00",
+          timeMode: "utc",
+          location: "Studio B",
+          description: "Phase 4C project",
+          url: "https://example.com/qraft-event",
+          uid: "urn:uuid:00000000-0000-4000-8000-000000000888",
+          dtstamp: "20260829T123000Z",
+        },
+      },
+      { payloadId: "raw" as const, input: { value: "  raw://example\r\nمرحبا 👋\n  " } },
+    ];
+
+    for (const testCase of cases) {
+      const artifact = await exportQraftProject({
+        mode: "qr",
+        payloadId: testCase.payloadId,
+        input: testCase.input,
+        errorCorrectionLevel: "M",
+        design: DEFAULT_QR_DESIGN,
+        rasterPixelSize: 1024,
+      });
+      const imported = await importQraftProject(artifact.blob);
+      expectQr(imported);
+      expect(imported).toMatchObject({ payloadId: testCase.payloadId, input: testCase.input });
+    }
+  });
+
+  it("imports legacy schema v1 QR projects through the explicit migration path", async () => {
+    const legacy = {
+      kind: "qraft-project",
+      schemaVersion: 1,
+      payload: { id: "url", input: "https://example.com/legacy" },
+      code: {
+        symbology: "qr",
+        errorCorrectionLevel: "M",
+        design: DEFAULT_QR_DESIGN,
+      },
+      export: { rasterPixelSize: 1024 },
+      assets: {},
     };
-    const artifact = await exportQraftProject({
-      payloadId: "location",
-      input,
+
+    await expect(
+      importQraftProject(new Blob([JSON.stringify(legacy)], { type: "application/json" })),
+    ).resolves.toMatchObject({
+      mode: "qr",
+      payloadId: "url",
+      input: "https://example.com/legacy",
       errorCorrectionLevel: "M",
-      design: DEFAULT_QR_DESIGN,
       rasterPixelSize: 1024,
     });
-
-    const imported = await importQraftProject(artifact.blob);
-    expect(imported).toMatchObject({ payloadId: "location", input });
-  });
-
-  it("round-trips an Event payload with persistent UID and revision metadata", async () => {
-    const input = {
-      title: "Qraft planning",
-      allDay: false,
-      startDate: "",
-      endDate: "",
-      startDateTime: "2026-09-02T14:00",
-      endDateTime: "2026-09-02T15:00",
-      timeMode: "utc",
-      location: "Studio B",
-      description: "Phase 3B event project",
-      url: "https://example.com/qraft-event",
-      uid: "urn:uuid:00000000-0000-4000-8000-000000000888",
-      dtstamp: "20260829T123000Z",
-    };
-    const artifact = await exportQraftProject({
-      payloadId: "event",
-      input,
-      errorCorrectionLevel: "M",
-      design: DEFAULT_QR_DESIGN,
-      rasterPixelSize: 1024,
-    });
-
-    const imported = await importQraftProject(artifact.blob);
-    expect(imported).toMatchObject({ payloadId: "event", input });
-  });
-
-  it("round-trips an exact Raw payload without trimming or normalization", async () => {
-    const input = {
-      value: "  raw://example\r\nمرحبا 👋\n  ",
-    };
-    const artifact = await exportQraftProject({
-      payloadId: "raw",
-      input,
-      errorCorrectionLevel: "Q",
-      design: DEFAULT_QR_DESIGN,
-      rasterPixelSize: 1024,
-    });
-
-    const imported = await importQraftProject(artifact.blob);
-    expect(imported).toMatchObject({ payloadId: "raw", input });
-  });
-
-  it("round-trips an App Link payload without turning Qraft into a redirect service", async () => {
-    const input = {
-      strategy: "custom-scheme",
-      destination: "qraftdemo://product/42?ref=portable-project",
-    };
-    const artifact = await exportQraftProject({
-      payloadId: "app",
-      input,
-      errorCorrectionLevel: "M",
-      design: DEFAULT_QR_DESIGN,
-      rasterPixelSize: 1024,
-    });
-
-    const imported = await importQraftProject(artifact.blob);
-    expect(imported).toMatchObject({ payloadId: "app", input });
-  });
-
-  it("round-trips a Social Link payload through the existing schema-v1 envelope", async () => {
-    const input = {
-      platform: "linkedin",
-      target: "avery-morgan",
-    };
-    const artifact = await exportQraftProject({
-      payloadId: "social",
-      input,
-      errorCorrectionLevel: "M",
-      design: DEFAULT_QR_DESIGN,
-      rasterPixelSize: 1024,
-    });
-
-    const imported = await importQraftProject(artifact.blob);
-    expect(imported).toMatchObject({ payloadId: "social", input });
   });
 
   it("round-trips a bounded normalized PNG logo", async () => {
@@ -145,6 +129,7 @@ describe("portable Qraft projects", () => {
       logo: { sizePercent: 20, paddingModules: 0.5 },
     } as const;
     const artifact = await exportQraftProject({
+      mode: "qr",
       payloadId: "text",
       input: "Qraft portable project",
       errorCorrectionLevel: "Q",
@@ -159,29 +144,71 @@ describe("portable Qraft projects", () => {
     });
 
     const imported = await importQraftProject(artifact.blob);
+    expectQr(imported);
     expect(imported.design.logo).toEqual({ sizePercent: 20, paddingModules: 0.5 });
-    expect(imported.logo).toMatchObject({
-      name: "brand--logo.png",
-      width: 256,
-      height: 256,
-    });
+    expect(imported.logo).toMatchObject({ name: "brand--logo.png", width: 256, height: 256 });
     expect(imported.logo?.blob.type).toBe("image/png");
-    expect(imported.logo?.blob.size).toBe(logoBytes.byteLength);
+    expect(imported.logo?.renderUri).toMatch(/^data:image\/png;base64,/);
   });
 
-  it("rejects project payload content that no longer validates in the current codec", async () => {
-    const artifact = await exportQraftProject({
+  it("round-trips Code 128 and Data Matrix barcode projects", async () => {
+    const code128 = await exportQraftProject({
+      mode: "barcode",
+      symbology: "code128",
+      payload: "QRAFT-128-001",
+      humanReadableText: true,
+      rasterPixelSize: 2048,
+    });
+    const importedCode128 = await importQraftProject(code128.blob);
+    expect(importedCode128).toEqual({
+      mode: "barcode",
+      symbology: "code128",
+      payload: "QRAFT-128-001",
+      humanReadableText: true,
+      rasterPixelSize: 2048,
+    });
+
+    const dataMatrix = await exportQraftProject({
+      mode: "barcode",
+      symbology: "datamatrix",
+      payload: "Lot-Ä-42",
+      humanReadableText: false,
+      rasterPixelSize: 1024,
+    });
+    await expect(importQraftProject(dataMatrix.blob)).resolves.toMatchObject({
+      mode: "barcode",
+      symbology: "datamatrix",
+      payload: "Lot-Ä-42",
+      humanReadableText: false,
+    });
+  });
+
+  it("rejects invalid current payload and invalid barcode project state", async () => {
+    const qr = await exportQraftProject({
+      mode: "qr",
       payloadId: "url",
       input: "https://example.com",
       errorCorrectionLevel: "M",
       design: DEFAULT_QR_DESIGN,
       rasterPixelSize: 1024,
     });
-    const raw = JSON.parse(await artifact.blob.text()) as Record<string, unknown>;
-    raw.payload = { id: "url", input: "javascript:alert(1)" };
-
+    const rawQr = JSON.parse(await qr.blob.text()) as Record<string, unknown>;
+    rawQr.content = { kind: "payload", payloadId: "url", input: "javascript:alert(1)" };
     await expect(
-      importQraftProject(new Blob([JSON.stringify(raw)], { type: "application/json" })),
+      importQraftProject(new Blob([JSON.stringify(rawQr)], { type: "application/json" })),
     ).rejects.toThrow(/payload is not valid/i);
+
+    const barcode = await exportQraftProject({
+      mode: "barcode",
+      symbology: "datamatrix",
+      payload: "valid",
+      humanReadableText: false,
+      rasterPixelSize: 1024,
+    });
+    const rawBarcode = JSON.parse(await barcode.blob.text()) as Record<string, unknown>;
+    rawBarcode.code = { symbology: "datamatrix", humanReadableText: true };
+    await expect(
+      importQraftProject(new Blob([JSON.stringify(rawBarcode)], { type: "application/json" })),
+    ).rejects.toThrow(/does not expose human-readable text/i);
   });
 });

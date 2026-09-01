@@ -73,6 +73,8 @@ Gate:
 
 ## Phase 4 — Barcode breadth
 
+**Status:** Active — first Phase 4 batch complete through Phase 4C. Code 128 and Data Matrix are Live with capability-driven UI, rectangular export, independent artifact decode and schema-v2 portable projects. Next cycle expands linear/retail breadth and then 2D/Expert Catalog coverage.
+
 Deliver:
 
 - bwip adapter,

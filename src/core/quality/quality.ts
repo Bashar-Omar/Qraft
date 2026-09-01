@@ -1,4 +1,4 @@
-import type { RenderMetadata } from "@/core/code/render";
+import type { QrRenderMetadata } from "@/core/code/render";
 import type { QraftQrDesign } from "@/core/design/qr-design";
 import type { QrLogoGeometryEstimate } from "@/core/design/qr-logo";
 
@@ -23,7 +23,7 @@ export type QrContrastMetric = Readonly<{
 export type QrQualityMetrics = Readonly<{
   contrast: QrContrastMetric;
   quietZoneModules: number;
-  errorCorrectionLevel: RenderMetadata["errorCorrectionLevel"];
+  errorCorrectionLevel: QrRenderMetadata["errorCorrectionLevel"];
   version: number;
   symbolModules: number;
   totalModules: number;
@@ -33,7 +33,7 @@ export type QrQualityMetrics = Readonly<{
 
 export type QrQualityContext = Readonly<{
   design: QraftQrDesign;
-  metadata: RenderMetadata;
+  metadata: QrRenderMetadata;
 }>;
 
 export interface QualityRule {

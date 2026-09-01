@@ -22,9 +22,11 @@ test("Core QR landing and Generate studio are reachable", async ({ page }) => {
   await page.goto("/");
 
   await expect(page.getByRole("heading", { name: "Craft codes that work." })).toBeVisible();
-  await expect(page.getByText("03C / LINK HELPERS", { exact: true })).toBeVisible();
+  await expect(
+    page.getByLabel("Visual Studio status").getByText("04C / BARCODE SLICE", { exact: true }),
+  ).toBeVisible();
 
-  await page.getByRole("link", { name: "Open QR studio" }).click();
+  await page.getByRole("link", { name: "Open code studio" }).click();
 
   await expect(page).toHaveURL(/\/generate$/);
   await expect(page.getByTestId("studio-shell")).toBeVisible();
@@ -165,10 +167,10 @@ test("Event editor emits timed and all-day calendar payloads through the shared 
   expect(project.suggestedFilename()).toBe("qraft-event.qraft.json");
   const projectBytes = await readDownloadBytes(project);
   const document = JSON.parse(projectBytes.toString("utf8")) as {
-    payload?: { id?: string; input?: Record<string, unknown> };
+    content?: { kind?: string; payloadId?: string; input?: Record<string, unknown> };
   };
-  expect(document.payload?.id).toBe("event");
-  expect(document.payload?.input).toMatchObject({
+  expect(document.content?.payloadId).toBe("event");
+  expect(document.content?.input).toMatchObject({
     allDay: true,
     startDate: "2026-09-05",
     endDate: "2026-09-06",
@@ -215,10 +217,10 @@ test("Raw mode preserves exact UTF-8 content and exposes ECC-aware byte pressure
   expect(project.suggestedFilename()).toBe("qraft-raw.qraft.json");
   const projectBytes = await readDownloadBytes(project);
   const document = JSON.parse(projectBytes.toString("utf8")) as {
-    payload?: { id?: string; input?: { value?: string } };
+    content?: { kind?: string; payloadId?: string; input?: { value?: string } };
   };
-  expect(document.payload?.id).toBe("raw");
-  expect(document.payload?.input?.value).toBe(exactValue);
+  expect(document.content?.payloadId).toBe("raw");
+  expect(document.content?.input?.value).toBe(exactValue);
 });
 
 test("Payload inspector classifies final Event and Raw payloads locally without navigation", async ({
@@ -459,7 +461,12 @@ test("Portable project export and import restores the validated studio state", a
   expect(projectDownload.suggestedFilename()).toBe("qraft-text.qraft.json");
   const projectBytes = await readDownloadBytes(projectDownload);
   const project = JSON.parse(projectBytes.toString("utf8")) as Record<string, unknown>;
-  expect(project).toMatchObject({ kind: "qraft-project", schemaVersion: 1 });
+  expect(project).toMatchObject({
+    kind: "qraft-project",
+    schemaVersion: 2,
+    content: { kind: "payload", payloadId: "text" },
+    code: { symbology: "qr" },
+  });
 
   await clickPayloadType(page, /URL/);
   await page.getByRole("button", { name: /Pure Mono/ }).click();

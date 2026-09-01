@@ -2,7 +2,7 @@ import {
   CodeRenderError,
   type CodeRenderer,
   type RenderRequest,
-  type RenderedCode,
+  type RenderedQrCode,
 } from "@/core/code/render";
 import { DEFAULT_QR_DESIGN, isDefaultQrDesign, parseQrDesign } from "@/core/design/qr-design";
 import { designerQrRenderer } from "@/engines/render/designer-qr/designer-qr-renderer";
@@ -12,20 +12,20 @@ import { standardQrRenderer } from "@/engines/render/standard-qr/standard-qr-ren
  * Routes plain QR requests through the lightweight standards renderer and
  * loads the designer engine only after a visual design actually needs it.
  */
-export class QrRenderer implements CodeRenderer {
+export class QrRenderer implements CodeRenderer<RenderedQrCode> {
   readonly id = "qr-router";
 
   constructor(
-    private readonly standardRenderer: CodeRenderer = standardQrRenderer,
-    private readonly designerRenderer: CodeRenderer = designerQrRenderer,
+    private readonly standardRenderer: CodeRenderer<RenderedQrCode> = standardQrRenderer,
+    private readonly designerRenderer: CodeRenderer<RenderedQrCode> = designerQrRenderer,
   ) {}
 
   supports(request: RenderRequest): boolean {
     return request.symbology === "qr";
   }
 
-  async render(request: RenderRequest): Promise<RenderedCode> {
-    if (!this.supports(request)) {
+  async render(request: RenderRequest): Promise<RenderedQrCode> {
+    if (request.symbology !== "qr") {
       throw new CodeRenderError("unsupported", `Renderer ${this.id} only supports QR.`);
     }
 

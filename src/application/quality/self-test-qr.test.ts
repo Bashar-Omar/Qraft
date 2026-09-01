@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import { createSelfTestQr } from "@/application/quality/self-test-qr";
-import type { RenderedCode } from "@/core/code/render";
+import type { RenderedQrCode } from "@/core/code/render";
 import { DEFAULT_QR_DESIGN, parseQrDesign } from "@/core/design/qr-design";
 import type { QrArtifactDecodeRequest, QrArtifactDecoder } from "@/core/quality/self-test";
 
-const rendered: RenderedCode = {
+const rendered: RenderedQrCode = {
+  width: 29,
+  height: 29,
   verificationMatrix: [[true]],
   svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 29 29"></svg>',
   metadata: {

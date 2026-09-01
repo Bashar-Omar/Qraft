@@ -5,7 +5,8 @@ import {
   QR_ECC_APPROX_RECOVERY_FRACTION,
   type CodeRenderer,
   type RenderRequest,
-  type RenderedCode,
+  type QrRenderRequest,
+  type RenderedQrCode,
 } from "@/core/code/render";
 import {
   DEFAULT_QR_DESIGN,
@@ -13,6 +14,7 @@ import {
   type QrForegroundPaint,
   type QraftQrDesign,
 } from "@/core/design/qr-design";
+import { parseSvgViewBoxDimensions } from "@/core/code/svg-geometry";
 import { standardQrRenderer } from "@/engines/render/standard-qr/standard-qr-renderer";
 
 const MODULE_PIXELS = 8;
@@ -37,7 +39,10 @@ function paintOptions(paint: QrForegroundPaint): Readonly<{
   };
 }
 
-function toVendorLogoImageSize(design: QraftQrDesign, baseline: RenderedCode): number | undefined {
+function toVendorLogoImageSize(
+  design: QraftQrDesign,
+  baseline: RenderedQrCode,
+): number | undefined {
   if (!design.logo) {
     return undefined;
   }
@@ -53,8 +58,8 @@ function toVendorLogoImageSize(design: QraftQrDesign, baseline: RenderedCode): n
 }
 
 export function toQrCodeStylingOptions(
-  request: RenderRequest,
-  baseline: RenderedCode,
+  request: QrRenderRequest,
+  baseline: RenderedQrCode,
   designInput: QraftQrDesign = DEFAULT_QR_DESIGN,
 ): Options {
   const design = parseQrDesign(designInput);
@@ -146,17 +151,19 @@ function toDesignerError(error: unknown): CodeRenderError {
   return new CodeRenderError("engine", "The designer QR engine could not render this payload.");
 }
 
-export class DesignerQrRenderer implements CodeRenderer {
+export class DesignerQrRenderer implements CodeRenderer<RenderedQrCode> {
   readonly id = "designer-qr";
 
-  constructor(private readonly baselineRenderer: CodeRenderer = standardQrRenderer) {}
+  constructor(
+    private readonly baselineRenderer: CodeRenderer<RenderedQrCode> = standardQrRenderer,
+  ) {}
 
   supports(request: RenderRequest): boolean {
     return request.symbology === "qr";
   }
 
-  async render(request: RenderRequest): Promise<RenderedCode> {
-    if (!this.supports(request)) {
+  async render(request: RenderRequest): Promise<RenderedQrCode> {
+    if (request.symbology !== "qr") {
       throw new CodeRenderError("unsupported", `Renderer ${this.id} only supports QR.`);
     }
 
@@ -206,8 +213,11 @@ export class DesignerQrRenderer implements CodeRenderer {
       }
 
       const svg = assertSafeVendorSvg(await raw.text(), Boolean(design.logo));
+      const dimensions = parseSvgViewBoxDimensions(svg);
 
       return {
+        width: dimensions.width,
+        height: dimensions.height,
         verificationMatrix: baseline.verificationMatrix,
         svg,
         metadata: {

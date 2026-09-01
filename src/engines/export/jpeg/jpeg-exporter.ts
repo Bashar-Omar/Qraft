@@ -20,7 +20,7 @@ export class JpegExporter implements Exporter {
       throw new Error("JPEG export requires a browser canvas environment.");
     }
 
-    const { canvas, pixelSize } = await rasterizeRenderedSvg(
+    const { canvas, pixelWidth, pixelHeight } = await rasterizeRenderedSvg(
       request.rendered,
       request.pixelSize,
       "#ffffff",
@@ -32,8 +32,8 @@ export class JpegExporter implements Exporter {
       blob,
       filename: `${filenameBase}.jpg`,
       mimeType: "image/jpeg",
-      width: pixelSize,
-      height: pixelSize,
+      width: pixelWidth,
+      height: pixelHeight,
     };
   }
 }

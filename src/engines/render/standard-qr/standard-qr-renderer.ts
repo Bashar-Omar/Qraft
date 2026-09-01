@@ -8,7 +8,7 @@ import {
   type QrErrorCorrectionLevel,
   type QrMatrix,
   type RenderRequest,
-  type RenderedCode,
+  type RenderedQrCode,
 } from "@/core/code/render";
 
 const ENGINE_ECC: Record<QrErrorCorrectionLevel, "low" | "medium" | "quartile" | "high"> = {
@@ -55,15 +55,15 @@ function toRenderError(error: unknown): CodeRenderError {
   return new CodeRenderError("engine", "The QR engine could not render this payload.");
 }
 
-export class StandardQrRenderer implements CodeRenderer {
+export class StandardQrRenderer implements CodeRenderer<RenderedQrCode> {
   readonly id = "standard-qr";
 
   supports(request: RenderRequest): boolean {
     return request.symbology === "qr";
   }
 
-  async render(request: RenderRequest): Promise<RenderedCode> {
-    if (!this.supports(request)) {
+  async render(request: RenderRequest): Promise<RenderedQrCode> {
+    if (request.symbology !== "qr") {
       throw new CodeRenderError("unsupported", `Renderer ${this.id} only supports QR.`);
     }
 
@@ -94,6 +94,8 @@ export class StandardQrRenderer implements CodeRenderer {
       }
 
       return {
+        width: totalModules,
+        height: totalModules,
         verificationMatrix: matrix,
         svg: matrixToSvg(matrix),
         metadata: {

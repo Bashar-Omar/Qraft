@@ -20,7 +20,10 @@ export class WebpExporter implements Exporter {
       throw new Error("WebP export requires a browser canvas environment.");
     }
 
-    const { canvas, pixelSize } = await rasterizeRenderedSvg(request.rendered, request.pixelSize);
+    const { canvas, pixelWidth, pixelHeight } = await rasterizeRenderedSvg(
+      request.rendered,
+      request.pixelSize,
+    );
     const blob = await canvasToExactBlob(canvas, "image/webp", WEBP_QUALITY);
     const filenameBase = sanitizeFilenameBase(request.filenameBase);
 
@@ -28,8 +31,8 @@ export class WebpExporter implements Exporter {
       blob,
       filename: `${filenameBase}.webp`,
       mimeType: "image/webp",
-      width: pixelSize,
-      height: pixelSize,
+      width: pixelWidth,
+      height: pixelHeight,
     };
   }
 }

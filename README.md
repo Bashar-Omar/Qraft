@@ -4,8 +4,8 @@
 
 Qraft is a public-source, privacy-first QR and barcode studio being built as a portfolio-grade product: designer-friendly, standards-aware, responsive, testable and local-first.
 
-> **Current status:** Phase 3C — App/Social link helpers + richer inspector actions.
-> Phase 3 payload-breadth implementation is now complete across standards-backed structured payloads, Event, exact Raw mode, curated App/Social links and a reusable local inspector with explicit web-only actions. Physical-device smoke remains a release-QA gate.
+> **Current status:** Phase 4C (step 3/3) — first production barcode slice.
+> Phase 3 remains complete. Code 128 and Data Matrix are now Live inside a capability-driven Barcode Studio with local preview/export, independent ZXing artifact self-test and `.qraft.json` schema v2 persistence. Schema v1 QR projects migrate explicitly on import. Physical-device smoke remains a release-QA gate.
 
 ## Product principles
 
@@ -31,14 +31,15 @@ Qraft is a public-source, privacy-first QR and barcode studio being built as a p
 - `qr` `0.6.0` behind Qraft's standard QR renderer adapter
 - `qr-code-styling` `1.9.2` behind the browser-only designer QR adapter
 - `@zxing/library` `0.23.0` behind the lazy local QR self-test adapter
+- `@bwip-js/browser` `4.11.4` behind the lazy named-encoder barcode adapter
 
 Node.js `24 LTS` is the project/CI standard.
 
 ## Why the QR engines are isolated
 
-`qr@0.6.0` remains the standards-first structural baseline and golden-vector oracle. Phase 2A adds `qr-code-styling@1.9.2` only behind `src/engines/render/designer-qr/`, loaded dynamically in the browser. Phase 2B adds `@zxing/library@0.23.0` only behind `src/engines/decode/zxing/` for explicit artifact self-tests. Qraft design and quality contracts remain vendor-neutral.
+`qr@0.6.0` remains the standards-first structural baseline and golden-vector oracle. Phase 2A adds `qr-code-styling@1.9.2` only behind `src/engines/render/designer-qr/`, loaded dynamically in the browser. Phase 2B adds `@zxing/library@0.23.0` only behind `src/engines/decode/zxing/` for explicit artifact self-tests. Phase 4B adds `@bwip-js/browser@4.11.4` only behind `src/engines/render/bwip/`; the concrete package binding is dynamically loaded for supported barcode requests and does not enter the normal QR render path. Qraft design, quality and symbology contracts remain vendor-neutral.
 
-See `docs/18-ADR-DECISIONS.md`, `docs/22-PHASE-1-CORE-QR.md`, `docs/23-PHASE-2-VISUAL-STUDIO.md`, `docs/24-PHASE-2B-QUALITY-ASSISTANT.md`, `docs/25-PHASE-2C-LOGO-SAFETY.md`, `docs/26-PHASE-2D-EXPORT-PROJECT.md`, `docs/27-PHASE-3A-STRUCTURED-PAYLOADS.md`, `docs/28-PHASE-3B-EVENT.md`, `docs/29-PHASE-3B-RAW.md`, `docs/30-PHASE-3B-INTEGRATION-INSPECTOR.md`, `docs/31-PHASE-3C-APP-LINKS.md`, `docs/32-PHASE-3C-SOCIAL-LINKS.md` and `docs/33-PHASE-3C-INSPECTOR-HARDENING.md`.
+See `docs/18-ADR-DECISIONS.md`, `docs/22-PHASE-1-CORE-QR.md`, `docs/23-PHASE-2-VISUAL-STUDIO.md`, `docs/24-PHASE-2B-QUALITY-ASSISTANT.md`, `docs/25-PHASE-2C-LOGO-SAFETY.md`, `docs/26-PHASE-2D-EXPORT-PROJECT.md`, `docs/27-PHASE-3A-STRUCTURED-PAYLOADS.md`, `docs/28-PHASE-3B-EVENT.md`, `docs/29-PHASE-3B-RAW.md`, `docs/30-PHASE-3B-INTEGRATION-INSPECTOR.md`, `docs/31-PHASE-3C-APP-LINKS.md`, `docs/32-PHASE-3C-SOCIAL-LINKS.md`, `docs/33-PHASE-3C-INSPECTOR-HARDENING.md`, `docs/34-PHASE-4A-SYMBOLOGY-CORE.md` and `docs/35-PHASE-4B-BWIP-ADAPTER.md`.
 
 ## Why TypeScript 5.9?
 
@@ -112,7 +113,7 @@ Vendor package types stay inside `engines/`. The architecture contract is docume
 ## Current routes
 
 - `/` — product landing and current capability status
-- `/generate` — live QR studio for URL, Wi-Fi, Email, Phone, SMS, Text, Contact, WhatsApp, Event, Location, App Link, Social Link and Raw payloads
+- `/generate` — live QR + Barcode Studio: curated QR payloads plus Code 128 and Data Matrix
 - `/scan` — planned scanner surface
 - `/batch` — planned batch surface
 - `/guides` — guide/documentation surface
@@ -186,7 +187,7 @@ Phase 2D adds:
 2. curated 512 / 1024 / 2048 / 4096 raster targets with integer module alignment,
 3. real JPEG export with a solid white backing surface,
 4. WebP export with exact MIME verification rather than silent PNG fallback,
-5. versioned `.qraft.json` schema v1,
+5. versioned `.qraft.json` project persistence (schema v2 current; v1 migration retained),
 6. bounded project/logo file sizes and strict fresh-object parsing,
 7. schema migration infrastructure and graceful future-version rejection,
 8. optional bounded embedded normalized PNG logo for true local project portability,
@@ -250,7 +251,7 @@ Phase 3C step 3/3 adds:
 5. copy-only treatment and visible notices for custom/non-web schemes,
 6. a clear boundary that valid syntax is not malware/safety verification.
 
-Next after the full Phase 3C verification/merge: Phase 4 — barcode breadth and the capability-driven symbology catalog.
+Phase 4 first batch is complete. Step 1/3 established Qraft-owned symbology/capability and rectangular-artifact contracts. Step 2/3 added the lazy `@bwip-js/browser` runtime and standards-honest Code 128/Data Matrix engine paths. Step 3/3 makes those two curated formats Live through a separate Barcode Studio, width/height-aware export UX, independent ZXing final-artifact self-tests and project schema v2 with explicit v1 migration. Next Phase 4 cycle expands curated linear/retail breadth before Expert Catalog.
 
 ## Privacy
 
