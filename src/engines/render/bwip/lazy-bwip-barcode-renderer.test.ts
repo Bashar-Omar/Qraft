@@ -16,6 +16,8 @@ describe("lazy BWIP barcode renderer", () => {
       "upca",
       "upce",
       "datamatrix",
+      "pdf417",
+      "aztec",
     ] as const;
 
     for (const symbology of supported) {

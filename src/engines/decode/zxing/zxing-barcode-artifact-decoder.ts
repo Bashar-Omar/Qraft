@@ -17,6 +17,8 @@ const FORMAT_BY_SYMBOLOGY = Object.freeze({
   upca: "UPC_A",
   upce: "UPC_E",
   datamatrix: "DATA_MATRIX",
+  pdf417: "PDF_417",
+  aztec: "AZTEC",
 } as const);
 
 export class ZxingBarcodeArtifactDecoder implements BarcodeArtifactDecoder {

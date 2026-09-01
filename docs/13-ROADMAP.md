@@ -73,7 +73,7 @@ Gate:
 
 ## Phase 4 — Barcode breadth
 
-**Status:** Active — second Phase 4 cycle, step 1/3 (Phase 4D) implemented locally. The curated live set now includes Code 128, Code 39, Code 93, ITF, ITF-14, EAN-13, EAN-8, UPC-A, UPC-E0 and Data Matrix with Qraft-owned validation/check digits, canonical artifact self-test and schema-v2 projects. Next: curated 2D breadth and searchable catalog metadata before Expert Catalog.
+**Status:** Active — second Phase 4 cycle, step 2/3 (Phase 4E) implemented locally. Phase 4D linear/retail coverage is joined by curated PDF417 and Aztec Code with Latin-1 byte contracts, named BWIP rendering, independent ZXing self-test and schema-v2 persistence. The symbology registry now owns searchable family/domain/use-case metadata that drives the live Studio and becomes the foundation for Expert Catalog in step 3/3.
 
 Deliver:
 

@@ -4,7 +4,7 @@ import { PhaseCard } from "@/components/foundation/phase-card";
 import { QrMotif } from "@/components/foundation/qr-motif";
 
 const systemNotes = [
-  ["PHASE", "04D / LINEAR + RETAIL"],
+  ["PHASE", "04E / 2D + CATALOG"],
   ["RUNTIME", "BROWSER-FIRST"],
   ["PERSISTENCE", "NO ACCOUNT"],
   ["DEPLOYMENT", "STATIC-EXPORT READY"],
@@ -15,7 +15,7 @@ export default function HomePage() {
     <>
       <section className="hero shell">
         <div className="hero__copy">
-          <span className="mono-label accent-marker">QRAFT / SYSTEM / 04D</span>
+          <span className="mono-label accent-marker">QRAFT / SYSTEM / 04E</span>
           <h1>Craft codes that work.</h1>
           <p className="hero__lede">
             A privacy-first QR and barcode studio designed as a serious creative tool — precise,
@@ -30,8 +30,8 @@ export default function HomePage() {
             </Link>
           </div>
           <p className="hero__honesty">
-            Phase 4D expands the curated barcode workflow across common linear and retail formats with
-            Qraft-owned validation, check digits and independent artifact self-tests — still local,
+            Phase 4E adds curated PDF417 and Aztec Code plus Qraft-owned catalog search across names,
+            aliases, families and real-world use cases — still local, independently self-tested and
             still without leaking vendor APIs into the UI.
           </p>
         </div>
@@ -47,14 +47,14 @@ export default function HomePage() {
             </div>
             <div className="hero-visual__annotation">
               <span>CLIENT FIRST</span>
-              <strong>04D</strong>
+              <strong>04E</strong>
               <span>NO CLOUD DATA</span>
             </div>
           </div>
           <div className="hero-visual__footer">
             <span>STATIC EXPORT</span>
             <span>TYPE-SAFE</span>
-            <span>QR / LINEAR / RETAIL / DATA MATRIX</span>
+            <span>QR / LINEAR / RETAIL / MATRIX / STACKED</span>
           </div>
         </div>
       </section>

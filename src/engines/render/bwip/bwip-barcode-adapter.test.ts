@@ -12,7 +12,7 @@ function runtimeFixture() {
   const runtime: BwipSvgRuntime = {
     render(symbology, options) {
       calls.push({ symbology, options });
-      return symbology === "datamatrix"
+      return symbology === "datamatrix" || symbology === "aztec"
         ? '<svg viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">\n<rect width="100%" height="100%" fill="#ffffff" />\n<path d="M1 1L17 1L17 17Z" fill-rule="evenodd" />\n</svg>\n'
         : '<svg viewBox="0 0 132 50" xmlns="http://www.w3.org/2000/svg">\n<rect width="100%" height="100%" fill="#ffffff" />\n<path stroke="#000000" stroke-width="1" d="M10 1L10 40" />\n</svg>\n';
     },
@@ -166,6 +166,47 @@ describe("BWIP barcode adapter", () => {
         humanReadableText: false,
         quietZoneModules: { top: 1, right: 1, bottom: 1, left: 1 },
       },
+    });
+  });
+
+  it("maps PDF417 and Aztec through curated Latin-1 2D profiles with standards-aware clear areas", async () => {
+    const { runtime, calls } = runtimeFixture();
+    const renderer = new BwipBarcodeAdapter(runtime);
+
+    const pdf = await renderer.render({ symbology: "pdf417", payload: "Document Ä-42" });
+    expect(calls[0]).toEqual({
+      symbology: "pdf417",
+      options: {
+        bcid: "pdf417",
+        text: "Document Ä-42",
+        binarytext: true,
+        scale: 1,
+        padding: 2,
+        backgroundcolor: "ffffff",
+      },
+    });
+    expect(pdf.metadata).toMatchObject({
+      symbology: "pdf417",
+      humanReadableText: false,
+      quietZoneModules: { top: 2, right: 2, bottom: 2, left: 2 },
+    });
+
+    calls.length = 0;
+    const aztec = await renderer.render({ symbology: "aztec", payload: "Ticket Café" });
+    expect(calls[0]).toEqual({
+      symbology: "aztec",
+      options: {
+        bcid: "azteccode",
+        text: "Ticket Café",
+        binarytext: true,
+        scale: 1,
+        backgroundcolor: "ffffff",
+      },
+    });
+    expect(aztec.metadata).toMatchObject({
+      symbology: "aztec",
+      humanReadableText: false,
+      quietZoneModules: { top: 0, right: 0, bottom: 0, left: 0 },
     });
   });
 

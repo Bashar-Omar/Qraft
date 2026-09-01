@@ -130,6 +130,31 @@ describe("Qraft project schema", () => {
         assets: {},
       }),
     ).toThrow(/check digit/i);
+
+    expect(
+      migrateQraftProject({
+        kind: QRAFT_PROJECT_KIND,
+        schemaVersion: 2,
+        content: { kind: "barcode", value: "Document Ä-42" },
+        code: { symbology: "pdf417", humanReadableText: false },
+        export: { rasterPixelSize: 1024 },
+        assets: {},
+      }),
+    ).toMatchObject({
+      content: { kind: "barcode", value: "Document Ä-42" },
+      code: { symbology: "pdf417", humanReadableText: false },
+    });
+
+    expect(() =>
+      migrateQraftProject({
+        kind: QRAFT_PROJECT_KIND,
+        schemaVersion: 2,
+        content: { kind: "barcode", value: "Ticket €" },
+        code: { symbology: "aztec", humanReadableText: false },
+        export: { rasterPixelSize: 1024 },
+        assets: {},
+      }),
+    ).toThrow(/Latin-1|ECI/i);
   });
 
   it("rejects newer or unsupported older project versions", () => {

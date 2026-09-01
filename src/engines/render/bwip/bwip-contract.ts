@@ -12,6 +12,8 @@ export type BwipEncoderId = Extract<
   | "upca"
   | "upce"
   | "datamatrix"
+  | "pdf417"
+  | "aztec"
 >;
 
 export const BWIP_ENCODER_IDS = Object.freeze([
@@ -25,6 +27,8 @@ export const BWIP_ENCODER_IDS = Object.freeze([
   "upca",
   "upce",
   "datamatrix",
+  "pdf417",
+  "aztec",
 ] as const satisfies readonly BwipEncoderId[]);
 
 export function isBwipEncoderId(symbology: SymbologyId): symbology is BwipEncoderId {

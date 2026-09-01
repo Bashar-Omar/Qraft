@@ -19,6 +19,8 @@ import { validateBwipSvg } from "@/engines/render/bwip/bwip-svg";
 const LINEAR_QUIET_ZONE_MODULES = Object.freeze({ top: 0, right: 10, bottom: 0, left: 10 });
 const RETAIL_QUIET_ZONE_MODULES = Object.freeze({ top: 0, right: 12, bottom: 0, left: 12 });
 const DATAMATRIX_QUIET_ZONE_MODULES = Object.freeze({ top: 1, right: 1, bottom: 1, left: 1 });
+const PDF417_QUIET_ZONE_MODULES = Object.freeze({ top: 2, right: 2, bottom: 2, left: 2 });
+const AZTEC_QUIET_ZONE_MODULES = Object.freeze({ top: 0, right: 0, bottom: 0, left: 0 });
 
 type BwipSymbologyProfile = Readonly<{
   encoder: BwipEncoderId;
@@ -100,6 +102,37 @@ const BWIP_SYMBOLOGY_PROFILES: Readonly<Record<BwipEncoderId, BwipSymbologyProfi
           binarytext: true,
           scale: 1,
           padding: DATAMATRIX_QUIET_ZONE_MODULES.left,
+          backgroundcolor: "ffffff",
+        };
+      },
+    },
+    pdf417: {
+      encoder: "pdf417",
+      bcid: "pdf417",
+      humanReadableText: { supported: false, defaultValue: false },
+      quietZoneModules: PDF417_QUIET_ZONE_MODULES,
+      createOptions(validated) {
+        return {
+          bcid: "pdf417",
+          text: validated.binaryText,
+          binarytext: true,
+          scale: 1,
+          padding: PDF417_QUIET_ZONE_MODULES.left,
+          backgroundcolor: "ffffff",
+        };
+      },
+    },
+    aztec: {
+      encoder: "aztec",
+      bcid: "azteccode",
+      humanReadableText: { supported: false, defaultValue: false },
+      quietZoneModules: AZTEC_QUIET_ZONE_MODULES,
+      createOptions(validated) {
+        return {
+          bcid: "azteccode",
+          text: validated.binaryText,
+          binarytext: true,
+          scale: 1,
           backgroundcolor: "ffffff",
         };
       },

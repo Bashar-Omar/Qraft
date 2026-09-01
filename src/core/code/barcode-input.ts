@@ -6,6 +6,8 @@ export const CODE39_CURATED_MAX_CHARACTERS = 64;
 export const CODE93_CURATED_MAX_CHARACTERS = 80;
 export const ITF_CURATED_MAX_DIGITS = 80;
 export const DATAMATRIX_LATIN1_MAX_BYTES = 1555;
+export const PDF417_LATIN1_MAX_BYTES = 1108;
+export const AZTEC_LATIN1_MAX_BYTES = 1914;
 
 export type BarcodeCheckDigit = Readonly<{
   digit: string;
@@ -100,6 +102,18 @@ export const BARCODE_INPUT_POLICIES: Readonly<Record<BarcodeSymbologyId, Barcode
       rows: 5,
       placeholder: "Qraft Data Matrix",
       hint: "ISO-8859-1 / Latin-1 bytes only. Unicode outside Latin-1 requires explicit ECI semantics.",
+    },
+    pdf417: {
+      inputMode: "text",
+      rows: 5,
+      placeholder: "Qraft PDF417 document payload",
+      hint: "Latin-1 byte workflow with automatic PDF417 sizing/error correction. ECI, Macro PDF417 and fixed rows/columns stay Expert-only.",
+    },
+    aztec: {
+      inputMode: "text",
+      rows: 5,
+      placeholder: "Qraft Aztec ticket payload",
+      hint: "Latin-1 byte workflow with automatic Aztec layers/error correction. ECI, reader-init and fixed-layer controls stay Expert-only.",
     },
   });
 
@@ -289,7 +303,12 @@ function validateItf(payload: string): ValidatedBarcodePayload {
   return createValidated("itf", payload);
 }
 
-function validateDataMatrix(payload: string): ValidatedBarcodePayload {
+function validateLatin1Payload(
+  symbology: Extract<BarcodeSymbologyId, "datamatrix" | "pdf417" | "aztec">,
+  payload: string,
+  label: string,
+  maxBytes: number,
+): ValidatedBarcodePayload {
   let bytes = 0;
   let binaryText = "";
 
@@ -298,15 +317,15 @@ function validateDataMatrix(payload: string): ValidatedBarcodePayload {
     if (codePoint === undefined || codePoint > 0xff) {
       throw new CodeRenderError(
         "invalid-request",
-        "Curated Data Matrix currently accepts ISO-8859-1 / Latin-1 bytes only. Unicode outside Latin-1 requires an explicit ECI workflow before Qraft can encode it honestly.",
+        `Curated ${label} currently accepts ISO-8859-1 / Latin-1 bytes only. Unicode outside Latin-1 requires an explicit ECI workflow before Qraft can encode it honestly.`,
       );
     }
 
     bytes += 1;
-    if (bytes > DATAMATRIX_LATIN1_MAX_BYTES) {
+    if (bytes > maxBytes) {
       throw new CodeRenderError(
         "capacity",
-        `Curated Data Matrix is limited to ${DATAMATRIX_LATIN1_MAX_BYTES} Latin-1 bytes.`,
+        `Curated ${label} is limited to ${maxBytes} Latin-1 bytes.`,
       );
     }
 
@@ -314,7 +333,7 @@ function validateDataMatrix(payload: string): ValidatedBarcodePayload {
   }
 
   return {
-    symbology: "datamatrix",
+    symbology,
     payload,
     encodedPayload: payload,
     payloadBytes: bytes,
@@ -333,7 +352,11 @@ const BARCODE_PAYLOAD_VALIDATORS: Readonly<Record<BarcodeSymbologyId, BarcodePay
     ean8: (payload) => validateGtin("ean8", payload, "EAN-8", 7),
     upca: (payload) => validateGtin("upca", payload, "UPC-A", 11),
     upce: validateUpce,
-    datamatrix: validateDataMatrix,
+    datamatrix: (payload) =>
+      validateLatin1Payload("datamatrix", payload, "Data Matrix", DATAMATRIX_LATIN1_MAX_BYTES),
+    pdf417: (payload) =>
+      validateLatin1Payload("pdf417", payload, "PDF417", PDF417_LATIN1_MAX_BYTES),
+    aztec: (payload) => validateLatin1Payload("aztec", payload, "Aztec Code", AZTEC_LATIN1_MAX_BYTES),
   });
 
 export function getBarcodeInputPolicy(symbology: BarcodeSymbologyId): BarcodeInputPolicy {

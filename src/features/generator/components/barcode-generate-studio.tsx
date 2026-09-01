@@ -22,6 +22,10 @@ import {
   type RasterPixelSize,
 } from "@/core/export/raster";
 import type { BarcodeSelfTestResult } from "@/core/quality/self-test";
+import {
+  BarcodeCatalogControls,
+  type BarcodeCatalogFamily,
+} from "@/features/generator/components/barcode-catalog-controls";
 import { BarcodePreview } from "@/features/generator/components/barcode-preview";
 import {
   BarcodeQualityPanel,
@@ -44,6 +48,8 @@ const INITIAL_BARCODE_DRAFTS: Readonly<Record<BarcodeSymbologyId, string>> = Obj
   upca: "78858101497",
   upce: "0123455",
   datamatrix: "Qraft Data Matrix",
+  pdf417: "Qraft PDF417 document payload",
+  aztec: "Qraft Aztec ticket payload",
 });
 
 type BarcodeGenerationState =
@@ -85,15 +91,21 @@ export function BarcodeGenerateStudio({
   initialProject,
   onOpenQrProject,
 }: BarcodeGenerateStudioProps) {
+  const [catalogQuery, setCatalogQuery] = useState("");
+  const [catalogFamily, setCatalogFamily] = useState<BarcodeCatalogFamily>("all");
   const definitions = useMemo(
     () =>
       symbologyRegistry
-        .listLive()
+        .search({
+          query: catalogQuery,
+          availability: "live",
+          ...(catalogFamily === "all" ? {} : { family: catalogFamily }),
+        })
         .filter(
           (definition): definition is SymbologyDefinition & { id: BarcodeSymbologyId } =>
             definition.id !== "qr",
         ),
-    [],
+    [catalogFamily, catalogQuery],
   );
   const [symbology, setSymbology] = useState<BarcodeSymbologyId>(
     initialProject?.symbology ?? "code128",
@@ -269,6 +281,13 @@ export function BarcodeGenerateStudio({
           <span className="mono-label">TYPE</span>
           <span className="phase-pill phase-pill--live">BARCODE</span>
         </div>
+        <BarcodeCatalogControls
+          family={catalogFamily}
+          onFamilyChange={setCatalogFamily}
+          onQueryChange={setCatalogQuery}
+          query={catalogQuery}
+          resultCount={definitions.length}
+        />
         <div className="type-list">
           {definitions.map((item, index) => (
             <button
@@ -285,6 +304,11 @@ export function BarcodeGenerateStudio({
               <span className="type-row__index">{String(index + 1).padStart(2, "0")}</span>
             </button>
           ))}
+          {definitions.length === 0 ? (
+            <div className="barcode-catalog-empty" role="status">
+              No live barcode formats match this catalog filter.
+            </div>
+          ) : null}
           <div className="type-row type-row--locked">
             <span>
               <strong>Expert Catalog</strong>
@@ -301,6 +325,14 @@ export function BarcodeGenerateStudio({
           <span className="phase-pill phase-pill--live">LIVE</span>
         </div>
 
+        <BarcodeCatalogControls
+          className="barcode-catalog-controls--mobile"
+          family={catalogFamily}
+          onFamilyChange={setCatalogFamily}
+          onQueryChange={setCatalogQuery}
+          query={catalogQuery}
+          resultCount={definitions.length}
+        />
         <div className="studio-mobile-types" aria-label="Barcode type">
           {definitions.map((item) => (
             <button

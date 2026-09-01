@@ -1,4 +1,5 @@
 import {
+  azteccode,
   code128,
   code39,
   code93,
@@ -8,6 +9,7 @@ import {
   ean8,
   interleaved2of5,
   itf14,
+  pdf417,
   upca,
   upce,
 } from "@bwip-js/browser";
@@ -36,6 +38,8 @@ const BWIP_ENCODERS: Readonly<Record<BwipEncoderId, BwipNamedEncoder>> = Object.
   upca,
   upce,
   datamatrix,
+  pdf417,
+  aztec: azteccode,
 });
 
 export const bwipBrowserRuntime: BwipSvgRuntime = {

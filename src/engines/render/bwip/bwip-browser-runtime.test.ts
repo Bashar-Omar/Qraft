@@ -51,4 +51,31 @@ describe("@bwip-js/browser runtime integration", () => {
     expect(artifact.height).toBeGreaterThan(0);
     expect(artifact.svg).toContain('fill-rule="evenodd"');
   });
+
+  it("renders real PDF417 and Aztec SVGs through named encoders", () => {
+    const pdf = validateBwipSvg(
+      bwipBrowserRuntime.render("pdf417", {
+        bcid: "pdf417",
+        text: "QRAFT-PDF417",
+        binarytext: true,
+        scale: 1,
+        padding: 2,
+        backgroundcolor: "ffffff",
+      }),
+    );
+    expect(pdf.width).toBeGreaterThan(pdf.height);
+    expect(pdf.svg).toContain("<path");
+
+    const aztec = validateBwipSvg(
+      bwipBrowserRuntime.render("aztec", {
+        bcid: "azteccode",
+        text: "QRAFT-AZTEC",
+        binarytext: true,
+        scale: 1,
+        backgroundcolor: "ffffff",
+      }),
+    );
+    expect(aztec.width).toBe(aztec.height);
+    expect(aztec.svg).toContain("<path");
+  });
 });

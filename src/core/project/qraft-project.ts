@@ -4,7 +4,10 @@ import {
 } from "@/core/code/barcode-input";
 import type { QrErrorCorrectionLevel } from "@/core/code/render";
 import { symbologyRegistry } from "@/core/code/symbology-registry";
-import type { BarcodeSymbologyId } from "@/core/code/symbology";
+import {
+  BARCODE_SYMBOLOGY_IDS,
+  type BarcodeSymbologyId,
+} from "@/core/code/symbology";
 import { parseQrDesign, type QraftQrDesign } from "@/core/design/qr-design";
 import { QR_LOGO_LIMITS } from "@/core/design/qr-logo";
 import { parseRasterPixelSize, type RasterPixelSize } from "@/core/export/raster";
@@ -33,18 +36,7 @@ const PAYLOAD_IDS = new Set<PayloadId>([
   "social",
   "raw",
 ]);
-const BARCODE_SYMBOLOGIES = new Set<BarcodeSymbologyId>([
-  "code128",
-  "code39",
-  "code93",
-  "itf",
-  "itf14",
-  "ean13",
-  "ean8",
-  "upca",
-  "upce",
-  "datamatrix",
-]);
+const BARCODE_SYMBOLOGIES = new Set<BarcodeSymbologyId>(BARCODE_SYMBOLOGY_IDS);
 const ECC_LEVELS = new Set<QrErrorCorrectionLevel>(["L", "M", "Q", "H"]);
 const DANGEROUS_KEYS = new Set(["__proto__", "prototype", "constructor"]);
 const BASE64_PATTERN = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;

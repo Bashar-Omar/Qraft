@@ -4,8 +4,8 @@
 
 Qraft is a public-source, privacy-first QR and barcode studio being built as a portfolio-grade product: designer-friendly, standards-aware, responsive, testable and local-first.
 
-> **Current status:** Phase 4D (new cycle, step 1/3) — curated linear + retail foundation.
-> Code 128 and Data Matrix remain Live. Code 39, Code 93, ITF, ITF-14, EAN-13, EAN-8, UPC-A and UPC-E0 now join the local Barcode Studio behind Qraft-owned character/length/check-digit validation, canonical self-test semantics and schema-v2 project persistence. Physical-device smoke remains a release-QA gate.
+> **Current status:** Phase 4E (new cycle, step 2/3) — curated 2D + searchable catalog foundation.
+> The Phase 4D linear/retail set remains Live. PDF417 and Aztec Code now join the curated Barcode Studio with explicit Latin-1 byte semantics, named BWIP adapters, independent ZXing artifact self-tests and schema-v2 projects. Qraft-owned catalog metadata/search now drives name, alias, family and use-case discovery ahead of Expert Catalog. Physical-device smoke remains a release-QA gate.
 
 ## Product principles
 
@@ -251,7 +251,7 @@ Phase 3C step 3/3 adds:
 5. copy-only treatment and visible notices for custom/non-web schemes,
 6. a clear boundary that valid syntax is not malware/safety verification.
 
-Phase 4 first batch is complete. The second Phase 4 cycle starts with Phase 4D: curated linear/retail breadth. Qraft now owns strict base-character contracts for Code 39/93, exact even-length ITF semantics, GS1 Mod-10 computation/verification for EAN-13/EAN-8/UPC-A/ITF-14 and standards-defined UPC-E0 handling. Retail self-tests compare against the canonical encoded value instead of relying on BWIP side effects. Next: curated 2D breadth plus the catalog metadata/search foundation before Expert Catalog.
+Phase 4 first batch is complete. The second Phase 4 cycle now includes Phase 4D linear/retail breadth plus Phase 4E curated PDF417/Aztec and Qraft-owned catalog search metadata. Retail identifiers retain domain-owned check-digit/canonicalization rules; the 2D slice keeps ISO-8859-1 byte interpretation explicit while ECI and advanced symbol-shaping controls remain Expert-only. Next: expose the renderer-backed Expert Catalog through the same registry/search contracts without turning vendor support into an unsupported product promise.
 
 ## Privacy
 

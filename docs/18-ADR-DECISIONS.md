@@ -572,3 +572,45 @@ A renderer-side transformation can produce a technically valid symbol while maki
 portable project and independent decoder disagree about what was encoded. Check digits and other
 meaningful transformations therefore belong in Qraft's domain validation layer. The vendor adapter
 receives a complete value and is not allowed to become the source of product semantics.
+
+---
+
+## ADR-031 — Catalog discovery is Qraft-owned metadata, not renderer introspection
+
+**Status:** Accepted
+
+Phase 4E introduces the discovery seam needed by the upcoming Expert Catalog.
+
+Decision:
+
+- `SymbologyDefinition` owns family, tier, availability, domain tags, aliases, use-case keywords, summary and capabilities,
+- `SymbologyRegistry.search()` filters those Qraft-owned definitions by query/family/tier/availability/domain,
+- search never asks BWIP which encoders exist at runtime,
+- the live Barcode Studio uses the same search contract that Expert Catalog will extend,
+- renderer support alone never changes a symbology from planned/experimental to curated/live.
+
+Why:
+
+BWIP can render far more formats than Qraft can honestly validate, document, self-test and persist. Treating the vendor symbol list as the product catalog would collapse the distinction between engine capability and supported product workflow. Qraft therefore owns discovery metadata and can add Expert entries deliberately without leaking vendor naming into core or UI code.
+
+---
+
+## ADR-032 — Curated PDF417/Aztec keep byte interpretation explicit and advanced shaping closed
+
+**Status:** Accepted
+
+Phase 4E adds PDF417 and Aztec Code as first-class curated 2D formats while deliberately keeping ECI and low-level symbol shaping out of the simple workflow.
+
+Decision:
+
+- curated PDF417 and Aztec accept ISO-8859-1 / Latin-1 bytes only,
+- arbitrary Unicode outside Latin-1 is rejected until Qraft owns an explicit ECI workflow,
+- PDF417 uses a conservative 1108-byte curated ceiling; Aztec uses a 1914-byte ceiling,
+- BWIP chooses ordinary rows/columns/layers and default error correction in the curated workflow,
+- fixed rows/columns/layers, explicit error-correction tuning, reader-init, raw codewords and Macro PDF417 remain Expert-only,
+- PDF417 exports a two-module clear area; Aztec does not invent a required quiet zone because the standard does not require one,
+- independent self-test targets ZXing's PDF_417/AZTEC decoders before the formats are considered product-live.
+
+Why:
+
+The renderer can accept escape syntax and many tuning options that alter interpretation and symbol shape. Exposing those controls before Qraft has typed domain contracts would recreate vendor option plumbing in the UI. The curated workflow instead prioritizes predictable payload interpretation and portable projects; Expert Mode can add advanced controls deliberately later.

@@ -11,6 +11,7 @@ const duplicate: SymbologyDefinition = {
   tier: "curated",
   availability: "live",
   summary: "duplicate",
+  catalog: { domains: ["general"], keywords: ["duplicate"] },
   capabilities: {
     vector: true,
     raster: true,
@@ -37,6 +38,8 @@ describe("symbology registry", () => {
       "upca",
       "upce",
       "datamatrix",
+      "pdf417",
+      "aztec",
     ]);
   });
 
@@ -47,6 +50,24 @@ describe("symbology registry", () => {
     expect(symbologyRegistry.get("datamatrix").family).toBe("matrix");
     expect(symbologyRegistry.get("ean13").family).toBe("linear");
     expect(symbologyRegistry.get("upce").capabilities.humanReadableText).toBe(true);
+    expect(symbologyRegistry.get("pdf417").family).toBe("stacked");
+    expect(symbologyRegistry.get("aztec").capabilities.quietZone).toBe(false);
+  });
+
+  it("searches Qraft-owned catalog metadata by aliases, family and use-case terms", () => {
+    expect(symbologyRegistry.search({ query: "gtin retail", availability: "live" }).map((item) => item.id)).toEqual([
+      "itf14",
+      "ean13",
+      "ean8",
+      "upca",
+      "upce",
+    ]);
+    expect(symbologyRegistry.search({ family: "stacked", availability: "live" }).map((item) => item.id)).toEqual([
+      "pdf417",
+    ]);
+    expect(symbologyRegistry.search({ query: "boarding pass" }).map((item) => item.id)).toEqual([
+      "aztec",
+    ]);
   });
 
   it("rejects duplicate registrations", () => {

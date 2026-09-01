@@ -191,3 +191,55 @@ test("curated linear and retail formats validate before rendering and self-test 
   await expect(studio.getByRole("status").filter({ hasText: /Expected 8/i })).toBeVisible();
   await expect(studio.getByRole("button", { name: "Download SVG" })).toBeDisabled();
 });
+
+test("catalog search discovers Aztec/PDF417 and both 2D formats self-test through ZXing", async ({
+  page,
+}) => {
+  await page.goto("/generate");
+  await openBarcodeStudio(page);
+
+  const studio = page.getByTestId("barcode-studio-shell");
+  const catalog = studio.locator(".barcode-catalog-controls:visible");
+  const search = catalog.getByLabel("Search barcode types");
+
+  await search.fill("ticket");
+  await expect(catalog).toContainText("1 MATCH");
+  await chooseBarcode(page, /Aztec Code/);
+
+  const content = studio.getByLabel("Barcode content");
+  await content.fill("Ticket-Café-2026");
+  await expect(page.getByRole("img", { name: "Generated Aztec Code barcode preview" })).toBeVisible();
+  await expect(studio.getByLabel("Human-readable text")).toHaveCount(0);
+  await expect(studio.locator(".preview-meta")).toContainText("AZTEC CODE / BWIP");
+
+  const quality = studio.locator(".quality-assistant");
+  await quality.getByRole("button", { name: "Run self-test" }).click();
+  await expect(quality.getByText("Passed independent local decode", { exact: true })).toBeVisible({
+    timeout: 15_000,
+  });
+
+  await search.fill("");
+  await catalog.getByRole("button", { name: "Stacked" }).click();
+  await expect(catalog).toContainText("1 MATCH");
+  await chooseBarcode(page, /PDF417/);
+  await content.fill("Document-Ä-42");
+  await expect(page.getByRole("img", { name: "Generated PDF417 barcode preview" })).toBeVisible();
+
+  await quality.getByRole("button", { name: "Run self-test" }).click();
+  await expect(quality.getByText("Passed independent local decode", { exact: true })).toBeVisible({
+    timeout: 15_000,
+  });
+
+  const projectPromise = page.waitForEvent("download");
+  await studio.getByRole("button", { name: "Save .qraft.json" }).click();
+  const project = await projectPromise;
+  expect(project.suggestedFilename()).toBe("qraft-pdf417.qraft.json");
+  const document = JSON.parse((await readDownloadBytes(project)).toString("utf8")) as {
+    content?: { value?: string };
+    code?: { symbology?: string; humanReadableText?: boolean };
+  };
+  expect(document).toMatchObject({
+    content: { value: "Document-Ä-42" },
+    code: { symbology: "pdf417", humanReadableText: false },
+  });
+});

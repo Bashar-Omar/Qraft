@@ -196,6 +196,35 @@ describe("portable Qraft projects", () => {
       humanReadableText: true,
       rasterPixelSize: 1024,
     });
+
+    const pdf417 = await exportQraftProject({
+      mode: "barcode",
+      symbology: "pdf417",
+      payload: "Document Ä-42",
+      humanReadableText: false,
+      rasterPixelSize: 2048,
+    });
+    await expect(importQraftProject(pdf417.blob)).resolves.toEqual({
+      mode: "barcode",
+      symbology: "pdf417",
+      payload: "Document Ä-42",
+      humanReadableText: false,
+      rasterPixelSize: 2048,
+    });
+
+    const aztec = await exportQraftProject({
+      mode: "barcode",
+      symbology: "aztec",
+      payload: "Ticket Café",
+      humanReadableText: false,
+      rasterPixelSize: 1024,
+    });
+    await expect(importQraftProject(aztec.blob)).resolves.toMatchObject({
+      mode: "barcode",
+      symbology: "aztec",
+      payload: "Ticket Café",
+      humanReadableText: false,
+    });
   });
 
   it("rejects invalid current payload and invalid barcode project state", async () => {

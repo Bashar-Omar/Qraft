@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  AZTEC_LATIN1_MAX_BYTES,
   CODE128_CURATED_MAX_CHARACTERS,
   DATAMATRIX_LATIN1_MAX_BYTES,
+  PDF417_LATIN1_MAX_BYTES,
   computeGtinCheckDigit,
   getBarcodeInputPolicy,
   validateBarcodePayload,
@@ -120,6 +122,34 @@ describe("barcode input validation", () => {
     expect(() =>
       validateBarcodePayload("datamatrix", "A".repeat(DATAMATRIX_LATIN1_MAX_BYTES + 1)),
     ).toThrow(/1555 Latin-1 bytes/i);
+  });
+
+  it("keeps PDF417 and Aztec on explicit Latin-1 byte semantics until ECI is implemented", () => {
+    expect(validateBarcodePayload("pdf417", "License Ä-2026")).toMatchObject({
+      symbology: "pdf417",
+      encodedPayload: "License Ä-2026",
+      payloadBytes: 14,
+    });
+    expect(validateBarcodePayload("aztec", "Ticket Café")).toMatchObject({
+      symbology: "aztec",
+      encodedPayload: "Ticket Café",
+      payloadBytes: 11,
+    });
+    expect(() => validateBarcodePayload("pdf417", "مرحبا")).toThrow(/Latin-1/i);
+    expect(() => validateBarcodePayload("aztec", "Qraft €")).toThrow(/ECI/i);
+  });
+
+  it("enforces conservative byte ceilings for curated PDF417 and Aztec", () => {
+    expect(() => validateBarcodePayload("pdf417", "A".repeat(PDF417_LATIN1_MAX_BYTES))).not.toThrow();
+    expect(() => validateBarcodePayload("pdf417", "A".repeat(PDF417_LATIN1_MAX_BYTES + 1))).toThrow(/1108 Latin-1 bytes/i);
+    expect(() => validateBarcodePayload("aztec", "A".repeat(AZTEC_LATIN1_MAX_BYTES))).not.toThrow();
+    expect(() => validateBarcodePayload("aztec", "A".repeat(AZTEC_LATIN1_MAX_BYTES + 1))).toThrow(/1914 Latin-1 bytes/i);
+  });
+
+  it("exposes curated 2D input guidance without leaking BWIP options", () => {
+    expect(getBarcodeInputPolicy("pdf417")).toMatchObject({ inputMode: "text", rows: 5 });
+    expect(getBarcodeInputPolicy("pdf417").hint).toMatch(/Macro PDF417.*Expert-only/i);
+    expect(getBarcodeInputPolicy("aztec").hint).toMatch(/fixed-layer controls.*Expert-only/i);
   });
 
   it("rejects empty and non-string content before an engine is called", () => {
