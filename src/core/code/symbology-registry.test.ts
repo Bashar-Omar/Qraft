@@ -11,6 +11,7 @@ const duplicate: SymbologyDefinition = {
   tier: "curated",
   availability: "live",
   summary: "duplicate",
+  catalog: { domains: ["general"], keywords: ["duplicate"] },
   capabilities: {
     vector: true,
     raster: true,
@@ -21,15 +22,38 @@ const duplicate: SymbologyDefinition = {
     quietZone: true,
     physicalSizing: true,
   },
+  verification: {
+    artifactSelfTest: "independent",
+    note: "duplicate",
+  },
 };
 
 describe("symbology registry", () => {
-  it("marks only the Phase 4C curated slice live", () => {
+  it("registers curated, Expert and Experimental Phase 4F support explicitly", () => {
     expect(symbologyRegistry.listLive().map((definition) => definition.id)).toEqual([
       "qr",
       "code128",
+      "code39",
+      "code93",
+      "itf",
+      "itf14",
+      "ean13",
+      "ean8",
+      "upca",
+      "upce",
+      "codabar",
+      "code11",
+      "msi",
+      "plessey",
       "datamatrix",
+      "pdf417",
+      "aztec",
+      "microqr",
+      "maxicode",
+      "rmqr",
     ]);
+    expect(symbologyRegistry.get("codabar").tier).toBe("expert");
+    expect(symbologyRegistry.get("rmqr").tier).toBe("experimental");
   });
 
   it("stores capability metadata in one Qraft-owned source", () => {
@@ -37,6 +61,39 @@ describe("symbology registry", () => {
     expect(symbologyRegistry.get("code128").capabilities.humanReadableText).toBe(true);
     expect(symbologyRegistry.get("code128").capabilities.gradient).toBe(false);
     expect(symbologyRegistry.get("datamatrix").family).toBe("matrix");
+    expect(symbologyRegistry.get("ean13").family).toBe("linear");
+    expect(symbologyRegistry.get("upce").capabilities.humanReadableText).toBe(true);
+    expect(symbologyRegistry.get("pdf417").family).toBe("stacked");
+    expect(symbologyRegistry.get("aztec").capabilities.quietZone).toBe(false);
+    expect(symbologyRegistry.get("codabar").verification.artifactSelfTest).toBe("renderer-only");
+    expect(symbologyRegistry.get("microqr").verification.artifactSelfTest).toBe("renderer-only");
+    expect(symbologyRegistry.get("maxicode").verification.artifactSelfTest).toBe("renderer-only");
+    expect(symbologyRegistry.get("code11").verification.artifactSelfTest).toBe("renderer-only");
+  });
+
+  it("searches Qraft-owned catalog metadata by aliases, family and use-case terms", () => {
+    expect(
+      symbologyRegistry
+        .search({ query: "gtin retail", availability: "live" })
+        .map((item) => item.id),
+    ).toEqual(["itf14", "ean13", "ean8", "upca", "upce"]);
+    expect(
+      symbologyRegistry.search({ family: "stacked", availability: "live" }).map((item) => item.id),
+    ).toEqual(["pdf417"]);
+    expect(symbologyRegistry.search({ query: "boarding pass" }).map((item) => item.id)).toEqual([
+      "aztec",
+    ]);
+    expect(
+      symbologyRegistry.search({ query: "blood bank", tier: "expert" }).map((item) => item.id),
+    ).toEqual(["codabar"]);
+    expect(
+      symbologyRegistry
+        .search({ domain: "healthcare", availability: "live" })
+        .map((item) => item.id),
+    ).toEqual(["codabar"]);
+    expect(symbologyRegistry.search({ tier: "experimental" }).map((item) => item.id)).toEqual([
+      "rmqr",
+    ]);
   });
 
   it("rejects duplicate registrations", () => {

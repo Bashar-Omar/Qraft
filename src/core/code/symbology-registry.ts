@@ -1,8 +1,44 @@
 import {
   SYMBOLOGY_DEFINITIONS,
+  type SymbologyAvailability,
   type SymbologyDefinition,
+  type SymbologyDomain,
+  type SymbologyFamily,
   type SymbologyId,
+  type SymbologyTier,
 } from "@/core/code/symbology";
+
+export type SymbologySearchQuery = Readonly<{
+  query?: string;
+  family?: SymbologyFamily;
+  tier?: SymbologyTier;
+  availability?: SymbologyAvailability;
+  domain?: SymbologyDomain;
+}>;
+
+function normalizeSearchText(value: string): string {
+  return value.trim().toLocaleLowerCase("en-US");
+}
+
+function matchesQuery(definition: SymbologyDefinition, query: string): boolean {
+  const normalized = normalizeSearchText(query);
+  if (!normalized) return true;
+
+  const haystack = normalizeSearchText(
+    [
+      definition.id,
+      definition.label,
+      definition.summary,
+      definition.family,
+      definition.tier,
+      ...definition.aliases,
+      ...definition.catalog.domains,
+      ...definition.catalog.keywords,
+    ].join(" "),
+  );
+
+  return normalized.split(/\s+/u).every((token) => haystack.includes(token));
+}
 
 export class SymbologyRegistry {
   private readonly definitions: ReadonlyMap<SymbologyId, SymbologyDefinition>;
@@ -33,7 +69,17 @@ export class SymbologyRegistry {
   }
 
   listLive(): readonly SymbologyDefinition[] {
-    return this.list().filter((definition) => definition.availability === "live");
+    return this.search({ availability: "live" });
+  }
+
+  search(query: SymbologySearchQuery = {}): readonly SymbologyDefinition[] {
+    return this.list().filter((definition) => {
+      if (query.family && definition.family !== query.family) return false;
+      if (query.tier && definition.tier !== query.tier) return false;
+      if (query.availability && definition.availability !== query.availability) return false;
+      if (query.domain && !definition.catalog.domains.includes(query.domain)) return false;
+      return matchesQuery(definition, query.query ?? "");
+    });
   }
 }
 

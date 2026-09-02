@@ -10,7 +10,7 @@ export function SiteFooter() {
           <p>Craft codes that work.</p>
         </div>
         <div className="site-footer__meta">
-          <span>PHASE 04C / BARCODE SLICE</span>
+          <span>PHASE 04F / EXPERT CATALOG</span>
           <a href={SITE.githubUrl} rel="noreferrer" target="_blank">
             PUBLIC REPOSITORY ↗
           </a>

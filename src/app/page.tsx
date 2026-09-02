@@ -4,7 +4,7 @@ import { PhaseCard } from "@/components/foundation/phase-card";
 import { QrMotif } from "@/components/foundation/qr-motif";
 
 const systemNotes = [
-  ["PHASE", "04C / BARCODE SLICE"],
+  ["PHASE", "04F / EXPERT CATALOG"],
   ["RUNTIME", "BROWSER-FIRST"],
   ["PERSISTENCE", "NO ACCOUNT"],
   ["DEPLOYMENT", "STATIC-EXPORT READY"],
@@ -15,7 +15,7 @@ export default function HomePage() {
     <>
       <section className="hero shell">
         <div className="hero__copy">
-          <span className="mono-label accent-marker">QRAFT / SYSTEM / 04C</span>
+          <span className="mono-label accent-marker">QRAFT / SYSTEM / 04F</span>
           <h1>Craft codes that work.</h1>
           <p className="hero__lede">
             A privacy-first QR and barcode studio designed as a serious creative tool — precise,
@@ -30,9 +30,9 @@ export default function HomePage() {
             </Link>
           </div>
           <p className="hero__honesty">
-            Phase 4C adds the first standards-oriented barcode workflow: Code 128 and Data Matrix
-            now share Qraft’s local preview/export/project pipeline without leaking vendor APIs into
-            the UI.
+            Phase 4F opens an allow-listed Expert Catalog with explicit Curated, Expert and
+            Experimental support labels — keeping independent artifact verification separate from
+            renderer availability and vendor APIs out of the UI.
           </p>
         </div>
 
@@ -47,14 +47,14 @@ export default function HomePage() {
             </div>
             <div className="hero-visual__annotation">
               <span>CLIENT FIRST</span>
-              <strong>04C</strong>
+              <strong>04F</strong>
               <span>NO CLOUD DATA</span>
             </div>
           </div>
           <div className="hero-visual__footer">
             <span>STATIC EXPORT</span>
             <span>TYPE-SAFE</span>
-            <span>QR / CODE 128 / DATA MATRIX</span>
+            <span>QR / LINEAR / RETAIL / MATRIX / STACKED</span>
           </div>
         </div>
       </section>

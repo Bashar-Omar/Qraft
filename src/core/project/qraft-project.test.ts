@@ -90,6 +90,92 @@ describe("Qraft project schema", () => {
         assets: {},
       }),
     ).toThrow(/human-readable text/i);
+
+    expect(
+      migrateQraftProject({
+        kind: QRAFT_PROJECT_KIND,
+        schemaVersion: 2,
+        content: { kind: "barcode", value: "9520123456788" },
+        code: { symbology: "ean13", humanReadableText: true },
+        export: { rasterPixelSize: 1024 },
+        assets: {},
+      }),
+    ).toMatchObject({
+      content: { kind: "barcode", value: "9520123456788" },
+      code: { symbology: "ean13", humanReadableText: true },
+    });
+
+    expect(
+      migrateQraftProject({
+        kind: QRAFT_PROJECT_KIND,
+        schemaVersion: 2,
+        content: { kind: "barcode", value: "952012345678" },
+        code: { symbology: "ean13", humanReadableText: true },
+        export: { rasterPixelSize: 1024 },
+        assets: {},
+      }),
+    ).toMatchObject({
+      content: { kind: "barcode", value: "9520123456788" },
+      code: { symbology: "ean13", humanReadableText: true },
+    });
+
+    expect(() =>
+      migrateQraftProject({
+        kind: QRAFT_PROJECT_KIND,
+        schemaVersion: 2,
+        content: { kind: "barcode", value: "9520123456780" },
+        code: { symbology: "ean13", humanReadableText: true },
+        export: { rasterPixelSize: 1024 },
+        assets: {},
+      }),
+    ).toThrow(/check digit/i);
+
+    expect(
+      migrateQraftProject({
+        kind: QRAFT_PROJECT_KIND,
+        schemaVersion: 2,
+        content: { kind: "barcode", value: "Document Ä-42" },
+        code: { symbology: "pdf417", humanReadableText: false },
+        export: { rasterPixelSize: 1024 },
+        assets: {},
+      }),
+    ).toMatchObject({
+      content: { kind: "barcode", value: "Document Ä-42" },
+      code: { symbology: "pdf417", humanReadableText: false },
+    });
+
+    expect(() =>
+      migrateQraftProject({
+        kind: QRAFT_PROJECT_KIND,
+        schemaVersion: 2,
+        content: { kind: "barcode", value: "Ticket €" },
+        code: { symbology: "aztec", humanReadableText: false },
+        export: { rasterPixelSize: 1024 },
+        assets: {},
+      }),
+    ).toThrow(/Latin-1|ECI/i);
+
+    expect(
+      migrateQraftProject({
+        kind: QRAFT_PROJECT_KIND,
+        schemaVersion: 2,
+        content: { kind: "barcode", value: "A0123456789B" },
+        code: { symbology: "codabar", humanReadableText: true },
+        export: { rasterPixelSize: 1024 },
+        assets: {},
+      }),
+    ).toMatchObject({ code: { symbology: "codabar", humanReadableText: true } });
+
+    expect(
+      migrateQraftProject({
+        kind: QRAFT_PROJECT_KIND,
+        schemaVersion: 2,
+        content: { kind: "barcode", value: "Qraft narrow label" },
+        code: { symbology: "rmqr", humanReadableText: false },
+        export: { rasterPixelSize: 1024 },
+        assets: {},
+      }),
+    ).toMatchObject({ code: { symbology: "rmqr", humanReadableText: false } });
   });
 
   it("rejects newer or unsupported older project versions", () => {

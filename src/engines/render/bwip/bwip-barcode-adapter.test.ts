@@ -1,16 +1,20 @@
 import { describe, expect, it } from "vitest";
 
 import { BwipBarcodeAdapter } from "@/engines/render/bwip/bwip-barcode-adapter";
-import type { BwipSvgOptions, BwipSvgRuntime } from "@/engines/render/bwip/bwip-contract";
+import type {
+  BwipEncoderId,
+  BwipSvgOptions,
+  BwipSvgRuntime,
+} from "@/engines/render/bwip/bwip-contract";
 
 function runtimeFixture() {
-  const calls: Array<{ symbology: "code128" | "datamatrix"; options: BwipSvgOptions }> = [];
+  const calls: Array<{ symbology: BwipEncoderId; options: BwipSvgOptions }> = [];
   const runtime: BwipSvgRuntime = {
     render(symbology, options) {
       calls.push({ symbology, options });
-      return symbology === "code128"
-        ? '<svg viewBox="0 0 132 50" xmlns="http://www.w3.org/2000/svg">\n<rect width="100%" height="100%" fill="#ffffff" />\n<path stroke="#000000" stroke-width="1" d="M10 1L10 40" />\n</svg>\n'
-        : '<svg viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">\n<rect width="100%" height="100%" fill="#ffffff" />\n<path d="M1 1L17 1L17 17Z" fill-rule="evenodd" />\n</svg>\n';
+      return ["datamatrix", "aztec", "microqr", "maxicode", "rmqr"].includes(symbology)
+        ? '<svg viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">\n<rect width="100%" height="100%" fill="#ffffff" />\n<path d="M1 1L17 1L17 17Z" fill-rule="evenodd" />\n</svg>\n'
+        : '<svg viewBox="0 0 132 50" xmlns="http://www.w3.org/2000/svg">\n<rect width="100%" height="100%" fill="#ffffff" />\n<path stroke="#000000" stroke-width="1" d="M10 1L10 40" />\n</svg>\n';
     },
   };
 
@@ -54,12 +58,66 @@ describe("BWIP barcode adapter", () => {
     });
   });
 
-  it("can intentionally suppress Code 128 human-readable text", async () => {
+  it("maps the curated linear family to named BWIP encoders without leaking vendor IDs", async () => {
+    const cases = [
+      ["code39", "QRAFT-39", "code39"],
+      ["code93", "QRAFT-93", "code93"],
+      ["itf", "0123456789", "interleaved2of5"],
+      ["itf14", "09528765432108", "itf14"],
+    ] as const;
+
+    for (const [symbology, payload, bcid] of cases) {
+      const { runtime, calls } = runtimeFixture();
+      const renderer = new BwipBarcodeAdapter(runtime);
+      const rendered = await renderer.render({ symbology, payload });
+
+      expect(calls[0]).toMatchObject({
+        symbology,
+        options: { bcid, text: payload, includetext: true, paddingwidth: 10 },
+      });
+      expect(rendered.metadata).toMatchObject({ symbology, humanReadableText: true });
+    }
+  });
+
+  it("passes canonical retail digits to EAN/UPC and preserves their native text layout", async () => {
+    const cases = [
+      ["ean13", "952012345678", "9520123456788", "ean13"],
+      ["ean8", "0133558", "01335583", "ean8"],
+      ["upca", "78858101497", "788581014974", "upca"],
+      ["upce", "0123455", "01234558", "upce"],
+    ] as const;
+
+    for (const [symbology, payload, canonical, bcid] of cases) {
+      const { runtime, calls } = runtimeFixture();
+      const renderer = new BwipBarcodeAdapter(runtime);
+      const rendered = await renderer.render({ symbology, payload });
+
+      expect(calls[0]).toMatchObject({
+        symbology,
+        options: {
+          bcid,
+          text: canonical,
+          includetext: true,
+          guardwhitespace: true,
+          paddingwidth: 12,
+        },
+      });
+      expect(calls[0]?.options.textxalign).toBeUndefined();
+      expect(rendered.metadata.quietZoneModules).toEqual({
+        top: 0,
+        right: 12,
+        bottom: 0,
+        left: 12,
+      });
+    }
+  });
+
+  it("can intentionally suppress human-readable text on linear and retail formats", async () => {
     const { runtime, calls } = runtimeFixture();
     const renderer = new BwipBarcodeAdapter(runtime);
 
     const rendered = await renderer.render({
-      symbology: "code128",
+      symbology: "code39",
       payload: "ABC123",
       options: { humanReadableText: false },
     });
@@ -67,6 +125,16 @@ describe("BWIP barcode adapter", () => {
     expect(calls[0]?.options.includetext).toBe(false);
     expect(calls[0]?.options.textxalign).toBeUndefined();
     expect(rendered.metadata.humanReadableText).toBe(false);
+
+    calls.length = 0;
+    await renderer.render({
+      symbology: "ean13",
+      payload: "952012345678",
+      options: { humanReadableText: false },
+    });
+    expect(calls[0]?.options.includetext).toBe(false);
+    expect(calls[0]?.options.guardwhitespace).toBeUndefined();
+    expect(calls[0]?.options.paddingwidth).toBe(12);
   });
 
   it("passes Data Matrix as exact eight-bit Latin-1 and preserves a one-module clear area", async () => {
@@ -99,6 +167,95 @@ describe("BWIP barcode adapter", () => {
         quietZoneModules: { top: 1, right: 1, bottom: 1, left: 1 },
       },
     });
+  });
+
+  it("maps PDF417 and Aztec through curated Latin-1 2D profiles with standards-aware clear areas", async () => {
+    const { runtime, calls } = runtimeFixture();
+    const renderer = new BwipBarcodeAdapter(runtime);
+
+    const pdf = await renderer.render({ symbology: "pdf417", payload: "Document Ä-42" });
+    expect(calls[0]).toEqual({
+      symbology: "pdf417",
+      options: {
+        bcid: "pdf417",
+        text: "Document Ä-42",
+        binarytext: true,
+        scale: 1,
+        padding: 2,
+        backgroundcolor: "ffffff",
+      },
+    });
+    expect(pdf.metadata).toMatchObject({
+      symbology: "pdf417",
+      humanReadableText: false,
+      quietZoneModules: { top: 2, right: 2, bottom: 2, left: 2 },
+    });
+
+    calls.length = 0;
+    const aztec = await renderer.render({ symbology: "aztec", payload: "Ticket Café" });
+    expect(calls[0]).toEqual({
+      symbology: "aztec",
+      options: {
+        bcid: "azteccode",
+        text: "Ticket Café",
+        binarytext: true,
+        scale: 1,
+        backgroundcolor: "ffffff",
+      },
+    });
+    expect(aztec.metadata).toMatchObject({
+      symbology: "aztec",
+      humanReadableText: false,
+      quietZoneModules: { top: 0, right: 0, bottom: 0, left: 0 },
+    });
+  });
+
+  it("maps Expert and Experimental formats through explicit allow-listed profiles", async () => {
+    const linearCases = [
+      ["codabar", "A0123456789B", "rationalizedCodabar"],
+      ["code11", "01234-56789", "code11"],
+      ["msi", "0123456789", "msi"],
+      ["plessey", "1A2B3C4D", "plessey"],
+    ] as const;
+
+    for (const [symbology, payload, bcid] of linearCases) {
+      const { runtime, calls } = runtimeFixture();
+      const renderer = new BwipBarcodeAdapter(runtime);
+      const rendered = await renderer.render({ symbology, payload });
+      expect(calls[0]).toMatchObject({
+        symbology,
+        options: { bcid, text: payload, includetext: true, paddingwidth: 10 },
+      });
+      expect(rendered.metadata.humanReadableText).toBe(true);
+    }
+
+    const { runtime, calls } = runtimeFixture();
+    const renderer = new BwipBarcodeAdapter(runtime);
+    const micro = await renderer.render({ symbology: "microqr", payload: "MICRO-QRAFT" });
+    expect(calls[0]).toMatchObject({
+      symbology: "microqr",
+      options: { bcid: "microqrcode", eclevel: "L", fixedeclevel: true, padding: 2 },
+    });
+    expect(micro.metadata.quietZoneModules).toEqual({ top: 2, right: 2, bottom: 2, left: 2 });
+
+    calls.length = 0;
+    const maxi = await renderer.render({ symbology: "maxicode", payload: "Qraft parcel 2026" });
+    expect(calls[0]).toMatchObject({ symbology: "maxicode", options: { bcid: "maxicode" } });
+    expect(maxi.metadata.quietZoneModules).toEqual({ top: 0, right: 0, bottom: 0, left: 0 });
+
+    calls.length = 0;
+    const rmqr = await renderer.render({ symbology: "rmqr", payload: "Qraft narrow label" });
+    expect(calls[0]).toMatchObject({
+      symbology: "rmqr",
+      options: {
+        bcid: "rectangularmicroqrcode",
+        version: "R17x139",
+        eclevel: "M",
+        fixedeclevel: true,
+        padding: 2,
+      },
+    });
+    expect(rmqr.metadata.humanReadableText).toBe(false);
   });
 
   it("rejects unsupported presentation options before the vendor runtime", async () => {

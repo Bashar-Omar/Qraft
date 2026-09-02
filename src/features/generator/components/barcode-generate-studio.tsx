@@ -9,6 +9,7 @@ import {
   type ImportedQrProject,
 } from "@/application/project/import-qraft-project";
 import { exportCode, renderBarcode, selfTestBarcode } from "@/composition/core-qr";
+import { getBarcodeInputPolicy, type ValidatedBarcodePayload } from "@/core/code/barcode-input";
 import { CodeRenderError, type RenderedBarcodeCode } from "@/core/code/render";
 import { symbologyRegistry } from "@/core/code/symbology-registry";
 import type { BarcodeSymbologyId, SymbologyDefinition } from "@/core/code/symbology";
@@ -18,6 +19,12 @@ import {
   type RasterPixelSize,
 } from "@/core/export/raster";
 import type { BarcodeSelfTestResult } from "@/core/quality/self-test";
+import {
+  BarcodeCatalogControls,
+  type BarcodeCatalogDomain,
+  type BarcodeCatalogFamily,
+  type BarcodeCatalogTier,
+} from "@/features/generator/components/barcode-catalog-controls";
 import { BarcodePreview } from "@/features/generator/components/barcode-preview";
 import {
   BarcodeQualityPanel,
@@ -31,7 +38,24 @@ import { downloadArtifact } from "@/features/generator/lib/download";
 
 const INITIAL_BARCODE_DRAFTS: Readonly<Record<BarcodeSymbologyId, string>> = Object.freeze({
   code128: "QRAFT-128-001",
+  code39: "QRAFT-39",
+  code93: "QRAFT-93",
+  itf: "0123456789",
+  itf14: "0952876543210",
+  ean13: "952012345678",
+  ean8: "0133558",
+  upca: "78858101497",
+  upce: "0123455",
+  codabar: "A0123456789B",
+  code11: "01234-56789",
+  msi: "0123456789",
+  plessey: "1A2B3C4D",
   datamatrix: "Qraft Data Matrix",
+  pdf417: "Qraft PDF417 document payload",
+  aztec: "Qraft Aztec ticket payload",
+  microqr: "MICRO-QRAFT",
+  maxicode: "Qraft parcel 2026",
+  rmqr: "Qraft narrow label",
 });
 
 type BarcodeGenerationState =
@@ -40,6 +64,7 @@ type BarcodeGenerationState =
       requestKey: string;
       definition: SymbologyDefinition;
       payload: string;
+      validation: ValidatedBarcodePayload;
       rendered: RenderedBarcodeCode;
     }>
   | Readonly<{ status: "error"; requestKey: string; message: string }>
@@ -72,15 +97,29 @@ export function BarcodeGenerateStudio({
   initialProject,
   onOpenQrProject,
 }: BarcodeGenerateStudioProps) {
+  const initialDefinition = initialProject ? symbologyRegistry.get(initialProject.symbology) : null;
+  const [catalogQuery, setCatalogQuery] = useState("");
+  const [catalogFamily, setCatalogFamily] = useState<BarcodeCatalogFamily>("all");
+  const [catalogTier, setCatalogTier] = useState<BarcodeCatalogTier>("all");
+  const [catalogDomain, setCatalogDomain] = useState<BarcodeCatalogDomain>("all");
+  const [includeExperimental, setIncludeExperimental] = useState(
+    initialDefinition?.tier === "experimental",
+  );
   const definitions = useMemo(
     () =>
       symbologyRegistry
-        .listLive()
+        .search({
+          query: catalogQuery,
+          availability: "live",
+          ...(catalogFamily === "all" ? {} : { family: catalogFamily }),
+          ...(catalogTier === "all" ? {} : { tier: catalogTier }),
+          ...(catalogDomain === "all" ? {} : { domain: catalogDomain }),
+        })
         .filter(
           (definition): definition is SymbologyDefinition & { id: BarcodeSymbologyId } =>
-            definition.id !== "qr",
+            definition.id !== "qr" && (includeExperimental || definition.tier !== "experimental"),
         ),
-    [],
+    [catalogDomain, catalogFamily, catalogQuery, catalogTier, includeExperimental],
   );
   const [symbology, setSymbology] = useState<BarcodeSymbologyId>(
     initialProject?.symbology ?? "code128",
@@ -105,6 +144,7 @@ export function BarcodeGenerateStudio({
   const selfTestAttempt = useRef(0);
 
   const definition = symbologyRegistry.get(symbology);
+  const inputPolicy = getBarcodeInputPolicy(symbology);
   const payload = drafts[symbology];
   const effectiveHumanReadableText = definition.capabilities.humanReadableText
     ? humanReadableText
@@ -128,6 +168,7 @@ export function BarcodeGenerateStudio({
             requestKey,
             definition: result.symbology,
             payload: result.payload,
+            validation: result.validation,
             rendered: result.rendered,
           });
         }
@@ -163,7 +204,11 @@ export function BarcodeGenerateStudio({
   };
 
   const runSelfTest = async () => {
-    if (currentGeneration.status !== "ready") return;
+    if (
+      currentGeneration.status !== "ready" ||
+      definition.verification.artifactSelfTest !== "independent"
+    )
+      return;
     const selfTestRequestKey = requestKey;
     const attempt = selfTestAttempt.current + 1;
     selfTestAttempt.current = attempt;
@@ -207,7 +252,7 @@ export function BarcodeGenerateStudio({
       const artifact = await exportQraftProject({
         mode: "barcode",
         symbology,
-        payload,
+        payload: currentGeneration.payload,
         humanReadableText: effectiveHumanReadableText,
         rasterPixelSize,
       });
@@ -230,6 +275,8 @@ export function BarcodeGenerateStudio({
         onOpenQrProject(imported);
         return;
       }
+      const importedDefinition = symbologyRegistry.get(imported.symbology);
+      if (importedDefinition.tier === "experimental") setIncludeExperimental(true);
       setSymbology(imported.symbology);
       setDrafts((current) => ({ ...current, [imported.symbology]: imported.payload }));
       setHumanReadableText(imported.humanReadableText);
@@ -254,6 +301,19 @@ export function BarcodeGenerateStudio({
           <span className="mono-label">TYPE</span>
           <span className="phase-pill phase-pill--live">BARCODE</span>
         </div>
+        <BarcodeCatalogControls
+          domain={catalogDomain}
+          family={catalogFamily}
+          includeExperimental={includeExperimental}
+          onDomainChange={setCatalogDomain}
+          onFamilyChange={setCatalogFamily}
+          onIncludeExperimentalChange={setIncludeExperimental}
+          onQueryChange={setCatalogQuery}
+          onTierChange={setCatalogTier}
+          query={catalogQuery}
+          resultCount={definitions.length}
+          tier={catalogTier}
+        />
         <div className="type-list">
           {definitions.map((item, index) => (
             <button
@@ -266,16 +326,31 @@ export function BarcodeGenerateStudio({
               <span>
                 <strong>{item.label}</strong>
                 <small>{item.summary}</small>
+                <span className="type-row__support" aria-label={`${item.tier} support`}>
+                  <span className={`support-badge support-badge--${item.tier}`}>
+                    {item.tier.toUpperCase()}
+                  </span>
+                  <span className="support-badge">
+                    {item.verification.artifactSelfTest === "independent"
+                      ? "SELF-TEST"
+                      : "RENDER-ONLY"}
+                  </span>
+                </span>
               </span>
               <span className="type-row__index">{String(index + 1).padStart(2, "0")}</span>
             </button>
           ))}
-          <div className="type-row type-row--locked">
-            <span>
-              <strong>Expert Catalog</strong>
-              <small>Long-tail standards stay gated until validation vectors exist.</small>
-            </span>
-            <span className="type-row__index">NEXT</span>
+          {definitions.length === 0 ? (
+            <div className="barcode-catalog-empty" role="status">
+              No live barcode formats match this catalog filter.
+            </div>
+          ) : null}
+          <div className="barcode-catalog-note">
+            <span className="mono-label">SUPPORT MODEL</span>
+            <small>
+              Curated, allow-listed Expert, and deliberate Experimental formats share one
+              Qraft-owned catalog.
+            </small>
           </div>
         </div>
       </aside>
@@ -283,9 +358,25 @@ export function BarcodeGenerateStudio({
       <section className="studio-pane studio-pane--editor">
         <div className="studio-pane__heading">
           <span className="mono-label">CONTENT / {definition.label.toUpperCase()}</span>
-          <span className="phase-pill phase-pill--live">LIVE</span>
+          <span className={`phase-pill phase-pill--${definition.tier}`}>
+            {definition.tier.toUpperCase()}
+          </span>
         </div>
 
+        <BarcodeCatalogControls
+          className="barcode-catalog-controls--mobile"
+          domain={catalogDomain}
+          family={catalogFamily}
+          includeExperimental={includeExperimental}
+          onDomainChange={setCatalogDomain}
+          onFamilyChange={setCatalogFamily}
+          onIncludeExperimentalChange={setIncludeExperimental}
+          onQueryChange={setCatalogQuery}
+          onTierChange={setCatalogTier}
+          query={catalogQuery}
+          resultCount={definitions.length}
+          tier={catalogTier}
+        />
         <div className="studio-mobile-types" aria-label="Barcode type">
           {definitions.map((item) => (
             <button
@@ -306,18 +397,23 @@ export function BarcodeGenerateStudio({
             <textarea
               aria-invalid={currentGeneration.status === "error"}
               id="barcode-content"
+              inputMode={inputPolicy.inputMode}
               onChange={(event) =>
                 setDrafts((current) => ({ ...current, [symbology]: event.target.value }))
               }
-              rows={symbology === "datamatrix" ? 5 : 3}
+              placeholder={inputPolicy.placeholder}
+              rows={inputPolicy.rows}
               spellCheck={false}
               value={payload}
             />
-            <p className="studio-field__hint">
-              {symbology === "code128"
-                ? "Curated Code 128 accepts exact visible ASCII. GS1/FNC/control-byte workflows remain Expert-only."
-                : "Curated Data Matrix currently accepts ISO-8859-1 / Latin-1 bytes. Unicode ECI is intentionally deferred."}
-            </p>
+            <p className="studio-field__hint">{inputPolicy.hint}</p>
+            {currentGeneration.status === "ready" && currentGeneration.validation.checkDigit ? (
+              <p className="studio-field__success" role="status">
+                CHECK DIGIT · {currentGeneration.validation.checkDigit.digit} ·{" "}
+                {currentGeneration.validation.checkDigit.status.toUpperCase()} · ENCODED{" "}
+                {currentGeneration.validation.encodedPayload}
+              </p>
+            ) : null}
             {currentGeneration.status === "error" ? (
               <p className="studio-field__issue" role="status">
                 {currentGeneration.message}
@@ -352,6 +448,10 @@ export function BarcodeGenerateStudio({
               <span>LOGO · {definition.capabilities.logo ? "YES" : "NO"}</span>
               <span>GRADIENT · {definition.capabilities.gradient ? "YES" : "NO"}</span>
               <span>QUIET ZONE · {definition.capabilities.quietZone ? "YES" : "NO"}</span>
+              <span>
+                SELF TEST ·{" "}
+                {definition.verification.artifactSelfTest === "independent" ? "YES" : "NO"}
+              </span>
             </div>
           </div>
 
@@ -364,7 +464,11 @@ export function BarcodeGenerateStudio({
               <li>Qraft-owned input validation</li>
               <li>Vendor-isolated BWIP adapter</li>
               <li>Validated canonical SVG geometry</li>
-              <li>Independent ZXing artifact self-test</li>
+              <li>
+                {definition.verification.artifactSelfTest === "independent"
+                  ? "Independent ZXing artifact self-test"
+                  : "Explicit renderer-only verification label"}
+              </li>
             </ul>
           </div>
         </div>
@@ -406,10 +510,19 @@ export function BarcodeGenerateStudio({
               <strong>{formatQuietZone(currentGeneration.rendered)}</strong>
               <span>DATA</span>
               <strong>{currentGeneration.rendered.metadata.payloadBytes} BYTES</strong>
+              <span>SUPPORT</span>
+              <strong>{definition.tier.toUpperCase()}</strong>
+              <span>VERIFY</span>
+              <strong>
+                {definition.verification.artifactSelfTest === "independent"
+                  ? "ZXING SELF-TEST"
+                  : "RENDER ONLY"}
+              </strong>
             </div>
             <BarcodeQualityPanel
               onRunSelfTest={() => void runSelfTest()}
               selfTest={currentSelfTest}
+              verification={definition.verification}
             />
           </>
         ) : null}

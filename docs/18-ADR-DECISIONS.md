@@ -490,7 +490,7 @@ only the Code 128 and Data Matrix proof slice.
 Decision:
 
 - only `src/engines/render/bwip/bwip-browser-runtime.ts` may import `@bwip-js/browser`,
-- production uses the package's named `code128` and `datamatrix` encoders plus `drawingSVG()`,
+- production uses only explicit named encoders plus `drawingSVG()`; Phase 4B began with `code128`/`datamatrix` and Phase 4D expands that same boundary to the curated linear/retail set,
 - the concrete runtime is dynamically imported behind `LazyBwipBarcodeRenderer`,
 - Qraft-owned adapter contracts remain independently testable without loading the package,
 - the generic 100+ encoder catalog is not eagerly linked into the existing QR path,
@@ -545,3 +545,100 @@ Decision:
 Why:
 
 Payload meaning and code representation are different product concepts. Keeping them separate prevents future Data Matrix/GS1/Expert work from turning project persistence into a growing QR-shaped object with optional fields. An explicit migration also preserves the portability promise made by earlier releases.
+
+---
+
+## ADR-030 — Retail check digits are Qraft domain state, not renderer side effects
+
+**Status:** Accepted
+
+Phase 4D expands the curated barcode surface into retail identifiers where a renderer can accept a
+short input and calculate the final check digit implicitly.
+
+Decision:
+
+- Qraft calculates and verifies GTIN Mod-10 check digits before the BWIP boundary,
+- validated barcode state distinguishes user input from the canonical encoded payload,
+- EAN-13, EAN-8, UPC-A and ITF-14 accept the standard short/full lengths and reject bad full check digits,
+- curated UPC-E supports standards-defined UPC-E0 compressed input only,
+- Interleaved 2 of 5 rejects odd digit counts rather than allowing BWIP to silently prefix `0`,
+- independent self-test compares against Qraft's canonical encoded payload,
+- successful retail project saves persist the canonical value,
+- add-ons, UPC-E1 and GS1/FNC transformations remain closed until dedicated product contracts exist.
+
+Why:
+
+A renderer-side transformation can produce a technically valid symbol while making Qraft's preview,
+portable project and independent decoder disagree about what was encoded. Check digits and other
+meaningful transformations therefore belong in Qraft's domain validation layer. The vendor adapter
+receives a complete value and is not allowed to become the source of product semantics.
+
+---
+
+## ADR-031 — Catalog discovery is Qraft-owned metadata, not renderer introspection
+
+**Status:** Accepted
+
+Phase 4E introduces the discovery seam needed by the upcoming Expert Catalog.
+
+Decision:
+
+- `SymbologyDefinition` owns family, tier, availability, domain tags, aliases, use-case keywords, summary and capabilities,
+- `SymbologyRegistry.search()` filters those Qraft-owned definitions by query/family/tier/availability/domain,
+- search never asks BWIP which encoders exist at runtime,
+- the live Barcode Studio uses the same search contract that Expert Catalog will extend,
+- renderer support alone never changes a symbology from planned/experimental to curated/live.
+
+Why:
+
+BWIP can render far more formats than Qraft can honestly validate, document, self-test and persist. Treating the vendor symbol list as the product catalog would collapse the distinction between engine capability and supported product workflow. Qraft therefore owns discovery metadata and can add Expert entries deliberately without leaking vendor naming into core or UI code.
+
+---
+
+## ADR-032 — Curated PDF417/Aztec keep byte interpretation explicit and advanced shaping closed
+
+**Status:** Accepted
+
+Phase 4E adds PDF417 and Aztec Code as first-class curated 2D formats while deliberately keeping ECI and low-level symbol shaping out of the simple workflow.
+
+Decision:
+
+- curated PDF417 and Aztec accept ISO-8859-1 / Latin-1 bytes only,
+- arbitrary Unicode outside Latin-1 is rejected until Qraft owns an explicit ECI workflow,
+- PDF417 uses a conservative 1108-byte curated ceiling; Aztec uses a 1914-byte ceiling,
+- BWIP chooses ordinary rows/columns/layers and default error correction in the curated workflow,
+- fixed rows/columns/layers, explicit error-correction tuning, reader-init, raw codewords and Macro PDF417 remain Expert-only,
+- PDF417 exports a two-module clear area; Aztec does not invent a required quiet zone because the standard does not require one,
+- independent self-test targets ZXing's PDF_417/AZTEC decoders before the formats are considered product-live.
+
+Why:
+
+The renderer can accept escape syntax and many tuning options that alter interpretation and symbol shape. Exposing those controls before Qraft has typed domain contracts would recreate vendor option plumbing in the UI. The curated workflow instead prioritizes predictable payload interpretation and portable projects; Expert Mode can add advanced controls deliberately later.
+
+---
+
+## ADR-033 — Support tier and verification level are separate product facts
+
+**Status:** Accepted
+
+Phase 4F opens the first Expert Catalog slice. BWIP can render many formats that Qraft's bundled
+independent decoder cannot verify, so a single `supported: true` flag would be misleading.
+
+Decision:
+
+- `SymbologyDefinition.tier` describes product UX/support depth: Curated, Expert or Experimental,
+- `SymbologyDefinition.verification.artifactSelfTest` independently describes whether the final SVG
+  can be decoded by Qraft's bundled ZXing path,
+- renderer-only formats remain usable only when Qraft owns explicit validation and adapter mappings,
+- the Quality panel does not expose a self-test button for renderer-only definitions,
+- Experimental definitions are hidden by default and require deliberate user opt-in,
+- portable projects may persist Expert/Experimental IDs without changing schema v2, but import
+  always revalidates through current Qraft policy,
+- vendor catalog enumeration never promotes an entry or creates a Qraft definition automatically.
+
+Why:
+
+Renderer availability, product maturity and independent verification are different facts. Keeping
+those dimensions separate lets Qraft grow an honest long-tail catalog without claiming scanner
+coverage it does not have and without forcing every useful Expert format to wait for a matching
+ZXing reader.

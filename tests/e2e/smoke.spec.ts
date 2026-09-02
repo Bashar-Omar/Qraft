@@ -23,7 +23,7 @@ test("Core QR landing and Generate studio are reachable", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: "Craft codes that work." })).toBeVisible();
   await expect(
-    page.getByLabel("Visual Studio status").getByText("04C / BARCODE SLICE", { exact: true }),
+    page.getByLabel("Visual Studio status").getByText("04F / EXPERT CATALOG", { exact: true }),
   ).toBeVisible();
 
   await page.getByRole("link", { name: "Open code studio" }).click();

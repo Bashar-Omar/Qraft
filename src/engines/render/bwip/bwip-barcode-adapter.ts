@@ -16,11 +16,18 @@ import {
 } from "@/engines/render/bwip/bwip-contract";
 import { validateBwipSvg } from "@/engines/render/bwip/bwip-svg";
 
-const CODE128_QUIET_ZONE_MODULES = Object.freeze({ top: 0, right: 10, bottom: 0, left: 10 });
+const LINEAR_QUIET_ZONE_MODULES = Object.freeze({ top: 0, right: 10, bottom: 0, left: 10 });
+const RETAIL_QUIET_ZONE_MODULES = Object.freeze({ top: 0, right: 12, bottom: 0, left: 12 });
 const DATAMATRIX_QUIET_ZONE_MODULES = Object.freeze({ top: 1, right: 1, bottom: 1, left: 1 });
+const PDF417_QUIET_ZONE_MODULES = Object.freeze({ top: 2, right: 2, bottom: 2, left: 2 });
+const AZTEC_QUIET_ZONE_MODULES = Object.freeze({ top: 0, right: 0, bottom: 0, left: 0 });
+const MICROQR_QUIET_ZONE_MODULES = Object.freeze({ top: 2, right: 2, bottom: 2, left: 2 });
+const MAXICODE_QUIET_ZONE_MODULES = Object.freeze({ top: 0, right: 0, bottom: 0, left: 0 });
+const RMQR_QUIET_ZONE_MODULES = Object.freeze({ top: 2, right: 2, bottom: 2, left: 2 });
 
 type BwipSymbologyProfile = Readonly<{
   encoder: BwipEncoderId;
+  bcid: string;
   humanReadableText: Readonly<{
     supported: boolean;
     defaultValue: boolean;
@@ -29,29 +36,66 @@ type BwipSymbologyProfile = Readonly<{
   createOptions(validated: ValidatedBarcodePayload, humanReadableText: boolean): BwipSvgOptions;
 }>;
 
+function createLinearProfile(
+  encoder: BwipEncoderId,
+  bcid: string,
+  options: Readonly<{ nativeTextLayout?: boolean; retailGuardWhitespace?: boolean }> = {},
+): BwipSymbologyProfile {
+  const quietZoneModules = options.retailGuardWhitespace
+    ? RETAIL_QUIET_ZONE_MODULES
+    : LINEAR_QUIET_ZONE_MODULES;
+
+  return {
+    encoder,
+    bcid,
+    humanReadableText: { supported: true, defaultValue: true },
+    quietZoneModules,
+    createOptions(validated, humanReadableText) {
+      return {
+        bcid,
+        text: validated.binaryText,
+        binarytext: true,
+        scale: 1,
+        ...(!options.retailGuardWhitespace ? { height: 15 } : {}),
+        includetext: humanReadableText,
+        ...(humanReadableText && !options.nativeTextLayout
+          ? { textxalign: "center" as const }
+          : {}),
+        paddingwidth: quietZoneModules.left,
+        paddingheight: 0,
+        ...(humanReadableText && options.retailGuardWhitespace ? { guardwhitespace: true } : {}),
+        backgroundcolor: "ffffff",
+      };
+    },
+  };
+}
+
 const BWIP_SYMBOLOGY_PROFILES: Readonly<Record<BwipEncoderId, BwipSymbologyProfile>> =
   Object.freeze({
-    code128: {
-      encoder: "code128",
-      humanReadableText: { supported: true, defaultValue: true },
-      quietZoneModules: CODE128_QUIET_ZONE_MODULES,
-      createOptions(validated, humanReadableText) {
-        return {
-          bcid: "code128",
-          text: validated.binaryText,
-          binarytext: true,
-          scale: 1,
-          height: 15,
-          includetext: humanReadableText,
-          ...(humanReadableText ? { textxalign: "center" as const } : {}),
-          paddingwidth: CODE128_QUIET_ZONE_MODULES.left,
-          paddingheight: 0,
-          backgroundcolor: "ffffff",
-        };
-      },
-    },
+    code128: createLinearProfile("code128", "code128"),
+    code39: createLinearProfile("code39", "code39"),
+    code93: createLinearProfile("code93", "code93"),
+    itf: createLinearProfile("itf", "interleaved2of5"),
+    itf14: createLinearProfile("itf14", "itf14", { nativeTextLayout: true }),
+    ean13: createLinearProfile("ean13", "ean13", {
+      nativeTextLayout: true,
+      retailGuardWhitespace: true,
+    }),
+    ean8: createLinearProfile("ean8", "ean8", {
+      nativeTextLayout: true,
+      retailGuardWhitespace: true,
+    }),
+    upca: createLinearProfile("upca", "upca", {
+      nativeTextLayout: true,
+      retailGuardWhitespace: true,
+    }),
+    upce: createLinearProfile("upce", "upce", {
+      nativeTextLayout: true,
+      retailGuardWhitespace: true,
+    }),
     datamatrix: {
       encoder: "datamatrix",
+      bcid: "datamatrix",
       humanReadableText: { supported: false, defaultValue: false },
       quietZoneModules: DATAMATRIX_QUIET_ZONE_MODULES,
       createOptions(validated) {
@@ -61,6 +105,93 @@ const BWIP_SYMBOLOGY_PROFILES: Readonly<Record<BwipEncoderId, BwipSymbologyProfi
           binarytext: true,
           scale: 1,
           padding: DATAMATRIX_QUIET_ZONE_MODULES.left,
+          backgroundcolor: "ffffff",
+        };
+      },
+    },
+    pdf417: {
+      encoder: "pdf417",
+      bcid: "pdf417",
+      humanReadableText: { supported: false, defaultValue: false },
+      quietZoneModules: PDF417_QUIET_ZONE_MODULES,
+      createOptions(validated) {
+        return {
+          bcid: "pdf417",
+          text: validated.binaryText,
+          binarytext: true,
+          scale: 1,
+          padding: PDF417_QUIET_ZONE_MODULES.left,
+          backgroundcolor: "ffffff",
+        };
+      },
+    },
+    aztec: {
+      encoder: "aztec",
+      bcid: "azteccode",
+      humanReadableText: { supported: false, defaultValue: false },
+      quietZoneModules: AZTEC_QUIET_ZONE_MODULES,
+      createOptions(validated) {
+        return {
+          bcid: "azteccode",
+          text: validated.binaryText,
+          binarytext: true,
+          scale: 1,
+          backgroundcolor: "ffffff",
+        };
+      },
+    },
+    codabar: createLinearProfile("codabar", "rationalizedCodabar"),
+    code11: createLinearProfile("code11", "code11"),
+    msi: createLinearProfile("msi", "msi"),
+    plessey: createLinearProfile("plessey", "plessey"),
+    microqr: {
+      encoder: "microqr",
+      bcid: "microqrcode",
+      humanReadableText: { supported: false, defaultValue: false },
+      quietZoneModules: MICROQR_QUIET_ZONE_MODULES,
+      createOptions(validated) {
+        return {
+          bcid: "microqrcode",
+          text: validated.binaryText,
+          binarytext: true,
+          scale: 1,
+          eclevel: "L",
+          fixedeclevel: true,
+          padding: MICROQR_QUIET_ZONE_MODULES.left,
+          backgroundcolor: "ffffff",
+        };
+      },
+    },
+    maxicode: {
+      encoder: "maxicode",
+      bcid: "maxicode",
+      humanReadableText: { supported: false, defaultValue: false },
+      quietZoneModules: MAXICODE_QUIET_ZONE_MODULES,
+      createOptions(validated) {
+        return {
+          bcid: "maxicode",
+          text: validated.binaryText,
+          binarytext: true,
+          scale: 1,
+          backgroundcolor: "ffffff",
+        };
+      },
+    },
+    rmqr: {
+      encoder: "rmqr",
+      bcid: "rectangularmicroqrcode",
+      humanReadableText: { supported: false, defaultValue: false },
+      quietZoneModules: RMQR_QUIET_ZONE_MODULES,
+      createOptions(validated) {
+        return {
+          bcid: "rectangularmicroqrcode",
+          text: validated.binaryText,
+          binarytext: true,
+          scale: 1,
+          version: "R17x139",
+          eclevel: "M",
+          fixedeclevel: true,
+          padding: RMQR_QUIET_ZONE_MODULES.left,
           backgroundcolor: "ffffff",
         };
       },
@@ -107,7 +238,7 @@ export class BwipBarcodeAdapter implements CodeRenderer<RenderedBarcodeCode> {
     if (!isSupportedBarcodeRequest(request)) {
       throw new CodeRenderError(
         "unsupported",
-        `Renderer ${this.id} only supports the validated Phase 4B barcode slice.`,
+        `Renderer ${this.id} only supports Qraft's validated BWIP barcode catalog.`,
       );
     }
 
